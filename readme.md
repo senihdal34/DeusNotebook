@@ -7,8 +7,8 @@ No animation, no shadows, no gradients. Everything is drawn for high contrast an
 
 <p align="center">
   <img src="docs/screenshots/01-planner.png" width="31%" alt="Weekly planner">
+  <img src="docs/screenshots/02-notes.png" width="31%" alt="Notes">
   <img src="docs/screenshots/03-reading-home.png" width="31%" alt="Reading board">
-  <img src="docs/screenshots/04-reading-insights.png" width="31%" alt="Reading insights">
 </p>
 
 ## What you can do with it
@@ -30,13 +30,18 @@ and Turkish letters (İ ı ş ğ ç ö ü) survive the whole trip, including fil
 A newspaper-style Home shows your latest note large, the rest in a grid, topics as tabs, and favorites in their own tab.
 Press and hold a note to pin it. Boox note names become topics automatically.
 
+<p align="center">
+  <img src="docs/screenshots/07-editor.png" width="45%" alt="A handwritten note in the editor">
+</p>
+
 **See your reading at a glance.**
 The Reading tab is a dashboard that reads the Boox reader's own library and reading log: what you are reading now,
 your streak, minutes per day, a year heat map, when you read, reading records, a yearly goal, highlights and a small
 reading buddy. Tap a book and it opens in the Boox reader at the page you left.
 
 <p align="center">
-  <img src="docs/screenshots/05-reading-library.png" width="45%" alt="Reading board, library page">
+  <img src="docs/screenshots/04-reading-insights.png" width="31%" alt="Reading insights">
+  <img src="docs/screenshots/05-reading-library.png" width="31%" alt="Reading board, library page">
 </p>
 
 **A good pen and a quiet screen.**
