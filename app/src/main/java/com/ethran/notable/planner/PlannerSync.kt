@@ -169,7 +169,17 @@ object PlannerSync {
     /** A missing or damaged record reads as "nothing mirrored yet", which only ever adds ink. */
     fun decode(s: String?): Map<String, Mark> = s?.let { runCatching { json.decodeFromString(marksSerializer, it) }.getOrNull() }.orEmpty()
 
-    fun key(weekPageId: String, dayPageId: String) = "$KEY_PREFIX$weekPageId:$dayPageId"
+    /**
+     * Records are per page layout. The zoom strip moved [PlannerLayout.ROWS_TOP] down and made the week rows shorter, so
+     * a record (and the copies) made with the old layout no longer match the rows: syncing such a pair would move ink
+     * or copy it into the wrong day. Pairs mirrored with an older layout are therefore left alone ([LAYOUT] bumps).
+     */
+    const val LAYOUT = "v2"
+
+    fun key(weekPageId: String, dayPageId: String) = "$KEY_PREFIX$LAYOUT:$weekPageId:$dayPageId"
+
+    /** Record key of the first layout (tab bar only, no zoom strip). */
+    fun legacyKey(weekPageId: String, dayPageId: String) = "$KEY_PREFIX$weekPageId:$dayPageId"
 
     /**
      * Syncs one week row with its day page. Returns the pages whose strokes changed. Call it under [run]'s lock: two
@@ -180,7 +190,10 @@ object PlannerSync {
         leftPageId: String, frozen: Set<String>
     ): Set<String> {
         val key = key(weekPageId, dayPageId)
-        val before = decode(store.mirrored(key))
+        val raw = store.mirrored(key)
+        // Mirrored under the old layout: its copies sit at old row positions. Leave both pages as they are.
+        if (raw == null && store.mirrored(legacyKey(weekPageId, dayPageId)) != null) return emptySet()
+        val before = decode(raw)
         val week = Side(weekPageId, store.strokes(weekPageId), rowTop)
         val day = Side(dayPageId, store.strokes(dayPageId), PlannerLayout.ROWS_TOP)
         val p = plan(week, day, height, before, leftPageId, frozen)

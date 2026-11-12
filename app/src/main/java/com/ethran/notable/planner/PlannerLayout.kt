@@ -9,8 +9,12 @@ import kotlin.math.max
  */
 object PlannerLayout {
     const val HEADER_H = 150f
-    /** Strip under the header for the shared HAFTA | NOTLAR | SABİT bar (drawn by the editor, not by the background). */
-    const val NAV_H = 153f   // same height as the tab bar and its padding on Home, so both pages line up
+    /** The shared Planner | Notes | Favorites | Reading tab bar under the header (drawn by the editor, not by the background). */
+    const val TABS_H = 153f   // same height as the tab bar and its padding on Home, so both pages line up
+    /** The Year | Quarter | Month | Week | Day zoom strip, directly under the tab bar (drawn by the editor). */
+    const val ZOOM_H = 96f
+    /** Everything the editor draws under the header: tab bar plus zoom strip. The page content starts below it. */
+    const val NAV_H = TABS_H + ZOOM_H
     /** Home's side padding in page pixels; the header block on the right ends here. */
     const val RIGHT_MARGIN = 105f
     const val ROWS_TOP = HEADER_H + NAV_H

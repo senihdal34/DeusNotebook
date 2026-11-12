@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="zoom_year">Yıl</string>
+    <string name="zoom_quarter">Çeyrek</string>
+    <string name="zoom_month">Ay</string>
+    <string name="zoom_week">Hafta</string>
+    <string name="zoom_day">Gün</string>
+</resources>

@@ -358,7 +358,7 @@ fun EditorView(
                             with(density) {
                                 Box(
                                     Modifier.offset(0.dp, com.ethran.notable.planner.PlannerLayout.HEADER_H.toDp())
-                                        .fillMaxWidth().height(com.ethran.notable.planner.PlannerLayout.NAV_H.toDp()),
+                                        .fillMaxWidth().height(com.ethran.notable.planner.PlannerLayout.TABS_H.toDp()),
                                     contentAlignment = Alignment.Center
                                 ) {
                                     com.ethran.notable.ui.components.MainTabs(
@@ -372,6 +372,9 @@ fun EditorView(
                             }
                         }
                     }
+                    // Year | Quarter | Month | Week | Day zoom strip under the tab bar of every planner page.
+                    // goTo opens week/day pages inside this notebook and month/quarter/year pages (other notebooks) with the editor route.
+                    com.ethran.notable.planner.PlannerZoomHost(pageId, appRepository, plannerService, onGo = { ensure -> goTo(ensure) })
                     plannerMonday?.let { monday ->
                         // The date number of each row is a tap zone: it opens that day's page.
                         androidx.compose.foundation.layout.BoxWithConstraints(Modifier.fillMaxSize()) {

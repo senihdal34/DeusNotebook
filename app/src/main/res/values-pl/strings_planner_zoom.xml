@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="zoom_year">Rok</string>
+    <string name="zoom_quarter">Kwartał</string>
+    <string name="zoom_month">Miesiąc</string>
+    <string name="zoom_week">Tydzień</string>
+    <string name="zoom_day">Dzień</string>
+</resources>
