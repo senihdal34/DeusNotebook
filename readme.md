@@ -56,19 +56,76 @@ tool and a pen button that switches tools.
 - **Research capture.** Annotate with boxes: link a person, tag a topic, and let the export turn it into graph links.
 - **Review on the computer.** Notes arrive as Markdown, images and stroke files in one folder; sync it with Syncthing.
 
-## Install
+## Installation guide
+
+**What you need:** an [Onyx Boox](https://www.boox.com/) tablet with Android 10 or newer (developed and tested on the
+Go 10.3). The pen only works on Onyx hardware; other Android devices can open the app but cannot draw with the Onyx pen layer.
+
+### Option 1: install the release APK (easiest)
+
+1. On the tablet, open the [latest release](https://github.com/senihdal34/DeusNotebook/releases/latest) in the Boox browser
+   and download `deusnotebook-<version>.apk`. Or download it on your computer and send it to the tablet with
+   BOOXDrop, a USB cable (copy it to the `Download` folder) or any file-transfer app.
+2. Open the Boox **Storage** (Depolama) app, go to `Download` and tap the APK.
+3. The first time, Android asks to allow installs from this source. Tap **Settings**, switch **Allow from this source**
+   on, go back and tap **Install**.
+4. Open **A Deus Notebook** from the apps screen. The first-run page walks you through the rest (see below).
+
+*Optional check:* the release is signed with this certificate (SHA-256):
+`DC:64:3E:E0:F2:88:80:DC:AC:14:0C:5B:88:0A:92:2C:AE:77:77:C2:4A:B7:14:5E:A5:7E:AF:95:89:3E:A4:E8`.
+Verify it with `apksigner verify --print-certs deusnotebook-<version>.apk`. A `.sha256` file with the checksum of the APK
+is attached to every release.
+
+### Option 2: install with a cable (adb)
+
+Enable **Developer options** and **USB debugging** on the tablet, connect it, then:
 
 ```bash
+adb install -r deusnotebook-<version>.apk
+```
+
+### Option 3: build from source
+
+```bash
+git clone https://github.com/senihdal34/DeusNotebook.git
+cd DeusNotebook
 ./gradlew assembleDebug
 adb install -r app/build/outputs/apk/debug/app-debug.apk
 ```
 
 Requires JDK 17 and the Android SDK. The Onyx Maven repository is plain HTTP (`allowInsecureProtocol`), see
-`settings.gradle`. Pen input only works on Onyx hardware; the rest runs on any Android 10+ device.
-Run the unit tests with `./gradlew testDebugUnitTest`.
+`settings.gradle`. Run the unit tests with `./gradlew testDebugUnitTest`. A debug build is signed with the shared debug
+key in the repository, so it cannot be installed over a release build (and the other way round): uninstall first. Your
+notes are not lost by that, see below.
 
-On first start grant file access. On Boox devices also long-press the app icon and choose "Unfreeze app" so the system
-does not close it in the background.
+### First run
+
+The welcome page has six steps. Only file access is required.
+
+1. **Language:** pick the app language and the language you write in by hand.
+2. **File access:** allow "All files access" so notes and exports can be saved as normal files.
+3. **Refresh mode:** switch the screen to HD or Regal for the sharpest ink.
+4. **Keep it from freezing:** on the Boox home screen press and hold the app icon and choose "Unfreeze app".
+   Otherwise the system may close the app in the background.
+5. **Sync (optional):** set up Syncthing to send notes to your computer, see below. You can do it later in Settings, Sync.
+6. **Quick guide:** gestures and tips.
+
+### Updating, uninstalling, your data
+
+- **Update:** download the newer APK and install it over the old one. Your notes stay. Settings, About shows the installed
+  version, and Settings, General has "Check for newer version".
+- **Where your notes live:** in the notebook database in `Documents/notabledb` and, once exported, as Markdown in
+  `Documents/primary/inbox` (changeable in Settings). These folders are outside the app, so they survive an uninstall.
+  Back them up before experimenting.
+- **More handwriting languages:** English and Chinese come with the tablet. For other languages open Boox Notes, any note,
+  the language button, "More languages", and download the pack.
+
+### Troubleshooting
+
+- *"App not installed"*: a different signature is already installed (a debug build, or another fork). Uninstall it first;
+  your notes in `Documents/notabledb` remain.
+- *The pen does not draw:* the Onyx pen layer only exists on Boox tablets.
+- *The app closes by itself in the background:* do step 4 of the first run (Unfreeze app).
 
 ## Sync to your computer
 
