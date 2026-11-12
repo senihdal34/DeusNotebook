@@ -1,0 +1,16 @@
+appId: io.aragonite.notes
+---
+# Shared step: Notes and Favorites open from the Reading tab and the way back works. (The Planner tab is an editor page
+# drawn on the pen surface; Maestro stalls on it on this tablet, so scripts/e2e-reading.sh checks it with adb.)
+- tapOn: "Notes"
+- extendedWaitUntil:
+    visible: "Personal Notes"
+    timeout: 60000
+- tapOn: "★ Favorites"
+- extendedWaitUntil:
+    visible: "Favorite Notes"
+    timeout: 60000
+- tapOn: "Reading"
+- extendedWaitUntil:
+    visible: "Streak"
+    timeout: 60000

@@ -1,0 +1,492 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Reading feature (board, badges, chapters). -->
+<resources>
+    <!-- Greetings and time units -->
+    <string name="reading_greeting_morning">早上好</string>
+    <string name="reading_greeting_afternoon">下午好</string>
+    <string name="reading_greeting_evening">晚上好</string>
+    <string name="reading_greeting_night">晚安</string>
+    <string name="reading_greeting_name">%1$s，%2$s</string>
+    <string name="reading_min_short">%1$d分</string>
+    <string name="reading_hour_short">%1$d小时</string>
+    <string name="reading_hour_min_short">%1$d小时%2$d分</string>
+    <string name="reading_duration_min">%1$d分钟</string>
+    <string name="reading_duration_h">%1$d小时</string>
+    <string name="reading_duration_h_min">%1$d小时%2$d分钟</string>
+    <string name="reading_time_left">剩余%1$s</string>
+    <!-- Relative days, pace -->
+    <string name="reading_never">从未</string>
+    <string name="reading_today">今天</string>
+    <string name="reading_yesterday">昨天</string>
+    <string name="reading_tomorrow">明天</string>
+    <string name="reading_today_lower">今天</string>
+    <string name="reading_now">现在</string>
+    <plurals name="reading_days_ago">
+        <item quantity="other">%d天前</item>
+    </plurals>
+    <plurals name="reading_weeks_ago">
+        <item quantity="other">%d周前</item>
+    </plurals>
+    <string name="reading_goal_reached">目标已达成</string>
+    <string name="reading_on_pace">进度正常</string>
+    <plurals name="reading_books_ahead">
+        <item quantity="other">领先%d本</item>
+    </plurals>
+    <plurals name="reading_books_behind">
+        <item quantity="other">落后%d本</item>
+    </plurals>
+    <!-- Date patterns (day, weekday, month are filled in by code from the app locale) -->
+    <string name="reading_fmt_day_month">%2$s%1$d日</string>
+    <string name="reading_fmt_day_month_year">%3$d年%2$s%1$d日</string>
+    <string name="reading_fmt_wd_day_month">%3$s%2$d日 %1$s</string>
+    <string name="reading_fmt_wd_day_month_year">%4$d年%3$s%2$d日 %1$s</string>
+    <string name="reading_fmt_wd_day">%2$d日 %1$s</string>
+    <string name="reading_fmt_wd_day_month_plain">%3$s%2$d日 %1$s</string>
+    <string name="reading_fmt_month_year">%2$d年%1$s</string>
+    <string name="reading_since">自%1$s起</string>
+    <string name="reading_part_early">%2$d年%1$s上旬</string>
+    <string name="reading_part_mid">%2$d年%1$s中旬</string>
+    <string name="reading_part_late">%2$d年%1$s下旬</string>
+    <!-- Board pages -->
+    <string name="reading_page_home">首页</string>
+    <string name="reading_page_insights">统计</string>
+    <string name="reading_page_library">书库</string>
+    <string name="reading_page_decor">装饰</string>
+    <!-- Hero, streak, week -->
+    <string name="reading_continue_reading">继续阅读</string>
+    <string name="reading_resume_reading">继续阅读</string>
+    <string name="reading_resume">继续</string>
+    <string name="reading_start_reading">开始阅读</string>
+    <string name="reading_pick_book">从书库中选一本书开始</string>
+    <string name="reading_shuffle">换一批</string>
+    <string name="reading_shuffle_picks">换一批推荐</string>
+    <string name="reading_streak">连续</string>
+    <string name="reading_read_today">今天读一读</string>
+    <string name="reading_best_streak_short">最长%1$d</string>
+    <plurals name="reading_unit_days">
+        <item quantity="other">天</item>
+    </plurals>
+    <string name="reading_this_week">本周</string>
+    <string name="reading_nothing_yet">暂无</string>
+    <!-- Goal pace -->
+    <string name="reading_goal_title">%1$d年目标</string>
+    <string name="reading_set_goal">设定阅读目标，跟踪你的进度。</string>
+    <string name="reading_goal_first_book">读完第一本就开始</string>
+    <string name="reading_goal_starting">刚起步</string>
+    <string name="reading_goal_new">新</string>
+    <string name="reading_goal_met_on_pace">目标达成 · 预计%1$d本</string>
+    <string name="reading_goal_on_pace_for">预计%1$d本</string>
+    <string name="reading_goal_met">目标达成</string>
+    <string name="reading_goal_ahead_pace">领先进度%1$d本</string>
+    <string name="reading_goal_ahead">领先%1$d</string>
+    <string name="reading_goal_behind_pace">落后进度%1$d本</string>
+    <string name="reading_goal_behind">落后%1$d</string>
+    <plurals name="reading_of_goal_books">
+        <item quantity="other">/ %d本</item>
+    </plurals>
+    <string name="reading_of_goal">/ %1$d</string>
+    <!-- Toggles, also reading, highlight -->
+    <string name="reading_wifi">Wi-Fi</string>
+    <string name="reading_light">亮度</string>
+    <string name="reading_night">夜间</string>
+    <string name="reading_sync">同步</string>
+    <string name="reading_toggle_cd">切换%1$s</string>
+    <string name="reading_also_reading">同时在读</string>
+    <string name="reading_all_count">全部%1$d</string>
+    <string name="reading_also_empty">你开始读的书会出现在这里。</string>
+    <string name="reading_highlights_empty">你的划线摘录会每天一条出现在这里。</string>
+    <string name="reading_highlight_of_day">今日摘录</string>
+    <!-- Shelves and links -->
+    <string name="reading_shelf_want_to_read">想读</string>
+    <string name="reading_shelf_up_next">系列下一本</string>
+    <string name="reading_shelf_discover">发现</string>
+    <string name="reading_shelf_recently_added">最近添加</string>
+    <string name="reading_shelf_in_progress">在读</string>
+    <string name="reading_shelf_pick_back_up">继续未读完的书</string>
+    <string name="reading_shelf_finished_this_year">今年读完</string>
+    <string name="reading_shelf_finished_in">%1$d年读完</string>
+    <string name="reading_shelf_default">书架</string>
+    <string name="reading_shelf_empty_want">还没开始读的书会放在这里。</string>
+    <string name="reading_shelf_empty_pick_back_up">你搁置了一段时间的书会出现在这里。</string>
+    <string name="reading_shelf_empty_finished">今年读完的书会汇集在这里。</string>
+    <string name="reading_shelf_empty_up_next">你已开始的系列的下一本会出现在这里。</string>
+    <string name="reading_nothing_here">这里还没有内容。</string>
+    <string name="reading_see_all">查看全部</string>
+    <string name="reading_link_library">书库</string>
+    <string name="reading_link_series">系列</string>
+    <string name="reading_link_authors">作者</string>
+    <string name="reading_link_collections">合集</string>
+    <string name="reading_link_finished">已读完</string>
+    <string name="reading_link_device">本机</string>
+    <string name="reading_link_search">搜索</string>
+    <plurals name="reading_unit_books">
+        <item quantity="other">本书</item>
+    </plurals>
+    <plurals name="reading_unit_series">
+        <item quantity="other">个系列</item>
+    </plurals>
+    <plurals name="reading_unit_authors">
+        <item quantity="other">位作者</item>
+    </plurals>
+    <plurals name="reading_unit_collections">
+        <item quantity="other">个合集</item>
+    </plurals>
+    <plurals name="reading_unit_books_here">
+        <item quantity="other">本书在本机</item>
+    </plurals>
+    <string name="reading_gb_free">剩余%1$s GB</string>
+    <string name="reading_title_author_hint">书名、作者</string>
+    <!-- Sync -->
+    <string name="reading_synced">已同步</string>
+    <string name="reading_not_yet">尚未</string>
+    <string name="reading_sync_now">立即同步</string>
+    <string name="reading_just_now">刚刚</string>
+    <string name="reading_min_ago">%1$d分钟前</string>
+    <string name="reading_h_ago">%1$d小时前</string>
+    <string name="reading_d_ago">%1$d天前</string>
+    <!-- Insights widgets -->
+    <string name="reading_year_in_reading">年度阅读</string>
+    <plurals name="reading_past_months">
+        <item quantity="other">最近%d个月</item>
+    </plurals>
+    <string name="reading_fig_read">阅读</string>
+    <string name="reading_fig_days">天</string>
+    <string name="reading_fig_best_streak">最长连续</string>
+    <string name="reading_fig_per_day">每个阅读日</string>
+    <plurals name="reading_n_days">
+        <item quantity="other">%d天</item>
+    </plurals>
+    <string name="reading_best_day">最佳一天</string>
+    <string name="reading_heat_empty">你的阅读日会逐渐填满这里</string>
+    <string name="reading_less">少</string>
+    <string name="reading_more">多</string>
+    <string name="reading_finish_forecast">读完预测</string>
+    <string name="reading_finish">读完</string>
+    <string name="reading_forecast_empty">在本机上读一会儿，这里就会显示读完日期。</string>
+    <string name="reading_forecast_left_pace">剩余%1$s，每天约%2$d分钟</string>
+    <string name="reading_part_mornings">早晨</string>
+    <string name="reading_part_afternoons">下午</string>
+    <string name="reading_part_evenings">傍晚</string>
+    <string name="reading_part_late_nights">深夜</string>
+    <string name="reading_when_you_read">阅读时段</string>
+    <string name="reading_hours_empty">在本机上阅读后，这里会显示你的阅读时段。</string>
+    <string name="reading_most_at">%1$s最多</string>
+    <string name="reading_reading_records">阅读纪录</string>
+    <string name="reading_records_empty">在本机上阅读时，你的纪录会显示在这里。</string>
+    <string name="reading_record_longest">最长一次</string>
+    <string name="reading_record_pages_hour">页/小时</string>
+    <string name="reading_record_average">平均每次</string>
+    <string name="reading_record_sessions">次阅读</string>
+    <string name="reading_a_year_ago">一年前</string>
+    <string name="reading_year_ago_empty">明年这里会显示你今天读的书。</string>
+    <string name="reading_reading_that_day">那天读了%1$s。</string>
+    <string name="reading_pick_it_up">接着读</string>
+    <string name="reading_word_of_day">每日一词</string>
+    <plurals name="reading_days_read">
+        <item quantity="other">读了%d天</item>
+    </plurals>
+    <!-- Decor widgets -->
+    <string name="reading_gathering_dust">积灰中</string>
+    <string name="reading_dust_empty">下载后从未打开过的书会在这里积灰。</string>
+    <plurals name="reading_never_opened_months">
+        <item quantity="other">%d个月从未打开</item>
+    </plurals>
+    <plurals name="reading_never_opened_days">
+        <item quantity="other">%d天从未打开</item>
+    </plurals>
+    <string name="reading_open">打开</string>
+    <string name="reading_open_book_cd">打开这本书</string>
+    <string name="reading_next_dusty_cd">下一本积灰的书</string>
+    <string name="reading_buddy_read_title">陪你读书</string>
+    <string name="reading_buddy_read_sub">今天%1$s</string>
+    <string name="reading_buddy_sleep_title">睡着了</string>
+    <string name="reading_buddy_sleep_sub">你一读书就醒</string>
+    <plurals name="reading_buddy_streak">
+        <item quantity="other">连续%d天！</item>
+    </plurals>
+    <string name="reading_buddy_new_best">新纪录</string>
+    <string name="reading_buddy_your_best">你的最高纪录是%1$d</string>
+    <string name="reading_buddy_ribbon_title">读完一本书！</string>
+    <string name="reading_buddy_ribbon_sub">读得好</string>
+    <string name="reading_buddy_yawn_title">该睡觉了</string>
+    <string name="reading_buddy_yawn_sub">今天读了%1$s</string>
+    <string name="reading_buddy_wait_title">随时可以开始</string>
+    <string name="reading_buddy_wait_sub">打开一本书开始吧</string>
+    <string name="reading_moon_new">新月</string>
+    <string name="reading_moon_waxing_crescent">蛾眉月</string>
+    <string name="reading_moon_first_quarter">上弦月</string>
+    <string name="reading_moon_waxing_gibbous">盈凸月</string>
+    <string name="reading_moon_full">满月</string>
+    <string name="reading_moon_waning_gibbous">亏凸月</string>
+    <string name="reading_moon_last_quarter">下弦月</string>
+    <string name="reading_moon_waning_crescent">残月</string>
+    <string name="reading_moon_today">今天%1$s</string>
+    <plurals name="reading_moon_in_days">
+        <item quantity="other">%2$d天后%1$s</item>
+    </plurals>
+    <string name="reading_moon_on">%1$s %2$s</string>
+    <string name="reading_pages_turned">翻过的页数</string>
+    <string name="reading_glyph_of_day">每日一字</string>
+    <string name="reading_tree_rings">年轮</string>
+    <string name="reading_rings_empty">每个读书的月份会长出一圈年轮。</string>
+    <string name="reading_12_months">12个月</string>
+    <string name="reading_widest_ring">最宽的一圈</string>
+    <!-- Glyph names -->
+    <string name="reading_glyph_ampersand">和号</string>
+    <string name="reading_glyph_book_write">书；书写</string>
+    <string name="reading_glyph_pilcrow">段落符号</string>
+    <string name="reading_glyph_ain">艾因</string>
+    <string name="reading_glyph_sharp_s">清音s</string>
+    <string name="reading_glyph_ka">卡</string>
+    <string name="reading_glyph_section">章节符</string>
+    <string name="reading_glyph_to_read">读</string>
+    <string name="reading_glyph_bengali_a">孟加拉文的A</string>
+    <string name="reading_glyph_at">艾特符号</string>
+    <string name="reading_glyph_alef">阿列夫</string>
+    <string name="reading_glyph_eth">埃兹</string>
+    <string name="reading_glyph_writing">文</string>
+    <string name="reading_glyph_omega">欧米伽</string>
+    <string name="reading_glyph_zhe">热</string>
+    <string name="reading_glyph_long_s">长s</string>
+    <!-- Badge widgets -->
+    <string name="reading_next_badge">下一枚徽章</string>
+    <string name="reading_new_badge">新徽章</string>
+    <string name="reading_latest_badge">最新徽章</string>
+    <string name="reading_badges_loading">阅读数据加载后会显示徽章。</string>
+    <string name="reading_badges_first">读一会儿，你的第一枚徽章就会出现在这里。</string>
+    <string name="reading_n_of_m">%1$d / %2$d</string>
+    <string name="reading_of_n">/ %1$s</string>
+    <string name="reading_badges">徽章</string>
+    <string name="reading_secret">隐藏</string>
+    <string name="reading_earned">已获得</string>
+    <string name="reading_in_progress">进行中</string>
+    <string name="reading_locked">未解锁</string>
+    <!-- Next stop (chapters) -->
+    <string name="reading_next_stop">下一站</string>
+    <string name="reading_last_stop">终点站</string>
+    <string name="reading_end">终点</string>
+    <string name="reading_end_of_book_in">读完全书还需%1$s</string>
+    <plurals name="reading_stops_to_end">
+        <item quantity="other">距终点还有%d站</item>
+    </plurals>
+    <plurals name="reading_stops">
+        <item quantity="other">%d站</item>
+    </plurals>
+    <string name="reading_chapters_none_hint">打开一本书，它的章节会排列在这里。</string>
+    <string name="reading_chapters_none_short">打开一本书开始。</string>
+    <string name="reading_chapters_no_toc_hint">这本书没有可用的目录。</string>
+    <string name="reading_chapters_no_toc_short">没有目录。</string>
+    <string name="reading_chapters_format_hint">只能从PDF和EPUB图书中读取章节。</string>
+    <string name="reading_chapters_format_short">此格式没有章节。</string>
+    <string name="reading_chapters_unreadable_hint">无法从此文件读取章节列表。</string>
+    <string name="reading_chapters_unreadable_short">章节无法读取。</string>
+    <string name="reading_chapters_few_hint">这本书的章节太少，画不出路线。</string>
+    <string name="reading_chapters_few_short">章节太少。</string>
+    <string name="reading_chapters_loading_hint">正在查找这本书的章节。</string>
+    <string name="reading_chapters_loading_short">正在查找章节。</string>
+    <!-- Screens behind the boxes, header and footer -->
+    <string name="reading_source_unavailable">无法读取NeoReader的书库，所以暂时没有内容可显示。</string>
+    <string name="reading_unknown">未知</string>
+    <string name="reading_search_hint">书名、作者或系列</string>
+    <plurals name="reading_results">
+        <item quantity="other">%d个结果</item>
+    </plurals>
+    <string name="reading_no_match">没有与“%1$s”匹配的书。</string>
+    <string name="reading_goal_books_finished">已读完%1$d/%2$d本</string>
+    <string name="reading_fewer_books_cd">减少</string>
+    <string name="reading_more_books_cd">增加</string>
+    <string name="reading_books_a_year">本/年</string>
+    <string name="reading_book">图书</string>
+    <string name="reading_finished">已读完</string>
+    <string name="reading_pct_read">已读%1$s</string>
+    <string name="reading_pages">页数</string>
+    <string name="reading_last_read">上次阅读</string>
+    <string name="reading_time_left_label">剩余时间</string>
+    <string name="reading_done">完成</string>
+    <string name="reading_open_in_neoreader">在NeoReader中打开</string>
+    <string name="reading_highlights_count">摘录 · %1$d</string>
+    <string name="reading_no_highlights">这本书还没有摘录。</string>
+    <string name="reading_search_books_cd">搜索图书</string>
+    <string name="reading_goal_cd">阅读目标</string>
+    <string name="reading_back_cd">返回</string>
+    <string name="reading_next_page_cd">下一页</string>
+    <string name="reading_previous_page_cd">上一页</string>
+    <string name="reading_page_cd">页面：%1$s</string>
+    <string name="reading_book_missing">找不到图书文件</string>
+    <string name="reading_open_failed">无法在NeoReader中打开这本书</string>
+    <!-- Badge rarities, categories and the secret badge -->
+    <string name="badge_rarity_common">普通</string>
+    <string name="badge_rarity_rare">稀有</string>
+    <string name="badge_rarity_epic">史诗</string>
+    <string name="badge_rarity_legendary">传说</string>
+    <string name="badge_category_reading">阅读</string>
+    <string name="badge_category_library">书库</string>
+    <string name="badge_category_exploration">探索</string>
+    <string name="badge_category_dedication">坚持</string>
+    <string name="badge_secret_name">隐藏徽章</string>
+    <string name="badge_secret_text">继续阅读，解锁这枚徽章。</string>
+    <string name="badge_eta_day">还需约一天</string>
+    <plurals name="badge_eta_days">
+        <item quantity="other">还需约%d天</item>
+    </plurals>
+    <string name="badge_eta_week">还需约一周</string>
+    <plurals name="badge_eta_weeks">
+        <item quantity="other">还需约%d周</item>
+    </plurals>
+    <plurals name="badge_eta_months">
+        <item quantity="other">还需约%d个月</item>
+    </plurals>
+    <string name="badge_earned_today">今天获得</string>
+    <string name="badge_earned_yesterday">昨天获得</string>
+    <string name="badge_earned_weekday">%1$s获得</string>
+    <string name="badge_earned_date">%1$s获得</string>
+    <string name="badge_earned_short_today">今天</string>
+    <string name="badge_earned_short_yesterday">昨天</string>
+    <!-- Badge catalogue: Reading -->
+    <string name="badge_books_finished_1_name">墨水学徒</string>
+    <string name="badge_books_finished_1_desc">读完你的第一本书</string>
+    <string name="badge_books_finished_2_name">书脊侦察兵</string>
+    <string name="badge_books_finished_2_desc">读完10本书</string>
+    <string name="badge_books_finished_3_name">故事中坚</string>
+    <string name="badge_books_finished_3_desc">读完35本书</string>
+    <string name="badge_books_finished_4_name">首席档案官</string>
+    <string name="badge_books_finished_4_desc">读完100本书</string>
+    <string name="badge_pages_read_1_name">初叶</string>
+    <string name="badge_pages_read_1_desc">阅读500页</string>
+    <string name="badge_pages_read_2_name">章节编织者</string>
+    <string name="badge_pages_read_2_desc">阅读5000页</string>
+    <string name="badge_pages_read_3_name">典籍战术家</string>
+    <string name="badge_pages_read_3_desc">阅读25000页</string>
+    <string name="badge_pages_read_4_name">大辞典</string>
+    <string name="badge_pages_read_4_desc">阅读100000页</string>
+    <string name="badge_hours_read_1_name">时光学徒</string>
+    <string name="badge_hours_read_1_desc">累计阅读10小时</string>
+    <string name="badge_hours_read_2_name">与时间同行的读者</string>
+    <string name="badge_hours_read_2_desc">累计阅读100小时</string>
+    <string name="badge_hours_read_3_name">编年史老兵</string>
+    <string name="badge_hours_read_3_desc">累计阅读500小时</string>
+    <string name="badge_hours_read_4_name">永恒学者</string>
+    <string name="badge_hours_read_4_desc">累计阅读1000小时</string>
+    <string name="badge_marathoner_name">马拉松读者</string>
+    <string name="badge_marathoner_desc">完成一次90分钟或更长的阅读</string>
+    <string name="badge_all_nighter_name">通宵达旦</string>
+    <string name="badge_all_nighter_desc">在凌晨1点到4点之间阅读</string>
+    <string name="badge_early_bird_name">早起的鸟儿</string>
+    <string name="badge_early_bird_desc">在早上5点到7点之间开始一次阅读</string>
+    <string name="badge_long_book_1_name">长篇小试</string>
+    <string name="badge_long_book_1_desc">读完一本300页或更多的书</string>
+    <string name="badge_page_turner_name">页海开路人</string>
+    <string name="badge_page_turner_desc">读完一本500页或更多的书</string>
+    <string name="badge_long_book_3_name">史诗远航者</string>
+    <string name="badge_long_book_3_desc">读完一本750页或更多的书</string>
+    <string name="badge_tome_tamer_name">巨著之王</string>
+    <string name="badge_tome_tamer_desc">读完一本1000页或更多的书</string>
+    <string name="badge_sprint_name">冲刺</string>
+    <string name="badge_sprint_desc">一天之内读完一本书</string>
+    <string name="badge_binge_reader_name">读书狂</string>
+    <string name="badge_binge_reader_desc">一周之内读完3本或更多的书</string>
+    <string name="badge_monthly_reader_2_name">月度机器</string>
+    <string name="badge_monthly_reader_2_desc">一个自然月内读完10本书</string>
+    <string name="badge_slow_burn_name">慢火细炖</string>
+    <string name="badge_slow_burn_desc">从开始到读完一本书用时超过90天</string>
+    <string name="badge_power_hour_name">高效一小时</string>
+    <string name="badge_power_hour_desc">一次阅读中读完75页或更多</string>
+    <string name="badge_speed_reader_name">速读者</string>
+    <string name="badge_speed_reader_desc">一天之内阅读100页或更多</string>
+    <!-- Badge catalogue: Library -->
+    <string name="badge_library_builder_1_name">书架种子</string>
+    <string name="badge_library_builder_1_desc">书库中有50本书</string>
+    <string name="badge_library_builder_2_name">藏书建筑师</string>
+    <string name="badge_library_builder_2_desc">书库中有250本书</string>
+    <string name="badge_library_builder_3_name">书山之主</string>
+    <string name="badge_library_builder_3_desc">书库中有1000本书</string>
+    <string name="badge_library_builder_4_name">亚历山大图书馆</string>
+    <string name="badge_library_builder_4_desc">书库中有5000本书</string>
+    <string name="badge_annotator_1_name">笔记新手</string>
+    <string name="badge_annotator_1_desc">创建10条批注</string>
+    <string name="badge_annotator_2_name">活跃批注者</string>
+    <string name="badge_annotator_2_desc">创建50条批注</string>
+    <string name="badge_annotator_3_name">高产批注者</string>
+    <string name="badge_annotator_3_desc">创建200条批注</string>
+    <string name="badge_annotator_4_name">批注大师</string>
+    <string name="badge_annotator_4_desc">创建500条批注</string>
+    <string name="badge_multi_format_name">多格式藏家</string>
+    <string name="badge_multi_format_desc">拥有3种或更多不同格式的书</string>
+    <string name="badge_curator_name">策展人</string>
+    <string name="badge_curator_desc">创建10个或更多合集</string>
+    <string name="badge_deep_dive_session_name">深度潜入</string>
+    <string name="badge_deep_dive_session_desc">一天之内创建10条批注</string>
+    <string name="badge_bookmarked_name">已加书签</string>
+    <string name="badge_bookmarked_desc">创建你的第一条批注或划线</string>
+    <!-- Badge catalogue: Exploration -->
+    <string name="badge_author_deep_dive_name">深读一位作者</string>
+    <string name="badge_author_deep_dive_desc">读同一位作者的5本或更多的书</string>
+    <string name="badge_short_story_fan_name">短篇迷</string>
+    <string name="badge_short_story_fan_desc">读完5本不足100页的书</string>
+    <string name="badge_thick_and_thin_name">厚薄通吃</string>
+    <string name="badge_thick_and_thin_desc">至少读完一本不足100页的书和一本超过800页的书</string>
+    <string name="badge_trilogy_master_name">三部曲大师</string>
+    <string name="badge_trilogy_master_desc">读完一个完整的三部曲系列</string>
+    <string name="badge_first_series_name">系列启程</string>
+    <string name="badge_first_series_desc">读完第一本属于某个系列的书</string>
+    <!-- Badge catalogue: Dedication -->
+    <string name="badge_streak_1_name">初出茅庐</string>
+    <string name="badge_streak_1_desc">保持连续7天阅读</string>
+    <string name="badge_streak_2_name">习惯成自然</string>
+    <string name="badge_streak_2_desc">保持连续30天阅读</string>
+    <string name="badge_streak_3_name">势不可挡</string>
+    <string name="badge_streak_3_desc">保持连续100天阅读</string>
+    <string name="badge_streak_4_name">经年不灭的火焰</string>
+    <string name="badge_streak_4_desc">保持连续365天阅读</string>
+    <string name="badge_year_round_reader_name">全年读者</string>
+    <string name="badge_year_round_reader_desc">在一个自然年的12个月里都有阅读</string>
+    <string name="badge_comeback_kid_name">王者归来</string>
+    <string name="badge_comeback_kid_desc">中断30天后重新开始阅读</string>
+    <string name="badge_seasonal_reader_name">四季</string>
+    <string name="badge_seasonal_reader_desc">在同一年的4个季节里都有阅读</string>
+    <string name="badge_perfect_month_name">完美一月</string>
+    <string name="badge_perfect_month_desc">一个自然月的每一天都阅读</string>
+    <string name="badge_consistent_reader_name">贵在坚持</string>
+    <string name="badge_consistent_reader_desc">连续14天每天至少阅读30分钟</string>
+    <string name="badge_weekend_rhythm_name">周末节奏</string>
+    <string name="badge_weekend_rhythm_desc">连续8个周末都阅读</string>
+    <string name="badge_weekend_warrior_name">周末战士</string>
+    <string name="badge_weekend_warrior_desc">一个周末里阅读5小时或更久</string>
+    <string name="badge_yearly_finisher_12_name">年度收官</string>
+    <string name="badge_yearly_finisher_12_desc">一个自然年内读完12本书</string>
+    <string name="badge_new_year_reader_name">新年读者</string>
+    <string name="badge_new_year_reader_desc">在1月1日完成一次阅读</string>
+    <string name="badge_category_sweeper_name">全类别通吃</string>
+    <string name="badge_category_sweeper_desc">在全部4个类别中至少获得一项成就</string>
+    <!-- Words of the day: the word stays English (an English vocabulary list), the meaning follows the app language -->
+    <string name="reading_word_ephemeral">只持续很短时间的</string>
+    <string name="reading_word_sonder">意识到每个路人都有和你一样鲜活的人生</string>
+    <string name="reading_word_petrichor">雨落在干燥泥土上的气味</string>
+    <string name="reading_word_liminal">处于两种状态之间的门槛上</string>
+    <string name="reading_word_sanguine">乐观而充满希望，尤其是在形势不妙时</string>
+    <string name="reading_word_laconic">言简意赅的</string>
+    <string name="reading_word_ineffable">无法用言语形容的</string>
+    <string name="reading_word_mellifluous">听起来甜美流畅的</string>
+    <string name="reading_word_equanimity">在压力下保持的内心平静</string>
+    <string name="reading_word_serendipity">偶然得来的幸运发现</string>
+    <string name="reading_word_obfuscate">故意把事情弄得含糊不清</string>
+    <string name="reading_word_perspicacious">看事敏锐、理解迅速的</string>
+    <string name="reading_word_halcyon">平静而幸福的，如同旧日时光</string>
+    <string name="reading_word_recondite">鲜为人知的；难以理解的</string>
+    <string name="reading_word_tenacious">紧抓不放的；不轻易放弃的</string>
+    <string name="reading_word_verdant">草木葱茏、一片翠绿的</string>
+    <string name="reading_word_quixotic">理想化却不切实际的</string>
+    <string name="reading_word_sedulous">做事细心而耐心的</string>
+    <string name="reading_word_lucid">清晰易懂的</string>
+    <string name="reading_word_crepuscular">黄昏的；在黄昏和黎明活动的</string>
+    <string name="reading_word_palimpsest">写在旧文字之上、旧字迹仍隐约可见的书页</string>
+    <string name="reading_word_eloquent">说话或写作清晰而有力的</string>
+    <string name="reading_word_fastidious">对细节和准确性极其讲究的</string>
+    <string name="reading_word_gregarious">喜欢交际的</string>
+    <string name="reading_word_juxtapose">把两样东西并排放置以作比较</string>
+    <string name="reading_word_limpid">像清水一样澄澈的</string>
+    <string name="reading_word_numinous">带有强烈灵性或神秘感的</string>
+    <string name="reading_word_reverie">愉快而恍惚的遐想</string>
+    <string name="reading_word_solace">悲伤时刻的慰藉</string>
+    <string name="reading_word_zenith">最高点</string>
+</resources>

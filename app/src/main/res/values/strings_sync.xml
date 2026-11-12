@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="sync_tab_name">Sync</string>
+    <string name="sync_intro">Your notes are saved as plain Markdown files in one folder on this tablet. Share that folder with your computer, and Obsidian or any AI tool that reads files can use your notes. No account and no cloud needed.</string>
+    <string name="sync_status_title">This tablet</string>
+    <string name="sync_status_folder">Notes folder</string>
+    <string name="sync_status_count">Exported notes: %1$d</string>
+    <string name="sync_status_last">Last export: %1$s</string>
+    <string name="sync_status_never">Nothing exported yet. Open a note and tap Save &amp; Exit.</string>
+    <string name="sync_status_syncthing_on">Syncthing is installed</string>
+    <string name="sync_status_syncthing_off">Syncthing is not installed</string>
+    <string name="sync_step1_title">Choose the notes folder</string>
+    <string name="sync_step1_body">Set it in General under Vault inbox folder. Use a folder inside your Obsidian vault on the tablet, or keep the default.</string>
+    <string name="sync_step1_button">Open folder setting</string>
+    <string name="sync_step2_title">Install Syncthing on the tablet</string>
+    <string name="sync_step2_body">Syncthing copies a folder between your devices, directly and privately. Install Syncthing-Fork from F-Droid (or Syncthing from Google Play), open it and allow storage access.</string>
+    <string name="sync_step2_get">Get Syncthing</string>
+    <string name="sync_step2_open">Open Syncthing</string>
+    <string name="sync_step3_title">Share the folder from the tablet</string>
+    <string name="sync_step3_body">In Syncthing tap Folders, then +, choose the notes folder above, and under Sharing add your computer using its device ID (in Syncthing on the computer: Actions, Show ID).</string>
+    <string name="sync_step4_title">Accept it on your computer</string>
+    <string name="sync_step4_body">Install Syncthing on your computer, accept the tablet and the folder, and choose where it lands: a folder inside your Obsidian vault, or any folder you like. New notes arrive within seconds.</string>
+    <string name="sync_step4_button">Get Syncthing for computer</string>
+    <string name="sync_step5_title">Let your AI read your notes</string>
+    <string name="sync_step5_body">Every note is a .md file with a title, date and #tags, plus its page images. Point your AI tool or agent at that folder on your computer and it can search and read your notes as text. Obsidian shows them as normal notes.</string>
+    <string name="sync_private_note">Only devices you approve in Syncthing receive your notes.</string>
+    <string name="welcome_sync_title">Optional: sync notes to your computer</string>
+    <string name="welcome_sync_body">Share your notes as Markdown with Obsidian or your AI tools using Syncthing. It takes about five minutes, and you can do it later in Settings, Sync.</string>
+    <string name="welcome_sync_button">Set up sync</string>
+</resources>

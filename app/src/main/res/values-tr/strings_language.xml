@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_language">Uygulama dili</string>
+    <string name="writing_language">Yazı dili</string>
+    <string name="writing_language_hint">El yazını tanıma dili. Notlar metne çevrilirken kullanılır.</string>
+    <string name="planner_notebook">Planlayıcı</string>
+    <string name="planner_title">Haftalık Plan</string>
+    <string name="planner_week_title">Hafta %1$s</string>
+    <string name="planner_year_complete">Yıl %%%1$d tamamlandı</string>
+    <string name="planner_todo">Yapılacaklar</string>
+    <string name="planner_notes">Notlar</string>
+    <string name="planner_previous">‹ Önceki</string>
+    <string name="planner_this_week">Bu hafta</string>
+    <string name="planner_next">Sonraki ›</string>
+    <string name="planner_previous_day">‹ Önceki gün</string>
+    <string name="planner_next_day">Sonraki gün ›</string>
+    <string name="planner_week_button">Hafta</string>
+    <string name="planner_back">‹ Planlayıcı</string>
+    <string name="writing_language_download">indir</string>
+    <string name="writing_language_waiting_hint">%1$s bu tabletde henüz yok. Boox\'ta Notlar\'ı aç, herhangi bir notu aç, dil düğmesine, sonra Daha fazla dil\'e dokunup indir. Geri dönünce otomatik seçilir.</string>
+    <string name="writing_language_open_boox">Boox\'u aç</string>
+    <string name="settings_back">Geri</string>
+</resources>

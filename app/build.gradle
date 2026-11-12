@@ -1,0 +1,250 @@
+plugins {
+    id 'com.android.application'
+    id 'org.jetbrains.kotlin.android'
+    id 'com.google.devtools.ksp'
+    id 'kotlin-parcelize'
+    id 'com.google.gms.google-services'
+    id 'org.jetbrains.kotlin.plugin.compose'
+    id 'org.jetbrains.kotlin.plugin.serialization'
+    id 'com.google.dagger.hilt.android'
+}
+
+android {
+    compileSdk 36
+
+    defaultConfig {
+        manifestPlaceholders = [appLabel: "@string/app_name"]
+        applicationId "io.aragonite.notes"
+        minSdk 29
+        targetSdk 35
+
+        versionCode 36
+        versionName '0.2.0'
+        if (project.hasProperty('IS_NEXT') && project.IS_NEXT.toBoolean()) {
+            def timestamp = new Date().format('dd.MM.YYYY-HH:mm')
+            versionName = "${versionName}-next-${timestamp}"
+        }
+
+        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+        vectorDrawables {
+            useSupportLibrary true
+        }
+        ksp {
+            arg('room.schemaLocation', "$projectDir/schemas")
+        }
+        javaCompileOptions {
+            annotationProcessorOptions {
+                arguments = ["room.schemaLocation":
+                                     "$projectDir/schemas".toString()]
+            }
+        }
+    }
+
+    signingConfigs {
+        debug {
+            if (System.getenv("STORE_FILE") != null) {
+                storeFile file(System.getenv("STORE_FILE"))
+                storePassword System.getenv("STORE_PASSWORD")
+                keyAlias System.getenv("KEY_ALIAS")
+                keyPassword System.getenv("KEY_PASSWORD")
+
+                v1SigningEnabled true
+                v2SigningEnabled true
+            } else {
+                // Shared debug key (public, password "android"): every local and CI debug build is
+                // signed the same way, so a new build installs over the previous one in place.
+                storeFile file('debug.keystore')
+                storePassword 'android'
+                keyAlias 'androiddebugkey'
+                keyPassword 'android'
+            }
+        }
+        release {
+            if (System.getenv("STORE_FILE") != null) {
+                storeFile file(System.getenv("STORE_FILE"))
+                storePassword System.getenv("STORE_PASSWORD")
+                keyAlias System.getenv("KEY_ALIAS")
+                keyPassword System.getenv("KEY_PASSWORD")
+
+                v1SigningEnabled true
+                v2SigningEnabled true
+            } else {
+                logger.info "Running locally, skipping release signing..."
+            }
+        }
+
+    }
+
+
+    // -PSIDE_BY_SIDE=true installs the debug build as io.aragonite.notes.debug with its own data
+    // folder, next to the real app (used by the e2e scripts). Off for normal and CI builds.
+    def sideBySide = project.findProperty('SIDE_BY_SIDE')?.toString() == 'true'
+
+    buildTypes {
+        debug {
+            if (sideBySide) {
+                applicationIdSuffix ".debug"
+                manifestPlaceholders = [appLabel: "A Deus Notebook TEST"]   // so the test copy is not mistaken for the real app
+            }
+            buildConfigField("boolean", "SIDE_BY_SIDE", sideBySide.toString())
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+            // signingConfig signingConfigs.debug
+            buildConfigField("boolean", "IS_NEXT", IS_NEXT)
+            buildConfigField "String", "SHIPBOOK_APP_ID", "\"${System.getenv("SHIPBOOK_APP_ID") ?: "default-secret"}\""
+            buildConfigField "String", "SHIPBOOK_APP_KEY", "\"${System.getenv("SHIPBOOK_APP_KEY") ?: "default-secret2"}\""
+            if (System.getenv("STORE_FILE") != null) {
+                signingConfig signingConfigs.release
+            }
+        }
+        release {
+            buildConfigField("boolean", "SIDE_BY_SIDE", "false")
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+            buildConfigField("boolean", "IS_NEXT", IS_NEXT)
+            buildConfigField "String", "SHIPBOOK_APP_ID", "\"${System.getenv("SHIPBOOK_APP_ID") ?: "default-secret"}\""
+            buildConfigField "String", "SHIPBOOK_APP_KEY", "\"${System.getenv("SHIPBOOK_APP_KEY") ?: "default-secret2"}\""
+            if (System.getenv("STORE_FILE") != null) {
+                signingConfig signingConfigs.release
+            }
+        }
+    }
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+    kotlinOptions {
+        jvmTarget = '17'
+    }
+    buildFeatures {
+        compose true
+        buildConfig true
+        aidl true
+    }
+    composeOptions {
+        kotlinCompilerExtensionVersion compose_version
+    }
+    packagingOptions {
+
+        resources {
+            excludes += '/META-INF/{AL2.0,LGPL2.1}'
+        }
+        jniLibs {
+            pickFirsts += ['**/*.so']
+        }
+    }
+    namespace 'com.ethran.notable'
+    sourceSets {
+        androidTest.assets.srcDirs += files("$projectDir/schemas".toString())
+    }
+}
+
+dependencies {
+    implementation 'androidx.core:core-ktx:1.17.0'
+    implementation "androidx.compose.ui:ui:$compose_version"
+    implementation "androidx.compose.material:material:$compose_version"
+    implementation "androidx.compose.ui:ui-tooling-preview:$compose_version"
+    implementation "androidx.compose.material:material-icons-extended:1.7.8"
+    implementation 'androidx.lifecycle:lifecycle-runtime-ktx:2.10.0'
+    implementation 'androidx.activity:activity-compose:1.12.3'
+    implementation 'androidx.fragment:fragment-ktx:1.8.9'
+    implementation 'androidx.graphics:graphics-core:1.0.4'
+    implementation 'androidx.input:input-motionprediction:1.0.0'
+
+    //implementation fileTree(dir: 'libs', include: ['*.aar'])
+    implementation('com.onyx.android.sdk:onyxsdk-device:1.3.2') {
+        exclude group: 'com.android.support', module: 'support-compat'
+    }
+
+    implementation('com.onyx.android.sdk:onyxsdk-pen:1.5.1') {
+        exclude group: 'com.android.support', module: 'support-compat'
+        exclude group: 'com.android.support', module: 'appcompat-v7'
+        exclude group: "com.onyx.android.sdk", module: "onyxsdk-geometry"
+    }
+
+    implementation('com.onyx.android.sdk:onyxsdk-base:1.8.3') {
+        exclude group: 'com.android.support', module: 'support-compat'
+        exclude group: 'com.android.support', module: 'appcompat-v7'
+    }
+
+    // Temporary (?) fix for https://github.com/gaborauth/toolsboox-android/issues/305
+    implementation("org.lsposed.hiddenapibypass:hiddenapibypass:6.1") // required by onyx sdk
+
+    // used in RawInputManager.
+    implementation group: 'io.reactivex.rxjava2', name: 'rxjava', version: '2.2.21'
+    implementation group: 'io.reactivex.rxjava2', name: 'rxandroid', version: '2.1.1'
+
+    testImplementation 'junit:junit:4.13.2'
+    testImplementation 'org.jetbrains.kotlin:kotlin-test:2.3.10'
+    androidTestImplementation 'androidx.test.ext:junit:1.3.0'
+    androidTestImplementation 'androidx.test.espresso:espresso-core:3.7.0'
+    androidTestImplementation "androidx.compose.ui:ui-test-junit4:$compose_version"
+    debugImplementation "androidx.compose.ui:ui-tooling:$compose_version"
+    debugImplementation "androidx.compose.ui:ui-test-manifest:$compose_version"
+    implementation "androidx.compose.runtime:runtime-livedata:$compose_version"
+    implementation "androidx.compose.runtime:runtime:$compose_version"
+    implementation 'org.jetbrains.kotlinx:kotlinx-serialization-json:1.10.0'
+
+    implementation "androidx.navigation:navigation-compose:2.9.7"
+
+    def room_version = "2.8.4"
+
+    implementation "androidx.room:room-runtime:$room_version"
+    implementation "androidx.room:room-ktx:$room_version"
+    annotationProcessor "androidx.room:room-compiler:$room_version"
+    ksp "androidx.room:room-compiler:$room_version"
+
+    // For testing:
+    implementation "androidx.room:room-testing-android:$room_version"
+    testImplementation "androidx.room:room-testing:$room_version"
+    testImplementation "androidx.arch.core:core-testing:2.2.0"
+
+    implementation "io.coil-kt:coil-compose:2.7.0"
+
+
+    implementation 'com.aventrix.jnanoid:jnanoid:2.0.0'
+
+    implementation platform('com.google.firebase:firebase-bom:33.16.0')
+    implementation 'com.google.firebase:firebase-analytics-ktx'
+
+    implementation 'br.com.devsrsouza.compose.icons.android:feather:1.0.0'
+    implementation "com.beust:klaxon:5.6"
+
+    //noinspection GradleDynamicVersion
+    implementation 'io.shipbook:shipbooksdk:1.+'
+
+    // For xopp file format
+    implementation("org.apache.commons:commons-compress:1.28.0") // GZip support
+    implementation 'at.yawk.lz4:lz4-java:1.10.3' // LZ4 support
+
+    // for PDF support:
+    implementation("com.artifex.mupdf:fitz:1.26.10")
+
+    // Jetpack Ink API — stroke rendering + geometry
+    def ink_version = "1.0.0"
+    implementation "androidx.ink:ink-nativeloader:$ink_version"
+    implementation "androidx.ink:ink-brush:$ink_version"
+    implementation "androidx.ink:ink-geometry:$ink_version"
+    implementation "androidx.ink:ink-rendering:$ink_version"
+    implementation "androidx.ink:ink-strokes:$ink_version"
+
+    // Hilt
+    implementation "com.google.dagger:hilt-android:2.59.2"
+    ksp "com.google.dagger:hilt-compiler:2.59.2"
+    implementation "androidx.hilt:hilt-navigation-compose:1.3.0"
+
+    // Added so that R8 optimization don't fail
+    // SLF4J backend: provides a simple logger so (probably) ShipBook can output logs.
+    // Needed because SLF4J is just an API; without a binding, logging calls are ignored.
+//    implementation 'org.slf4j:slf4j-simple:2.0.17'
+
+    // implementation 'org.joda:joda-convert:3.0.1'
+    // optional dependency of joda-convert:
+    // implementation 'org.threeten:threetenbp:1.7.2'
+}
+
+tasks.register('printVersionName') {
+    doLast {
+        println android.defaultConfig.versionName
+    }
+}

@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_language">应用语言</string>
+    <string name="writing_language">书写语言</string>
+    <string name="writing_language_hint">手写识别所用的语言，笔记转为文字时使用。</string>
+    <string name="planner_notebook">计划本</string>
+    <string name="planner_title">每周计划</string>
+    <string name="planner_week_title">第 %1$s 周</string>
+    <string name="planner_year_complete">今年已过 %1$d%%</string>
+    <string name="planner_todo">待办</string>
+    <string name="planner_notes">笔记</string>
+    <string name="planner_previous">‹ 上一周</string>
+    <string name="planner_this_week">本周</string>
+    <string name="planner_next">下一周 ›</string>
+    <string name="planner_previous_day">‹ 前一天</string>
+    <string name="planner_next_day">后一天 ›</string>
+    <string name="planner_week_button">本周页</string>
+    <string name="planner_back">‹ 计划本</string>
+    <string name="writing_language_download">下载</string>
+    <string name="writing_language_waiting_hint">此平板上还没有%1$s。请在 Boox 中打开“笔记”，打开任意一篇笔记，点按语言按钮，再点“更多语言”下载。返回后会自动选中。</string>
+    <string name="writing_language_open_boox">打开 Boox</string>
+    <string name="settings_back">返回</string>
+</resources>

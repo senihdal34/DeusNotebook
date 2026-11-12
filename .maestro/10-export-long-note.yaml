@@ -1,0 +1,22 @@
+appId: io.aragonite.notes.debug
+# Title of the long test note in the seed DB. Override with: maestro test -e NOTE_LONG="..." (scripts: E2E_NOTE_LONG).
+env:
+  NOTE_LONG: Örnek Gün Notu
+---
+# Long handwritten note (1960 strokes) -> Save & Exit -> export to the PC inbox folder.
+# Output is checked by scripts/e2e-export.sh (text present, image present, no stale copies).
+- launchApp
+- extendedWaitUntil:
+    visible: ${NOTE_LONG}
+    timeout: 20000
+- tapOn: ${NOTE_LONG}
+- extendedWaitUntil:
+    visible: "Save & Exit"
+    timeout: 20000
+- extendedWaitUntil:
+    notVisible: "Loading strokes..."
+    timeout: 60000
+- tapOn: "Save & Exit"
+- extendedWaitUntil:
+    visible: "Notes"
+    timeout: 20000

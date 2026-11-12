@@ -1,0 +1,23 @@
+appId: io.aragonite.notes.debug
+# Titles of three notes in the seed DB. Override with: maestro test -e NOTE_1="..." -e NOTE_2="..." -e NOTE_3="..."
+# (scripts: E2E_NOTE_1, E2E_NOTE_2, E2E_NOTE_3).
+env:
+  NOTE_1: Örnek Rapor
+  NOTE_2: Örnek Ürün Planı
+  NOTE_3: Örnek Gün Notu
+---
+# Home (newspaper layout, English app language): masthead, lead story, columns and thumbnails for notes that never had one.
+- launchApp
+- extendedWaitUntil:
+    visible: "Notes"
+    timeout: 20000
+- assertVisible: ${NOTE_1}
+- assertVisible: ${NOTE_2}
+- assertVisible: ${NOTE_3}
+- assertVisible: ".*NEW NOTE"
+- assertVisible: "Settings"
+# thumbnails are rendered in the background (long notes take a while)
+- extendedWaitUntil:
+    visible: "Notes"
+    timeout: 90000
+- takeScreenshot: .e2e-shots/home

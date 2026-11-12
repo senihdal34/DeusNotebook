@@ -1,0 +1,53 @@
+appId: io.aragonite.notes.debug
+---
+# The app opens on the handwritten weekly planner page; the week tool moves between weeks, the NOTES tab leads
+# to Home. NOTES shows the note cards with delete and tag buttons; a topic can be deleted.
+# Home texts below are the English ones (the default app language).
+- launchApp
+# start page: this week's handwritten page with the week tool in its header band
+- extendedWaitUntil:
+    visible: "BU HAFTA"
+    timeout: 40000
+- tapOn: "SONRAKİ ›"
+- tapOn: "‹ ÖNCEKİ"
+- tapOn: "‹ ÖNCEKİ"
+- tapOn: "BU HAFTA"
+- tapOn: "NOTES"
+- extendedWaitUntil:
+    visible: "NOTES"
+    timeout: 20000
+- tapOn: "NOTES"
+- extendedWaitUntil:
+    visible: "# CHOOSE"
+    timeout: 20000
+- assertVisible: "TODAY|YESTERDAY|.* AGO"
+# tag: add a new one; it becomes a topic
+- tapOn:
+    text: "\\+ TAG"
+    index: 0
+- inputText: "e2etest"
+- tapOn: "ADD"
+- extendedWaitUntil:
+    visible: "E2ETEST"
+    timeout: 10000
+# delete the topic: asks first
+- tapOn: "E2ETEST"
+- tapOn: "DELETE TOPIC"
+- assertVisible: "DELETE TOPIC\\?"
+- tapOn: "DELETE"
+- extendedWaitUntil:
+    notVisible: "E2ETEST"
+    timeout: 10000
+# delete a note: asks first, "Cancel" keeps it, "Delete" removes it
+- tapOn:
+    text: "Delete note"
+    index: 0
+- assertVisible: "DELETE NOTE\\?"
+- tapOn: "CANCEL"
+- tapOn:
+    text: "Delete note"
+    index: 0
+- tapOn: "DELETE"
+- extendedWaitUntil:
+    notVisible: "DELETE NOTE\\?"
+    timeout: 10000

@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="sync_tab_name">Sincronizar</string>
+    <string name="sync_intro">Tus notas se guardan como archivos Markdown simples en una carpeta de esta tableta. Comparte esa carpeta con tu ordenador y Obsidian, o cualquier herramienta de IA que lea archivos, podrá usar tus notas. No hace falta cuenta ni nube.</string>
+    <string name="sync_status_title">Esta tableta</string>
+    <string name="sync_status_folder">Carpeta de notas</string>
+    <string name="sync_status_count">Notas exportadas: %1$d</string>
+    <string name="sync_status_last">Última exportación: %1$s</string>
+    <string name="sync_status_never">Aún no se ha exportado nada. Abre una nota y toca Save &amp; Exit.</string>
+    <string name="sync_status_syncthing_on">Syncthing está instalado</string>
+    <string name="sync_status_syncthing_off">Syncthing no está instalado</string>
+    <string name="sync_step1_title">Elige la carpeta de notas</string>
+    <string name="sync_step1_body">Configúrala en General, en Vault inbox folder. Usa una carpeta dentro de tu bóveda de Obsidian en la tableta, o deja la predeterminada.</string>
+    <string name="sync_step1_button">Abrir ajuste de carpeta</string>
+    <string name="sync_step2_title">Instala Syncthing en la tableta</string>
+    <string name="sync_step2_body">Syncthing copia una carpeta entre tus dispositivos, de forma directa y privada. Instala Syncthing-Fork desde F-Droid (o Syncthing desde Google Play), ábrelo y permite el acceso al almacenamiento.</string>
+    <string name="sync_step2_get">Obtener Syncthing</string>
+    <string name="sync_step2_open">Abrir Syncthing</string>
+    <string name="sync_step3_title">Comparte la carpeta desde la tableta</string>
+    <string name="sync_step3_body">En Syncthing toca Folders, luego +, elige la carpeta de notas de arriba y en Sharing añade tu ordenador con su ID de dispositivo (en Syncthing del ordenador: Actions, Show ID).</string>
+    <string name="sync_step4_title">Acéptalo en tu ordenador</string>
+    <string name="sync_step4_body">Instala Syncthing en tu ordenador, acepta la tableta y la carpeta, y elige dónde se guarda: una carpeta dentro de tu bóveda de Obsidian o cualquiera que quieras. Las notas nuevas llegan en segundos.</string>
+    <string name="sync_step4_button">Obtener Syncthing para el ordenador</string>
+    <string name="sync_step5_title">Deja que tu IA lea tus notas</string>
+    <string name="sync_step5_body">Cada nota es un archivo .md con título, fecha y #etiquetas, más las imágenes de sus páginas. Apunta tu herramienta o agente de IA a esa carpeta del ordenador y podrá buscar y leer tus notas como texto. Obsidian las muestra como notas normales.</string>
+    <string name="sync_private_note">Solo los dispositivos que apruebes en Syncthing reciben tus notas.</string>
+    <string name="welcome_sync_title">Opcional: sincroniza las notas con tu ordenador</string>
+    <string name="welcome_sync_body">Comparte tus notas en Markdown con Obsidian o tus herramientas de IA usando Syncthing. Lleva unos cinco minutos y puedes hacerlo luego en Ajustes, Sincronizar.</string>
+    <string name="welcome_sync_button">Configurar sincronización</string>
+</resources>

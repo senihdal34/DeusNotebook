@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="sync_tab_name">同步</string>
+    <string name="sync_intro">你的笔记会以纯 Markdown 文件保存在这台平板的一个文件夹里。把这个文件夹分享到电脑后，Obsidian 或任何能读取文件的 AI 工具都能使用你的笔记。无需账号，也不需要云端。</string>
+    <string name="sync_status_title">这台平板</string>
+    <string name="sync_status_folder">笔记文件夹</string>
+    <string name="sync_status_count">已导出的笔记：%1$d</string>
+    <string name="sync_status_last">最近导出：%1$s</string>
+    <string name="sync_status_never">尚未导出任何内容。打开一篇笔记并点按 Save &amp; Exit。</string>
+    <string name="sync_status_syncthing_on">已安装 Syncthing</string>
+    <string name="sync_status_syncthing_off">未安装 Syncthing</string>
+    <string name="sync_step1_title">选择笔记文件夹</string>
+    <string name="sync_step1_body">在“通用”里的 Vault inbox folder 设置。可以使用平板上 Obsidian 库里的文件夹，也可以保留默认值。</string>
+    <string name="sync_step1_button">打开文件夹设置</string>
+    <string name="sync_step2_title">在平板上安装 Syncthing</string>
+    <string name="sync_step2_body">Syncthing 会在你的设备之间直接、私密地复制文件夹。请从 F-Droid 安装 Syncthing-Fork（或从 Google Play 安装 Syncthing），打开并允许存储访问。</string>
+    <string name="sync_step2_get">获取 Syncthing</string>
+    <string name="sync_step2_open">打开 Syncthing</string>
+    <string name="sync_step3_title">从平板分享文件夹</string>
+    <string name="sync_step3_body">在 Syncthing 中点按 Folders，再点 +，选择上面的笔记文件夹，并在 Sharing 中用设备 ID 添加你的电脑（在电脑的 Syncthing 里：Actions，Show ID）。</string>
+    <string name="sync_step4_title">在电脑上接受</string>
+    <string name="sync_step4_body">在电脑上安装 Syncthing，接受平板和该文件夹，并选择保存位置：Obsidian 库里的文件夹，或任意文件夹。新笔记几秒钟内就会到达。</string>
+    <string name="sync_step4_button">获取电脑版 Syncthing</string>
+    <string name="sync_step5_title">让你的 AI 读取笔记</string>
+    <string name="sync_step5_body">每篇笔记都是一个 .md 文件，含标题、日期和 #标签，另附页面图片。让电脑上的 AI 工具或智能体读取该文件夹，就能把笔记当作文本搜索和阅读。Obsidian 会把它们显示为普通笔记。</string>
+    <string name="sync_private_note">只有你在 Syncthing 中批准的设备才会收到笔记。</string>
+    <string name="welcome_sync_title">可选：把笔记同步到电脑</string>
+    <string name="welcome_sync_body">用 Syncthing 把笔记以 Markdown 形式分享给 Obsidian 或你的 AI 工具。大约五分钟，也可以稍后在“设置”的“同步”里完成。</string>
+    <string name="welcome_sync_button">设置同步</string>
+</resources>

@@ -1,0 +1,91 @@
+package com.ethran.notable.editor.ui
+
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.res.stringResource
+import com.ethran.notable.R
+import androidx.compose.runtime.remember
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+
+private val Pill = RoundedCornerShape(50)
+
+/**
+ * Week tool on a planner page: previous week, this week, next week, and and the shared tab bar sits under it. It sits in the free middle of the page's
+ * header band, so it does not cover anything you write.
+ */
+@Composable
+fun PlannerWeekBar(
+    isCurrentWeek: Boolean,
+    onPrevious: () -> Unit,
+    onThisWeek: () -> Unit,
+    onNext: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Row(modifier.padding(top = 36.dp), horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
+    Row(
+        Modifier.clip(Pill).background(Color.White).border(BorderStroke(1.5.dp, Color.Black), Pill).padding(horizontal = 6.dp),
+        horizontalArrangement = Arrangement.spacedBy(2.dp), verticalAlignment = Alignment.CenterVertically
+    ) {
+        BarButton(stringResource(R.string.planner_previous), false, onPrevious)
+        BarButton(stringResource(R.string.planner_this_week), isCurrentWeek, onThisWeek)
+        BarButton(stringResource(R.string.planner_next), false, onNext)
+    }
+    }
+}
+
+@Composable
+private fun BarButton(label: String, on: Boolean, onClick: () -> Unit) {
+    Box(
+        Modifier.clip(Pill).background(if (on) Color.Black else Color.Transparent)
+            .clickable(interactionSource = remember { MutableInteractionSource() }, indication = null, onClick = onClick)
+            .padding(horizontal = 11.dp, vertical = 8.dp),
+        contentAlignment = Alignment.Center
+    ) {
+        Text(label.uppercase(), fontFamily = FontFamily.SansSerif, fontSize = 11.sp, fontWeight = FontWeight.Bold, letterSpacing = 1.sp, color = if (on) Color.White else Color.Black)
+    }
+}
+
+/** Tool on a day page: back to the week, previous day, next day, notes. */
+@Composable
+fun PlannerDayBar(
+    onWeek: () -> Unit,
+    onPrevious: () -> Unit,
+    onNext: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Row(modifier.padding(top = 36.dp), horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
+        Row(
+            Modifier.clip(Pill).background(Color.White).border(BorderStroke(1.5.dp, Color.Black), Pill).padding(horizontal = 6.dp),
+            horizontalArrangement = Arrangement.spacedBy(2.dp), verticalAlignment = Alignment.CenterVertically
+        ) {
+            BarButton(stringResource(R.string.planner_previous_day), false, onPrevious)
+            BarButton(stringResource(R.string.planner_week_button), true, onWeek)
+            BarButton(stringResource(R.string.planner_next_day), false, onNext)
+        }
+    }
+}
+
+/** Top-left button on a day page: back to the week planner. Sits below the system's top-edge touch zone. */
+@Composable
+fun PlannerBackPill(onClick: () -> Unit, modifier: Modifier = Modifier) {
+    Box(modifier.padding(top = 36.dp)) {
+        Box(Modifier.clip(Pill).background(Color.White).border(BorderStroke(1.5.dp, Color.Black), Pill)) { BarButton(stringResource(R.string.planner_back), false, onClick) }
+    }
+}

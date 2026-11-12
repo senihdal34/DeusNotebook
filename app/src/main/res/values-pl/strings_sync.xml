@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="sync_tab_name">Synchronizacja</string>
+    <string name="sync_intro">Twoje notatki zapisują się jako zwykłe pliki Markdown w jednym folderze na tym tablecie. Udostępnij ten folder komputerowi, a Obsidian lub dowolne narzędzie AI czytające pliki będzie mogło z nich korzystać. Nie potrzeba konta ani chmury.</string>
+    <string name="sync_status_title">Ten tablet</string>
+    <string name="sync_status_folder">Folder notatek</string>
+    <string name="sync_status_count">Wyeksportowane notatki: %1$d</string>
+    <string name="sync_status_last">Ostatni eksport: %1$s</string>
+    <string name="sync_status_never">Nic jeszcze nie wyeksportowano. Otwórz notatkę i dotknij Save &amp; Exit.</string>
+    <string name="sync_status_syncthing_on">Syncthing jest zainstalowany</string>
+    <string name="sync_status_syncthing_off">Syncthing nie jest zainstalowany</string>
+    <string name="sync_step1_title">Wybierz folder notatek</string>
+    <string name="sync_step1_body">Ustaw go w Ogólne, w polu Vault inbox folder. Użyj folderu w swoim skarbcu Obsidian na tablecie lub zostaw domyślny.</string>
+    <string name="sync_step1_button">Otwórz ustawienie folderu</string>
+    <string name="sync_step2_title">Zainstaluj Syncthing na tablecie</string>
+    <string name="sync_step2_body">Syncthing kopiuje folder między Twoimi urządzeniami, bezpośrednio i prywatnie. Zainstaluj Syncthing-Fork z F-Droid (lub Syncthing z Google Play), otwórz go i zezwól na dostęp do pamięci.</string>
+    <string name="sync_step2_get">Pobierz Syncthing</string>
+    <string name="sync_step2_open">Otwórz Syncthing</string>
+    <string name="sync_step3_title">Udostępnij folder z tabletu</string>
+    <string name="sync_step3_body">W Syncthing dotknij Folders, potem +, wybierz powyższy folder notatek, a w Sharing dodaj swój komputer przez jego ID urządzenia (w Syncthing na komputerze: Actions, Show ID).</string>
+    <string name="sync_step4_title">Zaakceptuj na komputerze</string>
+    <string name="sync_step4_body">Zainstaluj Syncthing na komputerze, zaakceptuj tablet i folder oraz wybierz, gdzie trafi: folder w skarbcu Obsidian lub dowolny inny. Nowe notatki docierają w kilka sekund.</string>
+    <string name="sync_step4_button">Pobierz Syncthing na komputer</string>
+    <string name="sync_step5_title">Pozwól AI czytać notatki</string>
+    <string name="sync_step5_body">Każda notatka to plik .md z tytułem, datą i #tagami oraz obrazami stron. Wskaż narzędziu lub agentowi AI na komputerze ten folder, a przeszuka i przeczyta notatki jako tekst. Obsidian pokazuje je jak zwykłe notatki.</string>
+    <string name="sync_private_note">Notatki otrzymują tylko urządzenia zatwierdzone w Syncthing.</string>
+    <string name="welcome_sync_title">Opcjonalnie: synchronizuj notatki z komputerem</string>
+    <string name="welcome_sync_body">Udostępnij notatki jako Markdown w Obsidian lub narzędziach AI przez Syncthing. Zajmuje to około pięciu minut, a możesz to zrobić później w Ustawieniach, Synchronizacja.</string>
+    <string name="welcome_sync_button">Skonfiguruj synchronizację</string>
+</resources>

@@ -1,0 +1,48 @@
+{
+  "project_info": {
+    "project_number": "735103917327",
+    "project_id": "gen-lang-client-0804924935",
+    "storage_bucket": "gen-lang-client-0804924935.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:735103917327:android:885f3ce98fc0711f65b27a",
+        "android_client_info": {
+          "package_name": "io.aragonite.notes"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBp7q5YQsg5rmBj9JltC5NvUVidz6_QaNI"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:735103917327:android:885f3ce98fc0711f65b27a",
+        "android_client_info": {
+          "package_name": "io.aragonite.notes.debug"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBp7q5YQsg5rmBj9JltC5NvUVidz6_QaNI"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

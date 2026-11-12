@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_language">Idioma de la aplicación</string>
+    <string name="writing_language">Idioma de escritura</string>
+    <string name="writing_language_hint">Idioma de tu escritura a mano. Se usa al reconocer las notas como texto.</string>
+    <string name="planner_notebook">Planificador</string>
+    <string name="planner_title">Plan semanal</string>
+    <string name="planner_week_title">Semana %1$s</string>
+    <string name="planner_year_complete">Año completado al %1$d%%</string>
+    <string name="planner_todo">Pendientes</string>
+    <string name="planner_notes">Notas</string>
+    <string name="planner_previous">‹ Anterior</string>
+    <string name="planner_this_week">Esta semana</string>
+    <string name="planner_next">Siguiente ›</string>
+    <string name="planner_previous_day">‹ Día anterior</string>
+    <string name="planner_next_day">Día siguiente ›</string>
+    <string name="planner_week_button">Semana</string>
+    <string name="planner_back">‹ Planificador</string>
+    <string name="writing_language_download">descargar</string>
+    <string name="writing_language_waiting_hint">%1$s aún no está en esta tableta. En Boox abre Notas, abre cualquier nota, toca el botón de idioma, luego Más idiomas, y descárgalo. Al volver se selecciona automáticamente.</string>
+    <string name="writing_language_open_boox">Abrir Boox</string>
+    <string name="settings_back">Atrás</string>
+</resources>

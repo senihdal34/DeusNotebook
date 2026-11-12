@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="sync_tab_name">Eşitleme</string>
+    <string name="sync_intro">Notların bu tabletteki tek bir klasöre düz Markdown dosyaları olarak kaydedilir. Klasörü bilgisayarınla paylaşırsan Obsidian ya da dosya okuyan herhangi bir yapay zekâ aracı notlarını kullanabilir. Hesap ve bulut gerekmez.</string>
+    <string name="sync_status_title">Bu tablet</string>
+    <string name="sync_status_folder">Not klasörü</string>
+    <string name="sync_status_count">Dışa aktarılan not: %1$d</string>
+    <string name="sync_status_last">Son dışa aktarma: %1$s</string>
+    <string name="sync_status_never">Henüz bir şey dışa aktarılmadı. Bir notu açıp Save &amp; Exit\'e dokun.</string>
+    <string name="sync_status_syncthing_on">Syncthing kurulu</string>
+    <string name="sync_status_syncthing_off">Syncthing kurulu değil</string>
+    <string name="sync_step1_title">Not klasörünü seç</string>
+    <string name="sync_step1_body">Genel sekmesinde "Vault inbox folder" altında ayarla. Tabletteki Obsidian kasanın içinde bir klasör kullan ya da varsayılanı bırak.</string>
+    <string name="sync_step1_button">Klasör ayarını aç</string>
+    <string name="sync_step2_title">Tablete Syncthing kur</string>
+    <string name="sync_step2_body">Syncthing, bir klasörü cihazların arasında doğrudan ve özel olarak kopyalar. F-Droid\'den Syncthing-Fork\'u (ya da Google Play\'den Syncthing\'i) kur, aç ve depolama erişimine izin ver.</string>
+    <string name="sync_step2_get">Syncthing\'i indir</string>
+    <string name="sync_step2_open">Syncthing\'i aç</string>
+    <string name="sync_step3_title">Klasörü tabletten paylaş</string>
+    <string name="sync_step3_body">Syncthing\'de Folders, sonra + öğesine dokun, yukarıdaki not klasörünü seç ve Sharing altında bilgisayarını cihaz kimliğiyle ekle (bilgisayardaki Syncthing\'de: Actions, Show ID).</string>
+    <string name="sync_step4_title">Bilgisayarında kabul et</string>
+    <string name="sync_step4_body">Bilgisayarına Syncthing kur, tableti ve klasörü kabul et ve nereye ineceğini seç: Obsidian kasanın içinde bir klasör ya da istediğin herhangi bir klasör. Yeni notlar birkaç saniyede gelir.</string>
+    <string name="sync_step4_button">Bilgisayar için Syncthing\'i indir</string>
+    <string name="sync_step5_title">Yapay zekân notlarını okuyabilsin</string>
+    <string name="sync_step5_body">Her not; başlık, tarih ve #etiketlerle bir .md dosyasıdır, sayfa görselleri yanındadır. Bilgisayarındaki yapay zekâ aracını ya da ajanını o klasöre yönlendir, notlarını metin olarak arayıp okuyabilir. Obsidian bunları normal not olarak gösterir.</string>
+    <string name="sync_private_note">Notlarını yalnızca Syncthing\'de onayladığın cihazlar alır.</string>
+    <string name="welcome_sync_title">İsteğe bağlı: notları bilgisayarına eşitle</string>
+    <string name="welcome_sync_body">Notlarını Syncthing ile Markdown olarak Obsidian\'a ya da yapay zekâ araçlarına aç. Yaklaşık beş dakika sürer; sonra Ayarlar, Eşitleme bölümünden de yapabilirsin.</string>
+    <string name="welcome_sync_button">Eşitlemeyi kur</string>
+</resources>

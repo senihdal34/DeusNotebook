@@ -1,0 +1,26 @@
+*.iml
+.gradle
+/local.properties
+local.properties
+
+# IDE — only keep codeStyle and inspectionProfiles (shared team settings)
+/.idea/*
+!/.idea/codeStyles
+!/.idea/inspectionProfiles
+
+.DS_Store
+/build
+/captures
+.externalNativeBuild
+.cxx
+*.jks
+
+# Gradle daemon config (machine-specific)
+gradle/gradle-daemon-jvm.properties
+.e2e-shots/
+
+.e2e-seed/
+.kotlin
+design/home-redesign/index.html
+design/week/index.html
+.claude/worktrees/

@@ -1,0 +1,166 @@
+package com.ethran.notable.ui.dialogs
+
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.text.BasicTextField
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.onFocusChanged
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.RectangleShape
+import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import androidx.compose.ui.window.Dialog
+import com.ethran.notable.data.db.Folder
+import com.ethran.notable.data.db.FolderRepository
+import com.ethran.notable.ui.SnackState.Companion.logAndShowError
+import com.ethran.notable.ui.noRippleClickable
+import io.shipbook.shipbooksdk.ShipBook
+import kotlinx.coroutines.launch
+import androidx.compose.ui.res.stringResource
+import com.ethran.notable.R
+
+private val log = ShipBook.getLogger("FolderConfig")
+
+@Composable
+fun FolderConfigDialog(folderRepository: FolderRepository,
+                       folderId: String,
+                       onClose: () -> Unit) {
+    val scope = rememberCoroutineScope()
+    var folder by remember { mutableStateOf<Folder?>(null) }
+    var folderTitle by remember { mutableStateOf("") }
+
+    LaunchedEffect(folderId) {
+        val f = folderRepository.get(folderId)
+        if (f == null) {
+            logAndShowError("FolderConfigDialog", "Folder not found")
+            onClose()
+        } else {
+            folder = f
+            folderTitle = f.title
+        }
+    }
+
+    if (folder == null) return
+
+    Dialog(
+        onDismissRequest = {
+            log.i("Closing Directory Dialog - upstream")
+            onClose()
+        }
+    ) {
+        val focusManager = LocalFocusManager.current
+
+        Column(
+            modifier = Modifier
+                .background(Color.White)
+                .fillMaxWidth()
+                .border(2.dp, Color.Black, RectangleShape)
+        ) {
+            Column(
+                Modifier.padding(20.dp, 10.dp)
+            ) {
+                Text(text = stringResource(R.string.folder_setting), fontWeight = FontWeight.Bold)
+            }
+            Box(
+                Modifier
+                    .height(1.dp)
+                    .fillMaxWidth()
+                    .background(Color.Black)
+            )
+
+            Column(
+                Modifier.padding(20.dp, 10.dp)
+            ) {
+
+                Row {
+                    Text(
+                        text = stringResource(R.string.folder_title),
+                        fontWeight = FontWeight.Bold
+                    )
+                    Spacer(Modifier.width(10.dp))
+                    BasicTextField(
+                        value = folderTitle,
+                        textStyle = TextStyle(
+                            fontFamily = FontFamily.Monospace,
+                            fontWeight = FontWeight.Light,
+                            fontSize = 16.sp
+                        ),
+                        singleLine = true,
+                        keyboardOptions = KeyboardOptions(
+                            keyboardType = KeyboardType.Text,
+                            imeAction = ImeAction.Done
+                        ),
+                        onValueChange = { folderTitle = it },
+                        keyboardActions = KeyboardActions(onDone = {
+                            focusManager.clearFocus()
+                        }),
+                        modifier = Modifier
+                            .background(Color(230, 230, 230, 255))
+                            .padding(10.dp, 0.dp)
+                            .onFocusChanged { focusState ->
+                                if (!focusState.isFocused) {
+                                    val currentFolder = folder
+                                    if (currentFolder != null && currentFolder.title != folderTitle) {
+                                        scope.launch {
+                                            folderRepository.update(currentFolder.copy(title = folderTitle))
+                                        }
+                                    }
+                                }
+                            }
+
+
+                    )
+
+                }
+            }
+
+            Box(
+                Modifier
+                    .padding(20.dp, 0.dp)
+                    .height(0.5.dp)
+                    .fillMaxWidth()
+                    .background(Color.Black)
+            )
+
+            Column(
+                Modifier.padding(20.dp, 10.dp)
+            ) {
+                Text(
+                    text = stringResource(R.string.folder_delete),
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.noRippleClickable {
+                        scope.launch {
+                            folderRepository.delete(folderId)
+                            onClose()
+                        }
+                    })
+            }
+        }
+
+    }
+}

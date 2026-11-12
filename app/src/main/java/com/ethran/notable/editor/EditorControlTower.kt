@@ -1,0 +1,331 @@
+package com.ethran.notable.editor
+
+import android.content.Context
+import android.graphics.Bitmap
+import androidx.compose.ui.geometry.Offset
+import com.ethran.notable.data.datastore.GlobalAppSettings
+import com.ethran.notable.editor.canvas.CanvasEventBus
+import com.ethran.notable.editor.state.EditorState
+import com.ethran.notable.editor.state.History
+import com.ethran.notable.editor.state.HistoryBusActions
+import com.ethran.notable.editor.state.Mode
+import com.ethran.notable.editor.state.Operation
+import com.ethran.notable.editor.state.PlacementMode
+import com.ethran.notable.editor.state.SelectionState
+import com.ethran.notable.editor.state.UndoRedoType
+import com.ethran.notable.editor.utils.divideStrokesFromCut
+import com.ethran.notable.editor.utils.offsetStroke
+import com.ethran.notable.editor.utils.refreshScreen
+import com.ethran.notable.editor.utils.selectImagesAndStrokes
+import com.ethran.notable.editor.utils.strokeBounds
+import com.ethran.notable.ui.showHint
+import io.shipbook.shipbooksdk.ShipBook
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
+import kotlinx.coroutines.withContext
+import java.util.Date
+import java.util.UUID
+import com.ethran.notable.R
+import com.ethran.notable.i18n.AppStrings
+
+class EditorControlTower(
+    private val scope: CoroutineScope,
+    val page: PageView,
+    private var history: History,
+    private val state: EditorState
+) {
+    private var scrollInProgress = Mutex()
+    private var scrollJob: Job? = null
+    private val logEditorControlTower = ShipBook.getLogger("EditorControlTower")
+
+
+
+    fun registerObservers() {
+        scope.launch {
+            CanvasEventBus.changePage.collect { pageId ->
+                logEditorControlTower.d("Change to page $pageId")
+                switchPage(pageId)
+                page.changePage(pageId)
+                refreshScreen()
+            }
+        }
+    }
+
+    // returns delta if could not scroll, to be added to next request,
+    // this ensures that smooth scroll works reliably even if rendering takes to long
+    fun processScroll(delta: Offset): Offset {
+        if (delta == Offset.Zero) return Offset.Zero
+        if (!page.isTransformationAllowed) return Offset.Zero
+        if (scrollInProgress.isLocked) {
+            logEditorControlTower.w("Scroll in progress -- skipping")
+            return delta
+        } // Return unhandled part
+
+        scrollJob = scope.launch(Dispatchers.Main.immediate) {
+            scrollInProgress.withLock {
+                val scaledDelta = (delta / page.zoomLevel.value)
+                if (state.mode == Mode.Select) {
+                    if (state.selectionState.firstPageCut != null) {
+                        onOpenPageCut(scaledDelta)
+                    } else {
+                        onPageScroll(-delta)
+                    }
+                } else {
+                    onPageScroll(-delta)
+                }
+            }
+            CanvasEventBus.refreshUiImmediately.emit(Unit)
+        }
+        return Offset.Zero // All handled
+    }
+
+    /**
+     * Switches the currently active page.
+     *
+     * This function updates the editor state, clears the undo/redo history,
+     * and instructs the page view to load and display the content of the new page.
+     *
+     * @param id The unique identifier of the page to switch to.
+     */
+    private suspend fun switchPage(id: String) {
+        // TODO: Check if this is a problem:
+        //`switchPage()` now calls `page.changePage(id)` inside `withContext(Dispatchers.IO)`,
+        // but `PageView.changePage()` mutates in-memory state (e.g., `currentPageId`,
+        // `zoomLevel.value`) before it does its own IO work. Calling it from IO risks
+        // off-main state mutations and also makes it easier for callers to accidentally
+        // invoke `page.changePage()` twice (which currently happens in `registerObservers()`).
+        // Prefer calling `page.changePage(id)` from the main thread (or let
+        // `PageView.changePage()` manage its own dispatching) and ensure callers don’t call
+        // it again after `switchPage()`.
+
+        // Switch to Main thread for Compose state mutations
+        withContext(Dispatchers.Main) {
+            state.changePage(id)
+            history.cleanHistory()
+        }
+
+        // Switch to (or ensure we are on) IO thread for Database operations
+        withContext(Dispatchers.IO) {
+            page.changePage(id)
+        }
+    }
+
+    fun setIsDrawing(value: Boolean) {
+        if (state.isDrawing == value) {
+            logEditorControlTower.w("IsDrawing already set to $value")
+            return
+        }
+        state.isDrawing = value
+    }
+
+    fun toggleTool() {
+        state.mode = if (state.mode == Mode.Draw) Mode.Erase else Mode.Draw
+    }
+
+    fun toggleZen() {
+        state.isToolbarOpen = !state.isToolbarOpen
+    }
+
+    fun getSnapshotOfSelectionState(): SelectionState {
+        return state.selectionState
+    }
+
+    fun getSelectedBitmap(): Bitmap {
+        return state.selectionState.selectedBitmap!!
+    }
+
+    fun goToNextPage() {
+        scope.launch(Dispatchers.IO) {
+            logEditorControlTower.i("Going to next page")
+            val next = state.getNextPage()
+            if (next != null)
+                switchPage(next)
+        }
+    }
+
+    fun goToPreviousPage() {
+        scope.launch(Dispatchers.IO) {
+            logEditorControlTower.i("Going to previous page")
+            val previous = state.getPreviousPage()
+            if (previous != null)
+                switchPage(previous)
+        }
+    }
+
+    fun undo() {
+        scope.launch {
+            logEditorControlTower.i("Undo called")
+            history.handleHistoryBusActions(HistoryBusActions.MoveHistory(UndoRedoType.Undo))
+//            CanvasEventBus.refreshUi.emit(Unit)
+        }
+    }
+
+    fun redo() {
+        scope.launch {
+            logEditorControlTower.i("Redo called")
+            history.handleHistoryBusActions(HistoryBusActions.MoveHistory(UndoRedoType.Redo))
+//            CanvasEventBus.refreshUi.emit(Unit)
+        }
+    }
+
+    fun onPinchToZoom(delta: Float, center: Offset?) {
+        if (!page.isTransformationAllowed) return
+        if (state.mode == Mode.Select)
+            return
+        scope.launch {
+            scrollInProgress.withLock {
+                if (GlobalAppSettings.current.simpleRendering || !GlobalAppSettings.current.continuousZoom)
+                    page.simpleUpdateZoom(delta)
+                else
+                    page.updateZoom(delta, center)
+            }
+            CanvasEventBus.refreshUiImmediately.emit(Unit)
+        }
+    }
+
+    fun resetZoomAndScroll() {
+        scope.launch {
+            page.scroll = Offset(0f, page.scroll.y)
+            page.applyZoomAndRedraw(1f)
+            // Request UI update
+            CanvasEventBus.refreshUiImmediately.emit(Unit)
+        }
+    }
+
+    // TODO: add description
+    private fun onOpenPageCut(offset: Offset) {
+        if (offset.x < 0 || offset.y < 0) return
+        val cutLine = state.selectionState.firstPageCut!!
+
+        val (_, previousStrokes) = divideStrokesFromCut(page.strokes, cutLine)
+
+        // calculate new strokes to add to the page
+        val nextStrokes = previousStrokes.map { stroke ->
+            stroke.copy(
+                points = stroke.points.map { point ->
+                    point.copy(x = point.x + offset.x, y = point.y + offset.y)
+                }, top = stroke.top + offset.y, bottom = stroke.bottom + offset.y,
+                left = stroke.left + offset.x, right = stroke.right + offset.x
+            )
+        }
+
+        // remove and paste
+        page.removeStrokes(strokeIds = previousStrokes.map { it.id })
+        page.addStrokes(nextStrokes)
+
+        // commit to history
+        history.addOperationsToHistory(
+            listOf(
+                Operation.DeleteStroke(nextStrokes.map { it.id }),
+                Operation.AddStroke(previousStrokes)
+            )
+        )
+
+        state.selectionState.reset()
+        page.drawAreaScreenCoordinates(strokeBounds(previousStrokes + nextStrokes))
+    }
+
+    private suspend fun onPageScroll(dragDelta: Offset) {
+        // scroll is in Page coordinates
+        if (GlobalAppSettings.current.simpleRendering)
+            page.simpleUpdateScroll(dragDelta)
+        else
+            page.updateScroll(dragDelta)
+    }
+
+
+    // when selection is moved, we need to redraw canvas
+    fun applySelectionDisplace() {
+        val operationList = state.selectionState.applySelectionDisplace(page)
+        if (!operationList.isNullOrEmpty()) {
+            history.addOperationsToHistory(operationList)
+        }
+        scope.launch {
+            CanvasEventBus.refreshUi.emit(Unit)
+        }
+    }
+
+    fun deleteSelection() {
+        val operationList = state.selectionState.deleteSelection(page)
+        history.addOperationsToHistory(operationList)
+        state.isDrawing = true
+        scope.launch {
+            CanvasEventBus.refreshUi.emit(Unit)
+        }
+    }
+
+    fun changeSizeOfSelection(scale: Int) {
+        if (!state.selectionState.selectedImages.isNullOrEmpty())
+            state.selectionState.resizeImages(scale, scope, page)
+        if (!state.selectionState.selectedStrokes.isNullOrEmpty())
+            state.selectionState.resizeStrokes(scale, scope, page)
+        // Emit a refresh signal to update UI
+        scope.launch {
+            CanvasEventBus.refreshUi.emit(Unit)
+        }
+    }
+
+    fun duplicateSelection() {
+        // finish ongoing movement
+        applySelectionDisplace()
+        state.selectionState.duplicateSelection()
+
+    }
+
+    fun cutSelectionToClipboard(context: Context) {
+        state.clipboard = state.selectionState.selectionToClipboard(page.scroll, context)
+        deleteSelection()
+        showHint(AppStrings.get(R.string.hint_cut_to_clipboard), scope)
+    }
+
+    fun copySelectionToClipboard(context: Context) {
+        state.clipboard = state.selectionState.selectionToClipboard(page.scroll, context)
+    }
+
+
+    fun pasteFromClipboard() {
+        // finish ongoing movement
+        applySelectionDisplace()
+
+        val (strokes, images) = state.clipboard ?: return
+
+        val now = Date()
+        val scrollPos = page.scroll
+
+        val pastedStrokes = strokes.map {
+            offsetStroke(it, offset = scrollPos).copy(
+                // change the pasted strokes' ids - it's a copy
+                id = UUID
+                    .randomUUID()
+                    .toString(),
+                createdAt = now,
+                // set the pageId to the current page
+                pageId = this.page.currentPageId
+            )
+        }
+
+        val pastedImages = images.map {
+            it.copy(
+                // change the pasted images' ids - it's a copy
+                id = UUID
+                    .randomUUID()
+                    .toString(),
+                x = it.x + scrollPos.x.toInt(),
+                y = it.y + scrollPos.y.toInt(),
+                createdAt = now,
+                // set the pageId to the current page
+                pageId = this.page.currentPageId
+            )
+        }
+
+        selectImagesAndStrokes(scope, page, state, pastedImages, pastedStrokes)
+        state.selectionState.placementMode = PlacementMode.Paste
+
+        showHint(AppStrings.get(R.string.hint_pasted), scope)
+    }
+}
+

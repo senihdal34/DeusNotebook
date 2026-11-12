@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_language">Język aplikacji</string>
+    <string name="writing_language">Język pisma</string>
+    <string name="writing_language_hint">Język Twojego pisma. Używany przy rozpoznawaniu notatek jako tekstu.</string>
+    <string name="planner_notebook">Planer</string>
+    <string name="planner_title">Plan tygodnia</string>
+    <string name="planner_week_title">Tydzień %1$s</string>
+    <string name="planner_year_complete">Rok ukończony w %1$d%%</string>
+    <string name="planner_todo">Do zrobienia</string>
+    <string name="planner_notes">Notatki</string>
+    <string name="planner_previous">‹ Poprzedni</string>
+    <string name="planner_this_week">Ten tydzień</string>
+    <string name="planner_next">Następny ›</string>
+    <string name="planner_previous_day">‹ Poprzedni dzień</string>
+    <string name="planner_next_day">Następny dzień ›</string>
+    <string name="planner_week_button">Tydzień</string>
+    <string name="planner_back">‹ Planer</string>
+    <string name="writing_language_download">pobierz</string>
+    <string name="writing_language_waiting_hint">Języka %1$s nie ma jeszcze na tym tablecie. W Boox otwórz Notatki, otwórz dowolną notatkę, dotknij przycisku języka, potem Więcej języków i pobierz go. Po powrocie zostanie wybrany automatycznie.</string>
+    <string name="writing_language_open_boox">Otwórz Boox</string>
+    <string name="settings_back">Wstecz</string>
+</resources>
