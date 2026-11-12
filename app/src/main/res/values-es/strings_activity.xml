@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Tarjeta de actividad de escritura en la pantalla de Notas: mapa de calor de los días con escritura a mano. -->
+<resources>
+    <string name="activity_title">Actividad de escritura</string>
+    <plurals name="activity_subtitle">
+        <item quantity="one">%1$d día con tinta %2$s</item>
+        <item quantity="other">%1$d días con tinta %2$s</item>
+    </plurals>
+    <string name="activity_period_months">en los últimos %1$d meses</string>
+    <string name="activity_period_year">en %1$d</string>
+    <string name="activity_chip_months">%1$d m</string>
+    <string name="activity_period_selector">Elegir período</string>
+    <string name="activity_grid_description">Mapa de calor de los días en que escribiste a mano</string>
+    <string name="activity_stat_streak">días seguidos</string>
+    <string name="activity_stat_longest">la más larga</string>
+    <string name="activity_stat_per_week">días por semana</string>
+    <string name="activity_legend_less">Menos</string>
+    <string name="activity_legend_more">Más</string>
+    <string name="activity_empty">Escribe algo para empezar tu racha.</string>
+</resources>
