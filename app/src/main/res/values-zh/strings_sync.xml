@@ -24,7 +24,8 @@
     <string name="sync_step5_title">让你的 AI 读取笔记</string>
     <string name="sync_step5_body">每篇笔记都是一个 .md 文件，含标题、日期和 #标签，另附页面图片。让电脑上的 AI 工具或智能体读取该文件夹，就能把笔记当作文本搜索和阅读。Obsidian 会把它们显示为普通笔记。</string>
     <string name="sync_private_note">只有你在 Syncthing 中批准的设备才会收到笔记。</string>
-    <string name="welcome_sync_title">可选：把笔记同步到电脑</string>
-    <string name="welcome_sync_body">用 Syncthing 把笔记以 Markdown 形式分享给 Obsidian 或你的 AI 工具。大约五分钟，也可以稍后在“设置”的“同步”里完成。</string>
+    <string name="welcome_sync_title">把笔记同步到电脑</string>
+    <string name="welcome_sync_body">用 Syncthing 把笔记以 Markdown 形式发送给 Obsidian 或你的 AI 工具。大约五分钟，也可以稍后在“设置”的“同步”里完成。</string>
     <string name="welcome_sync_button">设置同步</string>
+    <string name="welcome_sync_needs_access">请先允许文件访问。</string>
 </resources>

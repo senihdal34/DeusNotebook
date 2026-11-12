@@ -24,7 +24,8 @@
     <string name="sync_step5_title">Pozwól AI czytać notatki</string>
     <string name="sync_step5_body">Każda notatka to plik .md z tytułem, datą i #tagami oraz obrazami stron. Wskaż narzędziu lub agentowi AI na komputerze ten folder, a przeszuka i przeczyta notatki jako tekst. Obsidian pokazuje je jak zwykłe notatki.</string>
     <string name="sync_private_note">Notatki otrzymują tylko urządzenia zatwierdzone w Syncthing.</string>
-    <string name="welcome_sync_title">Opcjonalnie: synchronizuj notatki z komputerem</string>
-    <string name="welcome_sync_body">Udostępnij notatki jako Markdown w Obsidian lub narzędziach AI przez Syncthing. Zajmuje to około pięciu minut, a możesz to zrobić później w Ustawieniach, Synchronizacja.</string>
+    <string name="welcome_sync_title">Synchronizuj notatki z komputerem</string>
+    <string name="welcome_sync_body">Wysyłaj notatki jako Markdown do Obsidiana lub narzędzi AI przez Syncthing. Zajmuje to około pięciu minut. Możesz to też zrobić później w Ustawieniach, Synchronizacja.</string>
     <string name="welcome_sync_button">Skonfiguruj synchronizację</string>
+    <string name="welcome_sync_needs_access">Najpierw zezwól na dostęp do plików.</string>
 </resources>

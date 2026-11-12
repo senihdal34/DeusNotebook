@@ -24,7 +24,8 @@
     <string name="sync_step5_title">Yapay zekân notlarını okuyabilsin</string>
     <string name="sync_step5_body">Her not; başlık, tarih ve #etiketlerle bir .md dosyasıdır, sayfa görselleri yanındadır. Bilgisayarındaki yapay zekâ aracını ya da ajanını o klasöre yönlendir, notlarını metin olarak arayıp okuyabilir. Obsidian bunları normal not olarak gösterir.</string>
     <string name="sync_private_note">Notlarını yalnızca Syncthing\'de onayladığın cihazlar alır.</string>
-    <string name="welcome_sync_title">İsteğe bağlı: notları bilgisayarına eşitle</string>
-    <string name="welcome_sync_body">Notlarını Syncthing ile Markdown olarak Obsidian\'a ya da yapay zekâ araçlarına aç. Yaklaşık beş dakika sürer; sonra Ayarlar, Eşitleme bölümünden de yapabilirsin.</string>
+    <string name="welcome_sync_title">Notlarını bilgisayarına eşitle</string>
+    <string name="welcome_sync_body">Notlarını Syncthing ile Markdown olarak Obsidian\'a ya da yapay zekâ araçlarına gönder. Yaklaşık beş dakika sürer. Sonra Ayarlar, Eşitleme bölümünden de yapabilirsin.</string>
     <string name="welcome_sync_button">Eşitlemeyi kur</string>
+    <string name="welcome_sync_needs_access">Önce dosya erişimine izin ver.</string>
 </resources>

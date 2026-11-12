@@ -63,12 +63,14 @@ fun HouseIconButton(icon: ImageVector, description: String, modifier: Modifier =
     ) { Icon(icon, contentDescription = description, tint = House.Ink, modifier = Modifier.size(24.dp)) }
 }
 
-/** Outlined pill with spaced capitals; [filled] turns it black (the one main action). */
+/** Outlined pill with spaced capitals; [filled] turns it black (the one main action); [enabled] false greys it out. */
 @Composable
-fun HousePillButton(label: String, modifier: Modifier = Modifier, filled: Boolean = false, onClick: () -> Unit) {
+fun HousePillButton(label: String, modifier: Modifier = Modifier, filled: Boolean = false, enabled: Boolean = true, onClick: () -> Unit) {
+    val line = if (enabled) House.Ink else House.Grey2
     Box(
-        modifier.height(44.dp).clip(House.Pill).border(1.5.dp, House.Ink, House.Pill)
-            .background(if (filled) House.Ink else Color.Transparent).houseTap(onClick).padding(horizontal = 22.dp),
+        modifier.height(44.dp).clip(House.Pill).border(1.5.dp, line, House.Pill)
+            .background(if (filled && enabled) House.Ink else Color.Transparent)
+            .then(if (enabled) Modifier.houseTap(onClick) else Modifier).padding(horizontal = 22.dp),
         contentAlignment = Alignment.Center
-    ) { HouseCaps(label, 12, if (filled) Color.White else House.Ink) }
+    ) { HouseCaps(label, 12, if (!enabled) House.Grey2 else if (filled) Color.White else House.Ink) }
 }

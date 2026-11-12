@@ -9,6 +9,8 @@ import android.os.Build
 import android.os.Environment
 import android.provider.Settings
 import androidx.annotation.RequiresApi
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -20,19 +22,15 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.Button
-import androidx.compose.material.ButtonDefaults
-import androidx.compose.material.Card
 import androidx.compose.material.Icon
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Surface
 import androidx.compose.material.Text
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.CheckCircle
-import androidx.compose.material.icons.filled.DoDisturb
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
@@ -42,10 +40,11 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -60,9 +59,18 @@ import com.ethran.notable.R
 import com.ethran.notable.editor.utils.getCurRefreshModeString
 import com.ethran.notable.editor.utils.isRecommendedRefreshMode
 import com.ethran.notable.editor.utils.setRecommendedMode
+import com.ethran.notable.i18n.LanguagePrefs
+import com.ethran.notable.i18n.restartApp
 import com.ethran.notable.navigation.NavigationDestination
+import com.ethran.notable.ui.components.House
+import com.ethran.notable.ui.components.HouseCaps
+import com.ethran.notable.ui.components.HousePillButton
+import com.ethran.notable.ui.components.HouseRule
+import com.ethran.notable.ui.components.LanguageSettings
 import com.ethran.notable.ui.viewmodels.WelcomeViewModel
 import com.ethran.notable.utils.hasFilePermission
+import compose.icons.FeatherIcons
+import compose.icons.feathericons.Check
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
@@ -122,407 +130,225 @@ fun WelcomeView(
         }
     }
 
+    // The welcome page is done: it must not come back after the next restart.
+    fun finishWelcome() {
+        LanguagePrefs.setResumeWelcome(context, false)
+        scope.launch(Dispatchers.IO) { viewModel.removeWelcome() }
+    }
 
-    // Call the stateless content view
     WelcomeContent(
-        filePermissionGranted = filePermissionGranted,
-        recommendedRefreshMode = recommendedRefreshMode,
+        progress = WelcomeProgress(filePermissionGranted, recommendedRefreshMode),
         refreshModeString = refreshModeString,
+        // The same two dropdowns as in Settings. A new app language restarts the app; the page opens again.
+        languageContent = {
+            LanguageSettings(onAppLanguageChange = { language ->
+                viewModel.setAppLanguage(context, language) { restartApp(context) }
+            })
+        },
         onFilePermissionRequest = { requestPermissions() },
         onRefreshModeRequest = { setRecommendedMode() },
         onContinue = {
-            scope.launch(Dispatchers.IO) {
-                viewModel.removeWelcome()
-            }
+            finishWelcome()
             goToLibrary()
         },
         onSetupSync = {
-            scope.launch(Dispatchers.IO) {
-                viewModel.removeWelcome()
-            }
+            finishWelcome()
             goToSyncSetup()
         }
     )
 }
 
+/** Stateless page: easy to preview, and the step logic it uses is in WelcomeSteps.kt. */
 @Composable
 fun WelcomeContent(
-    filePermissionGranted: Boolean,
-    recommendedRefreshMode: Boolean,
+    progress: WelcomeProgress,
     refreshModeString: String,
+    languageContent: @Composable () -> Unit,
     onFilePermissionRequest: () -> Unit,
     onRefreshModeRequest: () -> Unit,
     onContinue: () -> Unit,
     onSetupSync: () -> Unit = {}
 ) {
-    Surface(
-        modifier = Modifier.fillMaxSize(),
-        color = MaterialTheme.colors.background
-    ) {
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(horizontal = 16.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            WelcomeHeader()
+    val appName = stringResource(R.string.app_name)
+    Surface(modifier = Modifier.fillMaxSize(), color = House.Paper) {
+        Column(Modifier.fillMaxSize()) {
+            // Scrolls in portrait and landscape; the column keeps a readable width on a wide screen.
+            Box(Modifier.weight(1f).fillMaxWidth(), contentAlignment = Alignment.TopCenter) {
+                Column(
+                    Modifier
+                        .widthIn(max = 800.dp)
+                        .fillMaxWidth()
+                        .verticalScroll(rememberScrollState())
+                        .padding(horizontal = 28.dp)
+                ) {
+                    WelcomeHeader(appName)
 
-            // Pass values and callbacks down
-            PermissionsRow(
-                isFilePermissionGranted = filePermissionGranted,
-                isRecommendedRefreshMode = recommendedRefreshMode,
-                refreshModeString = refreshModeString,
-                onFileClick = onFilePermissionRequest,
-                onRefreshClick = onRefreshModeRequest
-            )
+                    WelcomeStepBlock(WelcomeStep.LANGUAGE, stepStatus(WelcomeStep.LANGUAGE, progress), stringResource(R.string.welcome_language_title)) {
+                        BodyText(stringResource(R.string.welcome_language_body))
+                        languageContent()
+                    }
 
-            Box(
-                modifier = Modifier
-                    .weight(1f)
-                    .fillMaxWidth()
-                    .verticalScroll(rememberScrollState())
-            ) {
-                Column {
-                    OnyxUnfreezeInstruction()
-                    SyncOnboardingCard(enabled = filePermissionGranted, onSetupSync = onSetupSync)
-                    ShowInstructions()
+                    WelcomeStepBlock(WelcomeStep.FILE_ACCESS, stepStatus(WelcomeStep.FILE_ACCESS, progress), stringResource(R.string.welcome_view_file_access)) {
+                        BodyText(stringResource(R.string.welcome_view_file_access_explanation, appName))
+                        val granted = progress.fileAccessGranted
+                        HousePillButton(
+                            if (granted) stringResource(R.string.welcome_view_permissions_granted)
+                            else stringResource(R.string.welcome_view_permissions_button),
+                            Modifier.padding(top = 14.dp), enabled = !granted, onClick = onFilePermissionRequest
+                        )
+                    }
+
+                    WelcomeStepBlock(WelcomeStep.REFRESH_MODE, stepStatus(WelcomeStep.REFRESH_MODE, progress), stringResource(R.string.welcome_view_refresh_mode)) {
+                        BodyText(stringResource(R.string.welcome_view_refresh_mode_details))
+                        val good = progress.refreshModeRecommended
+                        HousePillButton(
+                            if (good) stringResource(R.string.welcome_view_refresh_mode_applied, refreshModeString)
+                            else stringResource(R.string.welcome_view_refresh_mode_set_hd_mode, refreshModeString),
+                            Modifier.padding(top = 14.dp), enabled = !good, onClick = onRefreshModeRequest
+                        )
+                    }
+
+                    WelcomeStepBlock(WelcomeStep.UNFREEZE, stepStatus(WelcomeStep.UNFREEZE, progress), stringResource(R.string.welcome_view_prevent_frozen, appName)) {
+                        BodyText(stringResource(R.string.welcome_view_prevent_frozen_details))
+                        Column(
+                            Modifier.padding(top = 14.dp).fillMaxWidth()
+                                .border(1.5.dp, House.Ink, RoundedCornerShape(14.dp)).padding(16.dp)
+                        ) {
+                            HouseCaps(stringResource(R.string.welcome_view_prevent_frozen_instructions_title), 12, House.Ink)
+                            Spacer(Modifier.height(8.dp))
+                            BodyText(stringResource(R.string.welcome_view_prevent_frozen_instructions, appName))
+                        }
+                        Text(
+                            stringResource(R.string.welcome_view_prevent_frozen_recommended),
+                            fontFamily = House.Sans, fontSize = 16.sp, fontWeight = FontWeight.Bold, color = House.Ink,
+                            modifier = Modifier.padding(top = 10.dp)
+                        )
+                    }
+
+                    WelcomeStepBlock(WelcomeStep.SYNC, stepStatus(WelcomeStep.SYNC, progress), stringResource(R.string.welcome_sync_title), optional = true) {
+                        BodyText(stringResource(R.string.welcome_sync_body))
+                        val enabled = canSetUpSync(progress)
+                        HousePillButton(
+                            stringResource(R.string.welcome_sync_button),
+                            Modifier.padding(top = 14.dp), enabled = enabled, onClick = onSetupSync
+                        )
+                        if (!enabled) {
+                            Text(
+                                stringResource(R.string.welcome_sync_needs_access),
+                                fontFamily = House.Sans, fontSize = 15.sp, color = House.Grey1,
+                                modifier = Modifier.padding(top = 8.dp)
+                            )
+                        }
+                    }
+
+                    WelcomeStepBlock(WelcomeStep.GUIDE, stepStatus(WelcomeStep.GUIDE, progress), stringResource(R.string.welcome_view_quick_start_title), last = true) {
+                        GuideSection(R.string.welcome_view_quick_start_navigation, R.string.welcome_view_quick_start_navigation_details)
+                        GuideSection(R.string.welcome_view_quick_start_selection_editing_title, R.string.welcome_view_quick_start_selection_editing_details)
+                        GuideSection(R.string.welcome_view_quick_start_tips_title, R.string.welcome_view_quick_start_tips_details, appName)
+                    }
+                    Spacer(Modifier.height(16.dp))
                 }
             }
 
-            Spacer(modifier = Modifier.height(12.dp))
-
-            Button(
-                onClick = onContinue,
-                enabled = filePermissionGranted,
-                modifier = Modifier
-                    .fillMaxWidth(0.8f)
-                    .padding(top = 24.dp)
-            ) {
-                Text(
-                    if (filePermissionGranted)
-                        stringResource(R.string.welcome_view_continue)
-                    else
-                        stringResource(R.string.welcome_view_complete_setup_first)
+            // Always in reach, whatever the scroll position.
+            HouseRule(1.5.dp)
+            Box(Modifier.fillMaxWidth().padding(horizontal = 28.dp, vertical = 14.dp), contentAlignment = Alignment.Center) {
+                val ready = canContinue(progress)
+                HousePillButton(
+                    if (ready) stringResource(R.string.welcome_view_continue) else stringResource(R.string.welcome_view_complete_setup_first),
+                    Modifier.widthIn(max = 800.dp).fillMaxWidth(), filled = true, enabled = ready, onClick = onContinue
                 )
             }
-
-            Spacer(modifier = Modifier.height(30.dp))
-        }
-    }
-}
-
-/** Optional step for new users: send the notes to a computer with Syncthing (the guide is Settings, Sync). */
-@Composable
-private fun SyncOnboardingCard(enabled: Boolean, onSetupSync: () -> Unit) {
-    Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(vertical = 12.dp),
-        elevation = 0.dp,
-        backgroundColor = MaterialTheme.colors.surface,
-        shape = RoundedCornerShape(8.dp)
-    ) {
-        Column(Modifier.padding(18.dp).fillMaxWidth()) {
-            Text(
-                stringResource(R.string.welcome_sync_title),
-                style = MaterialTheme.typography.h6, fontWeight = FontWeight.Bold, color = MaterialTheme.colors.onSurface
-            )
-            Spacer(modifier = Modifier.height(8.dp))
-            Text(
-                stringResource(R.string.welcome_sync_body),
-                style = MaterialTheme.typography.body2, color = MaterialTheme.colors.onSurface, lineHeight = 18.sp
-            )
-            Spacer(modifier = Modifier.height(12.dp))
-            Button(onClick = onSetupSync, enabled = enabled) { Text(stringResource(R.string.welcome_sync_button)) }
         }
     }
 }
 
 @Composable
-private fun WelcomeHeader() {
-    Column(
-        horizontalAlignment = Alignment.CenterHorizontally,
-        modifier = Modifier.padding(top = 16.dp, bottom = 24.dp)
-    ) {
+private fun WelcomeHeader(appName: String) {
+    Column(Modifier.fillMaxWidth().padding(top = 28.dp, bottom = 8.dp)) {
         Text(
-            stringResource(R.string.welcome_view_title),
-            style = MaterialTheme.typography.h4,
-            modifier = Modifier.padding(bottom = 8.dp)
+            stringResource(R.string.welcome_view_title, appName),
+            fontFamily = House.Serif, fontWeight = FontWeight.Bold, fontSize = 36.sp, letterSpacing = (-1).sp, color = House.Ink
         )
-        Text(
-            stringResource(R.string.welcome_view_subtitle),
-            style = MaterialTheme.typography.body1,
-            textAlign = TextAlign.Center
-        )
+        Spacer(Modifier.height(8.dp))
+        BodyText(stringResource(R.string.welcome_view_subtitle))
+        Spacer(Modifier.height(16.dp))
+        HouseRule(5.dp)
     }
 }
 
+/**
+ * One numbered step: a round marker (a check when the app can see the step is done), a small "Step n" label, a serif
+ * title, then the step's own content under the title. Steps are separated by a hairline.
+ */
 @Composable
-private fun PermissionsRow(
-    isFilePermissionGranted: Boolean,
-    isRecommendedRefreshMode: Boolean,
-    refreshModeString: String,
-    onFileClick: () -> Unit,
-    onRefreshClick: () -> Unit
-) {
-    // Two-column layout for permissions and instructions
-    Row(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.SpaceEvenly
-    ) {
-        // File Permission Column
-        Column(
-            modifier = Modifier
-                .weight(1f)
-                .padding(end = 8.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            PermissionItem(
-                title = stringResource(R.string.welcome_view_file_access),
-                description = stringResource(R.string.welcome_view_file_access_explanation),
-                isGranted = isFilePermissionGranted,
-                buttonText = if (isFilePermissionGranted) stringResource(R.string.welcome_view_permissions_granted) else stringResource(
-                    R.string.welcome_view_permissions_button
-                ),
-                onClick = onFileClick,
-                enabled = !isFilePermissionGranted
-            )
-        }
-
-        // Refresh Mode Column
-        Column(
-            modifier = Modifier
-                .weight(1f)
-                .padding(start = 8.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            PermissionItem(
-                title = stringResource(R.string.welcome_view_refresh_mode),
-                description = stringResource(R.string.welcome_view_refresh_mode_details),
-                isGranted = isRecommendedRefreshMode,
-                buttonText = if (isRecommendedRefreshMode) stringResource(
-                    R.string.welcome_view_refresh_mode_applied, refreshModeString
-                )
-                else stringResource(
-                    R.string.welcome_view_refresh_mode_set_hd_mode, refreshModeString
-                ),
-                onClick = onRefreshClick,
-                enabled = !isRecommendedRefreshMode
-            )
-        }
-    }
-}
-
-
-@Composable
-fun OnyxUnfreezeInstruction() {
-    Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(vertical = 12.dp),
-        elevation = 0.dp,
-        backgroundColor = MaterialTheme.colors.surface,
-        shape = RoundedCornerShape(8.dp)
-    ) {
-        Column(
-            modifier = Modifier
-                .padding(start = 18.dp, top = 18.dp, end = 18.dp, bottom = 5.dp)
-                .fillMaxWidth(),
-            horizontalAlignment = Alignment.Start
-        ) {
-            Text(
-                text = stringResource(R.string.welcome_view_prevent_frozen),
-                style = MaterialTheme.typography.h6,
-                color = MaterialTheme.colors.onSurface,
-                fontWeight = FontWeight.Bold
-            )
-            Spacer(modifier = Modifier.height(8.dp))
-            Text(
-                text = stringResource(R.string.welcome_view_prevent_frozen_details),
-                style = MaterialTheme.typography.body2,
-                color = MaterialTheme.colors.onSurface,
-                lineHeight = 18.sp
-            )
-            Spacer(modifier = Modifier.height(10.dp))
-            Text(
-                text = stringResource(R.string.welcome_view_prevent_frozen_instructions_title),
-                style = MaterialTheme.typography.subtitle2,
-                color = MaterialTheme.colors.onSurface,
-                fontWeight = FontWeight.SemiBold
-            )
-            Spacer(modifier = Modifier.height(4.dp))
-            Text(
-                text = stringResource(R.string.welcome_view_prevent_frozen_instructions),
-                style = MaterialTheme.typography.body2,
-                color = MaterialTheme.colors.onSurface,
-                lineHeight = 18.sp
-            )
-            Spacer(modifier = Modifier.height(6.dp))
-            Text(
-                text = stringResource(R.string.welcome_view_prevent_frozen_recommended),
-                style = MaterialTheme.typography.caption.copy(fontWeight = FontWeight.Bold),
-                color = MaterialTheme.colors.onSurface
-            )
-        }
-    }
-}
-
-@Composable
-fun ShowInstructions() {
-    Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(vertical = 6.dp),
-        elevation = 0.dp,
-        backgroundColor = MaterialTheme.colors.surface,
-        shape = RoundedCornerShape(8.dp)
-    ) {
-        Column(
-            modifier = Modifier
-                .padding(start = 18.dp, top = 5.dp, end = 18.dp, bottom = 5.dp)
-                .fillMaxWidth(),
-            horizontalAlignment = Alignment.Start
-        ) {
-            Text(
-                text = stringResource(R.string.welcome_view_quick_start_title),
-                style = MaterialTheme.typography.h6,
-                color = MaterialTheme.colors.onSurface,
-                fontWeight = FontWeight.Bold
-            )
-            Spacer(modifier = Modifier.height(10.dp))
-            // Split into two columns for compactness
-            Row(Modifier.fillMaxWidth()) {
-                // First column: navigation, editing, selection
-                Column(Modifier.weight(1f)) {
-                    Text(
-                        text = stringResource(R.string.welcome_view_quick_start_navigation),
-                        style = MaterialTheme.typography.subtitle2,
-                        fontWeight = FontWeight.SemiBold,
-                        color = MaterialTheme.colors.onSurface
-                    )
-                    Text(
-                        text = stringResource(R.string.welcome_view_quick_start_navigation_details),
-                        style = MaterialTheme.typography.body2,
-                        color = MaterialTheme.colors.onSurface,
-                        lineHeight = 18.sp
-                    )
-                    Spacer(modifier = Modifier.height(8.dp))
-                    Text(
-                        text = stringResource(R.string.welcome_view_quick_start_selection_editing_title),
-                        style = MaterialTheme.typography.subtitle2,
-                        fontWeight = FontWeight.SemiBold,
-                        color = MaterialTheme.colors.onSurface
-                    )
-                    Text(
-                        text = stringResource(R.string.welcome_view_quick_start_selection_editing_details),
-                        style = MaterialTheme.typography.body2,
-                        color = MaterialTheme.colors.onSurface,
-                        lineHeight = 18.sp
-                    )
-                }
-                Spacer(Modifier.width(20.dp))
-                // Second column: extra features
-                Column(Modifier.weight(1f)) {
-                    Text(
-                        text = stringResource(R.string.welcome_view_quick_start_tips_title),
-                        style = MaterialTheme.typography.subtitle2,
-                        fontWeight = FontWeight.SemiBold,
-                        color = MaterialTheme.colors.onSurface
-                    )
-                    Text(
-                        text = stringResource(R.string.welcome_view_quick_start_tips_details),
-                        style = MaterialTheme.typography.body2,
-                        color = MaterialTheme.colors.onSurface,
-                        lineHeight = 18.sp
-                    )
-                }
-            }
-        }
-    }
-}
-
-@Composable
-private fun PermissionItem(
+private fun WelcomeStepBlock(
+    step: WelcomeStep,
+    status: StepStatus,
     title: String,
-    description: String,
-    isGranted: Boolean,
-    buttonText: String,
-    onClick: () -> Unit,
-    enabled: Boolean
+    optional: Boolean = false,
+    last: Boolean = false,
+    content: @Composable () -> Unit
 ) {
-    Column(
-        horizontalAlignment = Alignment.CenterHorizontally,
-        modifier = Modifier.padding(8.dp)
-    ) {
-        // Status indicator
+    Row(Modifier.fillMaxWidth().padding(top = 22.dp, bottom = 22.dp)) {
+        val done = status == StepStatus.DONE
         Box(
-            contentAlignment = Alignment.Center,
-            modifier = Modifier.size(48.dp)
+            Modifier.size(44.dp).clip(CircleShape)
+                .background(if (done) House.Ink else Color.Transparent)
+                .border(1.5.dp, House.Ink, CircleShape),
+            contentAlignment = Alignment.Center
         ) {
-            if (isGranted) {
-                Icon(
-                    imageVector = Icons.Default.CheckCircle,
-                    contentDescription = "Granted",
-                    tint = MaterialTheme.colors.primary,
-                    modifier = Modifier.size(48.dp)
-                )
+            if (done) {
+                Icon(FeatherIcons.Check, contentDescription = stringResource(R.string.welcome_step_done), tint = Color.White, modifier = Modifier.size(24.dp))
             } else {
-                Icon(
-                    imageVector = Icons.Default.DoDisturb,
-                    contentDescription = "Granted",
-                    tint = MaterialTheme.colors.primary,
-                    modifier = Modifier.size(48.dp)
-                )
+                Text(step.number.toString(), fontFamily = House.Serif, fontWeight = FontWeight.Bold, fontSize = 22.sp, color = House.Ink)
             }
         }
-
-        Spacer(modifier = Modifier.height(8.dp))
-
-        Text(
-            text = title,
-            style = MaterialTheme.typography.subtitle1,
-            textAlign = TextAlign.Center
-        )
-
-        Text(
-            text = description,
-            style = MaterialTheme.typography.caption,
-            textAlign = TextAlign.Center,
-            modifier = Modifier.padding(vertical = 4.dp)
-        )
-
-        Button(
-            onClick = onClick,
-            enabled = enabled,
-            modifier = Modifier.fillMaxWidth(),
-            colors = ButtonDefaults.buttonColors(
-                backgroundColor = if (isGranted) MaterialTheme.colors.primary.copy(alpha = 0.12f)
-                else MaterialTheme.colors.primary
+        Spacer(Modifier.width(18.dp))
+        Column(Modifier.weight(1f)) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                HouseCaps(stringResource(R.string.welcome_step_label, step.number), 12)
+                if (optional) {
+                    Spacer(Modifier.width(10.dp))
+                    HouseCaps(stringResource(R.string.welcome_optional), 12, House.Grey2)
+                }
+            }
+            Text(
+                title, fontFamily = House.Serif, fontWeight = FontWeight.Bold, fontSize = 26.sp, color = House.Ink,
+                modifier = Modifier.padding(top = 4.dp, bottom = 8.dp)
             )
-        ) {
-            Text(buttonText)
+            content()
         }
     }
+    if (!last) Box(Modifier.fillMaxWidth().height(1.dp).background(House.Grey2.copy(alpha = 0.5f)))
 }
 
+@Composable
+private fun BodyText(text: String, modifier: Modifier = Modifier) =
+    Text(text, fontFamily = House.Sans, fontSize = 17.sp, lineHeight = 25.sp, color = House.Ink, modifier = modifier)
+
+@Composable
+private fun GuideSection(titleRes: Int, detailsRes: Int, vararg args: Any) {
+    Column(Modifier.fillMaxWidth().padding(top = 14.dp)) {
+        HouseCaps(stringResource(titleRes), 12, House.Ink)
+        Spacer(Modifier.height(6.dp))
+        BodyText(stringResource(detailsRes, *args))
+    }
+}
 
 
 // ----------------------------------- //
 // --------      Previews      ------- //
 // ----------------------------------- //
 
-
-@Preview(
-    showBackground = true,
-    name = "Setup Required"
-)
+@Preview(showBackground = true, name = "Setup Required")
 @Composable
 fun WelcomePreviewSetup() {
     MaterialTheme {
         WelcomeContent(
-            filePermissionGranted = false,
-            recommendedRefreshMode = false,
+            progress = WelcomeProgress(fileAccessGranted = false, refreshModeRecommended = false),
             refreshModeString = "Normal",
+            languageContent = { BodyText("English / English") },
             onFilePermissionRequest = {},
             onRefreshModeRequest = {},
             onContinue = {}
@@ -530,17 +356,14 @@ fun WelcomePreviewSetup() {
     }
 }
 
-@Preview(
-    showBackground = true,
-    name = "Ready to Go"
-)
+@Preview(showBackground = true, name = "Ready to Go")
 @Composable
 fun WelcomePreviewReady() {
     MaterialTheme {
         WelcomeContent(
-            filePermissionGranted = true,
-            recommendedRefreshMode = true,
+            progress = WelcomeProgress(fileAccessGranted = true, refreshModeRecommended = true),
             refreshModeString = "Extreme",
+            languageContent = { BodyText("English / English") },
             onFilePermissionRequest = {},
             onRefreshModeRequest = {},
             onContinue = {}

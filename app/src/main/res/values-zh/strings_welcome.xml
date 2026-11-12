@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="welcome_view_title">欢迎使用%1$s</string>
+    <string name="welcome_view_subtitle">这些步骤只需做一次。只有文件访问是必需的。</string>
+    <string name="welcome_step_label">第 %1$d 步</string>
+    <string name="welcome_optional">可选</string>
+    <string name="welcome_step_done">已完成</string>
+    <string name="welcome_language_title">语言</string>
+    <string name="welcome_language_body">选择应用语言和手写识别语言。更改应用语言后，应用会重新启动，并回到此页面。</string>
+    <string name="welcome_view_file_access">文件访问</string>
+    <string name="welcome_view_file_access_explanation">%1$s 把笔记保存为文件，因此需要你的许可。</string>
+    <string name="welcome_view_permissions_button">允许访问</string>
+    <string name="welcome_view_permissions_granted">已允许</string>
+    <string name="welcome_view_refresh_mode">刷新模式</string>
+    <string name="welcome_view_refresh_mode_details">HD 或 Regal 模式能让笔迹在屏幕上最清晰。</string>
+    <string name="welcome_view_refresh_mode_applied">正在使用%1$s</string>
+    <string name="welcome_view_refresh_mode_set_hd_mode">使用 HD 模式（当前为%1$s）</string>
+    <string name="welcome_view_prevent_frozen">防止%1$s被冻结</string>
+    <string name="welcome_view_prevent_frozen_details">Boox 平板可能会冻结后台应用以节省电量。被冻结的应用会关闭，你可能丢失内容。</string>
+    <string name="welcome_view_prevent_frozen_instructions_title">如何解除冻结</string>
+    <string name="welcome_view_prevent_frozen_instructions">1. 在 Boox 主屏幕上长按%1$s图标。\n2. 点按\"解冻应用\"。</string>
+    <string name="welcome_view_prevent_frozen_recommended">强烈建议。</string>
+    <string name="welcome_view_quick_start_title">快速指南</string>
+    <string name="welcome_view_quick_start_navigation">导航</string>
+    <string name="welcome_view_quick_start_navigation_details">• 上下滑动：滚动页面\n• 左右滑动：上一页/下一页\n• 双指捏合：缩放\n• 点按页码：快速跳转\n• 双指左右滑动：显示/隐藏工具栏</string>
+    <string name="welcome_view_quick_start_selection_editing_title"><![CDATA[选择与编辑]]></string>
+    <string name="welcome_view_quick_start_selection_editing_details"><![CDATA[• 按住并拖动：选择内容\n• 双击：撤销\n• 双击选区：复制\n• 拖动选区：移动\n• 涂抹擦除（如已启用）]]></string>
+    <string name="welcome_view_quick_start_tips_title">提示</string>
+    <string name="welcome_view_quick_start_tips_details">• 点按页码可跳转到某一页。\n• 在设置中开启涂抹擦除，像在纸上一样擦除。\n• 对选区使用导出选项，可把它作为图片分享。\n• %1$s 可以实时显示 LaTeX 的 PDF。参见 README。\n• 每个手势都可以在设置中更改。</string>
+    <string name="welcome_view_continue">继续</string>
+    <string name="welcome_view_complete_setup_first">允许文件访问后才能继续</string>
+</resources>

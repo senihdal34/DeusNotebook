@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="welcome_view_title">Welcome to %1$s</string>
+    <string name="welcome_view_subtitle">Do these steps once. Only file access is required.</string>
+    <string name="welcome_step_label">Step %1$d</string>
+    <string name="welcome_optional">Optional</string>
+    <string name="welcome_step_done">Done</string>
+    <string name="welcome_language_title">Language</string>
+    <string name="welcome_language_body">Pick the language of the app and the language you write in by hand. If you change the app language, the app restarts and this page comes back.</string>
+    <string name="welcome_view_file_access">File access</string>
+    <string name="welcome_view_file_access_explanation">%1$s saves your notes as files. It needs your permission for that.</string>
+    <string name="welcome_view_permissions_button">Allow access</string>
+    <string name="welcome_view_permissions_granted">Allowed</string>
+    <string name="welcome_view_refresh_mode">Refresh mode</string>
+    <string name="welcome_view_refresh_mode_details">HD or Regal mode gives the sharpest ink on the screen.</string>
+    <string name="welcome_view_refresh_mode_applied">Using %1$s</string>
+    <string name="welcome_view_refresh_mode_set_hd_mode">Use HD mode (now %1$s)</string>
+    <string name="welcome_view_prevent_frozen">Keep %1$s from freezing</string>
+    <string name="welcome_view_prevent_frozen_details">Boox tablets can freeze apps in the background to save battery. A frozen app closes, and you can lose work.</string>
+    <string name="welcome_view_prevent_frozen_instructions_title">How to unfreeze the app</string>
+    <string name="welcome_view_prevent_frozen_instructions">1. Press and hold the %1$s icon on the Boox home screen.\n2. Tap \"Unfreeze app\".</string>
+    <string name="welcome_view_prevent_frozen_recommended">Strongly recommended.</string>
+    <string name="welcome_view_quick_start_title">Quick guide</string>
+    <string name="welcome_view_quick_start_navigation">Navigation</string>
+    <string name="welcome_view_quick_start_navigation_details">• Swipe up/down: Scroll page\n• Swipe left/right: Previous/next page\n• Pinch with 2 fingers: Zoom\n• Tap page number: Quick jump\n• Two-finger swipe left/right: Show/hide toolbar</string>
+    <string name="welcome_view_quick_start_selection_editing_title"><![CDATA[Selection & Editing]]></string>
+    <string name="welcome_view_quick_start_selection_editing_details"><![CDATA[• Hold & drag: Select items\n• Double tap: Undo\n• Double tap on selection: Copy\n• Drag selection: Move\n• Scribble to erase (if enabled)]]></string>
+    <string name="welcome_view_quick_start_tips_title">Tips</string>
+    <string name="welcome_view_quick_start_tips_details">• Tap the page number to jump to a page.\n• Turn on scribble-to-erase in Settings to erase like on paper.\n• Use the export option on a selection to share it as an image.\n• %1$s can show a LaTeX PDF live. See the README.\n• You can change every gesture in Settings.</string>
+    <string name="welcome_view_continue">Continue</string>
+    <string name="welcome_view_complete_setup_first">Allow file access to continue</string>
+</resources>

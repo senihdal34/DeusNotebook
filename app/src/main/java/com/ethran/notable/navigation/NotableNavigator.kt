@@ -20,6 +20,7 @@ import com.ethran.notable.ui.views.HomeDestination
 import com.ethran.notable.ui.views.LibraryDestination
 import com.ethran.notable.ui.views.SystemInformationDestination
 import com.ethran.notable.ui.views.WelcomeDestination
+import com.ethran.notable.ui.views.startsOnWelcome
 import com.ethran.notable.utils.hasFilePermission
 import io.shipbook.shipbooksdk.ShipBook
 import kotlinx.coroutines.CoroutineScope
@@ -36,7 +37,7 @@ fun rememberNotableAppState(
 ): NotableNavigator {
     val context = LocalContext.current
     return remember(navController, context, coroutineScope) {
-        NotableNavigator(navController, hasFilePermission(context), coroutineScope)
+        NotableNavigator(navController, hasFilePermission(context), coroutineScope, com.ethran.notable.i18n.LanguagePrefs.resumeWelcome(context))
     }
 }
 
@@ -44,14 +45,15 @@ fun rememberNotableAppState(
 class NotableNavigator(
     val navController: NavHostController,
     private val hasFilePermission: Boolean,
-    private val coroutineScope: CoroutineScope
+    private val coroutineScope: CoroutineScope,
+    private val resumeWelcome: Boolean = false
 ) {
     var isQuickNavOpen by mutableStateOf(false)
     var currentPageId by mutableStateOf<String?>(null)
 
 
     val startDestination: String
-        get() = if (GlobalAppSettings.current.showWelcome || !hasFilePermission) WelcomeDestination.route
+        get() = if (startsOnWelcome(GlobalAppSettings.current.showWelcome, hasFilePermission, resumeWelcome)) WelcomeDestination.route
         else HomeDestination.route
 
     val quickNavSourcePageId: String?

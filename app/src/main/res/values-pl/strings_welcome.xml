@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="welcome_view_title">Witaj w aplikacji %1$s</string>
+    <string name="welcome_view_subtitle">Wykonaj te kroki raz. Obowiązkowy jest tylko dostęp do plików.</string>
+    <string name="welcome_step_label">Krok %1$d</string>
+    <string name="welcome_optional">Opcjonalnie</string>
+    <string name="welcome_step_done">Gotowe</string>
+    <string name="welcome_language_title">Język</string>
+    <string name="welcome_language_body">Wybierz język aplikacji i język, w którym piszesz ręcznie. Po zmianie języka aplikacji uruchomi się ona ponownie, a ta strona wróci.</string>
+    <string name="welcome_view_file_access">Dostęp do plików</string>
+    <string name="welcome_view_file_access_explanation">%1$s zapisuje notatki jako pliki. Potrzebuje na to Twojej zgody.</string>
+    <string name="welcome_view_permissions_button">Zezwól na dostęp</string>
+    <string name="welcome_view_permissions_granted">Zezwolono</string>
+    <string name="welcome_view_refresh_mode">Tryb odświeżania</string>
+    <string name="welcome_view_refresh_mode_details">Tryb HD lub Regal daje najostrzejszy zapis na ekranie.</string>
+    <string name="welcome_view_refresh_mode_applied">Używany tryb: %1$s</string>
+    <string name="welcome_view_refresh_mode_set_hd_mode">Użyj trybu HD (teraz %1$s)</string>
+    <string name="welcome_view_prevent_frozen">Nie pozwól, by %1$s był zamrażany</string>
+    <string name="welcome_view_prevent_frozen_details">Tablety Boox mogą zamrażać aplikacje w tle, aby oszczędzać baterię. Zamrożona aplikacja się zamyka i możesz stracić pracę.</string>
+    <string name="welcome_view_prevent_frozen_instructions_title">Jak odmrozić aplikację</string>
+    <string name="welcome_view_prevent_frozen_instructions">1. Przytrzymaj ikonę %1$s na ekranie głównym Boox.\n2. Dotknij \"Odmroź aplikację\".</string>
+    <string name="welcome_view_prevent_frozen_recommended">Zdecydowanie zalecane.</string>
+    <string name="welcome_view_quick_start_title">Krótki przewodnik</string>
+    <string name="welcome_view_quick_start_navigation">Nawigacja</string>
+    <string name="welcome_view_quick_start_navigation_details">• Przeciągnij w górę/w dół: Przewijaj stronę\n• Przeciągnij w lewo/w prawo: Poprzednia/następna strona\n• Uszczypnij dwoma palcami: Przybliż/oddal\n• Stuknij numer strony: Szybkie przejście\n• Przeciągnięcie dwoma palcami w lewo/w prawo: Pokaż/ukryj pasek narzędzi</string>
+    <string name="welcome_view_quick_start_selection_editing_title"><![CDATA[Zaznaczanie i edycja]]></string>
+    <string name="welcome_view_quick_start_selection_editing_details"><![CDATA[• Przytrzymaj i przeciągnij: Zaznacz elementy\n• Podwójne stuknięcie: Cofnij\n• Podwójne stuknięcie na zaznaczeniu: Kopiuj\n• Przeciągnij zaznaczenie: Przenieś\n• Szkicuj, aby wymazać (jeśli włączone)]]></string>
+    <string name="welcome_view_quick_start_tips_title">Wskazówki</string>
+    <string name="welcome_view_quick_start_tips_details">• Dotknij numeru strony, aby przejść do strony.\n• Włącz w Ustawieniach wymazywanie bazgrołem, aby wymazywać jak na papierze.\n• Opcja eksportu przy zaznaczeniu udostępnia je jako obraz.\n• %1$s może na żywo pokazywać PDF z LaTeX-a. Zajrzyj do README.\n• Każdy gest możesz zmienić w Ustawieniach.</string>
+    <string name="welcome_view_continue">Kontynuuj</string>
+    <string name="welcome_view_complete_setup_first">Zezwól na dostęp do plików, aby kontynuować</string>
+</resources>
