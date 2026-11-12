@@ -98,6 +98,24 @@ class PlannerSyncTest {
         assertEquals(setOf("d1", "d-far", copyOnDay("w1")), store.ids("day"))
     }
 
+    @Test fun `a pair mirrored with the old layout is left alone`() {
+        // A copy made before the zoom strip moved the rows: the record sits under the old key.
+        val store = FakeStore(onWeek("w1"), onDay("d1"), onDay(copyOnDay("w-old"), dy = -60f))
+        store.kv[PlannerSync.legacyKey("week", "day")] = "{}"
+        assertEquals(emptySet<String>(), leaveWeek(store))
+        assertEquals(emptySet<String>(), leaveDay(store))
+        assertEquals(setOf("w1"), store.ids("week"))
+        assertEquals(setOf("d1", copyOnDay("w-old")), store.ids("day"))
+        assertEquals(0, store.applied)
+    }
+
+    @Test fun `records are kept under the current layout key`() {
+        val store = FakeStore(onWeek("w1"))
+        leaveWeek(store)
+        assertTrue(store.kv.containsKey(PlannerSync.key("week", "day")))
+        assertTrue(PlannerSync.key("week", "day") != PlannerSync.legacyKey("week", "day"))
+    }
+
     @Test fun `a copy is placed where the original sits in its row`() {
         val store = FakeStore(onWeek("w1", dy = 33f, x = 410f))
         leaveWeek(store)
