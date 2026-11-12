@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Writing activity card on the Notes screen: a heatmap of the days with handwriting. -->
+<resources>
+    <string name="activity_title">Writing activity</string>
+    <plurals name="activity_subtitle">
+        <item quantity="one">%1$d day with ink %2$s</item>
+        <item quantity="other">%1$d days with ink %2$s</item>
+    </plurals>
+    <!-- Fills %2$s of the subtitle: "... with ink in the last 6 months" / "... with ink in 2025" -->
+    <string name="activity_period_months">in the last %1$d months</string>
+    <string name="activity_period_year">in %1$d</string>
+    <string name="activity_chip_months">%1$d mo</string>
+    <string name="activity_period_selector">Select period</string>
+    <string name="activity_grid_description">Heatmap of the days you wrote by hand</string>
+    <string name="activity_stat_streak">day streak</string>
+    <string name="activity_stat_longest">longest</string>
+    <string name="activity_stat_per_week">days a week</string>
+    <string name="activity_legend_less">Less</string>
+    <string name="activity_legend_more">More</string>
+    <string name="activity_empty">Write something to start your streak.</string>
+</resources>

@@ -75,7 +75,19 @@ interface StrokeDao {
     @Query("SELECT * FROM stroke WHERE id =:strokeId")
     suspend fun getById(strokeId: String): Stroke
 
+    /** Strokes per local calendar day ("yyyy-MM-dd") since [sinceMs]; feeds the writing activity card. Grouping only, week maths happens in Kotlin. */
+    @Query("SELECT strftime('%Y-%m-%d', createdAt/1000, 'unixepoch', 'localtime') AS day, COUNT(*) AS n FROM Stroke WHERE createdAt >= :sinceMs GROUP BY day")
+    suspend fun strokesPerDay(sinceMs: Long): List<StrokeDayCount>
+
+    /** A cheap fingerprint of the stroke table: when it is unchanged, the per-day counts need no recomputing. */
+    @Query("SELECT MAX(createdAt) AS maxCreated, COUNT(*) AS total FROM Stroke")
+    suspend fun strokeSignature(): StrokeSignatureRow
+
 }
+
+data class StrokeDayCount(val day: String?, val n: Int)
+
+data class StrokeSignatureRow(val maxCreated: Long?, val total: Int)
 
 class StrokeRepository @Inject constructor(
     private val db: StrokeDao

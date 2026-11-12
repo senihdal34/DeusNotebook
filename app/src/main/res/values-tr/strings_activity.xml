@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Notlar ekranındaki yazma etkinliği kartı: elle yazılan günlerin ısı haritası. -->
+<resources>
+    <string name="activity_title">Yazma etkinliği</string>
+    <plurals name="activity_subtitle">
+        <item quantity="one">%2$s %1$d gün yazı yazıldı</item>
+        <item quantity="other">%2$s %1$d gün yazı yazıldı</item>
+    </plurals>
+    <string name="activity_period_months">Son %1$d ayda</string>
+    <string name="activity_period_year">%1$d yılında</string>
+    <string name="activity_chip_months">%1$d ay</string>
+    <string name="activity_period_selector">Dönem seçimi</string>
+    <string name="activity_grid_description">Elle yazdığın günlerin ısı haritası</string>
+    <string name="activity_stat_streak">günlük seri</string>
+    <string name="activity_stat_longest">en uzun</string>
+    <string name="activity_stat_per_week">gün / hafta</string>
+    <string name="activity_legend_less">Az</string>
+    <string name="activity_legend_more">Çok</string>
+    <string name="activity_empty">Serini başlatmak için bir şeyler yaz.</string>
+</resources>

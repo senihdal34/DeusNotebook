@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 笔记页面上的书写活动卡片：手写天数热力图。 -->
+<resources>
+    <string name="activity_title">书写活动</string>
+    <plurals name="activity_subtitle">
+        <item quantity="other">%2$s有 %1$d 天书写</item>
+    </plurals>
+    <string name="activity_period_months">最近 %1$d 个月</string>
+    <string name="activity_period_year">%1$d 年</string>
+    <string name="activity_chip_months">%1$d 个月</string>
+    <string name="activity_period_selector">选择时间范围</string>
+    <string name="activity_grid_description">手写天数热力图</string>
+    <string name="activity_stat_streak">天连续书写</string>
+    <string name="activity_stat_longest">最长连续</string>
+    <string name="activity_stat_per_week">天/周</string>
+    <string name="activity_legend_less">少</string>
+    <string name="activity_legend_more">多</string>
+    <string name="activity_empty">写点什么，开始你的连续书写吧。</string>
+</resources>

@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Karta aktywności pisania na ekranie Notatek: mapa cieplna dni z pismem odręcznym. -->
+<resources>
+    <string name="activity_title">Aktywność pisania</string>
+    <plurals name="activity_subtitle">
+        <item quantity="one">%1$d dzień z pismem %2$s</item>
+        <item quantity="few">%1$d dni z pismem %2$s</item>
+        <item quantity="many">%1$d dni z pismem %2$s</item>
+        <item quantity="other">%1$d dnia z pismem %2$s</item>
+    </plurals>
+    <string name="activity_period_months">w ostatnich %1$d miesiącach</string>
+    <string name="activity_period_year">w %1$d roku</string>
+    <string name="activity_chip_months">%1$d mies.</string>
+    <string name="activity_period_selector">Wybór okresu</string>
+    <string name="activity_grid_description">Mapa cieplna dni z pismem odręcznym</string>
+    <string name="activity_stat_streak">dni z rzędu</string>
+    <string name="activity_stat_longest">najdłuższa seria</string>
+    <string name="activity_stat_per_week">dni w tygodniu</string>
+    <string name="activity_legend_less">Mniej</string>
+    <string name="activity_legend_more">Więcej</string>
+    <string name="activity_empty">Napisz coś, aby zacząć swoją serię.</string>
+</resources>

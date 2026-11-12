@@ -84,6 +84,7 @@ import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import com.ethran.notable.R
+import com.ethran.notable.activity.WritingActivityCard
 import com.ethran.notable.i18n.AppStrings
 import com.ethran.notable.ui.showHint
 import com.ethran.notable.ui.viewmodels.HomeSection
@@ -226,12 +227,14 @@ fun HomeView(
                 Row(Modifier.fillMaxWidth().height(IntrinsicSize.Min)) {
                     Column(Modifier.weight(1f).padding(end = 36.dp)) {
                         Stories(shown, state, selected, landscape = true, actions = actions)
+                        WritingActivityCard(Modifier.fillMaxWidth().padding(top = 8.dp, bottom = 24.dp))
                     }
                     Rail(state, selected, actions)
                 }
             } else {
                 Stories(shown, state, selected, landscape = false, actions = actions)
                 NewNoteButton(actions, Modifier.align(Alignment.CenterHorizontally).padding(top = 26.dp, bottom = 20.dp))
+                WritingActivityCard(Modifier.fillMaxWidth().padding(top = 8.dp, bottom = 24.dp))
             }
         }
     }
