@@ -17,6 +17,8 @@ import com.ethran.notable.data.datastore.EditorSettingCacheManager
 import com.ethran.notable.editor.EditorDestination
 import com.ethran.notable.editor.EditorView
 import com.ethran.notable.io.ExportEngine
+import com.ethran.notable.ui.views.AboutDestination
+import com.ethran.notable.ui.views.AboutView
 import com.ethran.notable.ui.views.BugReportDestination
 import com.ethran.notable.ui.views.BugReportScreen
 import com.ethran.notable.ui.views.Library
@@ -143,7 +145,14 @@ fun NotableNavHost(
                     onBack = { appNavigator.goBack() },
                     goToWelcome = { appNavigator.goToWelcome() },
                     goToSystemInfo = { appNavigator.goToSystemInfo() },
+                    goToAbout = { appNavigator.navController.navigate(AboutDestination.route) },
                 )
+                appNavigator.cleanCurrentPageId()
+            }
+            composable(
+                route = AboutDestination.route,
+            ) {
+                AboutView(onBack = { appNavigator.goBack() })
                 appNavigator.cleanCurrentPageId()
             }
             composable(
@@ -160,6 +169,7 @@ fun NotableNavHost(
                     viewModel = viewModel,
                     onOpenPage = { pageId -> appNavigator.navController.navigate("editor/$pageId") },
                     onSettings = { appNavigator.navController.navigate(SettingsDestination.route) },
+                    onAbout = { appNavigator.navController.navigate(AboutDestination.route) },
                     onCreateNewPage = { appNavigator.onCreateNewQuickPage(appRepository, null) },
                     onOpenPlanner = { bookId, pageId ->
                         appNavigator.navController.navigate(

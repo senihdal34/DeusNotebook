@@ -9,6 +9,19 @@ plugins {
     id 'com.google.dagger.hilt.android'
 }
 
+// Short commit hash of the checkout this build is made from. The About screen shows it so users can find the exact
+// Corresponding Source of the version they run (AGPL-3.0 section 13). Builds without git (a source zip) say "unknown".
+def gitShortSha = {
+    try {
+        def process = ['git', 'rev-parse', '--short', 'HEAD'].execute(null, rootProject.projectDir)
+        def out = process.inputStream.text.trim()
+        process.waitFor()
+        (process.exitValue() == 0 && out ==~ /[0-9a-f]{4,40}/) ? out : 'unknown'
+    } catch (Exception ignored) {
+        'unknown'
+    }
+}.call()
+
 android {
     compileSdk 36
 
@@ -20,6 +33,7 @@ android {
 
         versionCode 36
         versionName '0.2.0'
+        buildConfigField "String", "GIT_SHA", "\"${gitShortSha}\""
         if (project.hasProperty('IS_NEXT') && project.IS_NEXT.toBoolean()) {
             def timestamp = new Date().format('dd.MM.YYYY-HH:mm')
             versionName = "${versionName}-next-${timestamp}"

@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Legal notices screen. These texts are kept in English in every language on purpose: the BookOrbit notice and the
+  modified-version statement must be shown word for word (ADDITIONAL_TERMS.md, sections 1 and 3). The default resource
+  is the fallback for the translated locales, so there is no copy in values-xx.
+-->
+<resources xmlns:tools="http://schemas.android.com/tools" tools:ignore="MissingTranslation">
+    <string name="legal_title" translatable="false">About and legal notices</string>
+    <string name="legal_back" translatable="false">Back</string>
+
+    <!-- This app -->
+    <string name="legal_app_heading" translatable="false">This app</string>
+    <string name="legal_version" translatable="false">Version %1$s (build %2$d)</string>
+    <string name="legal_commit" translatable="false">Commit %1$s</string>
+    <string name="legal_commit_unknown" translatable="false">Commit not recorded in this build</string>
+    <string name="legal_app_license" translatable="false">A Deus Notebook is free software, licensed under the GNU Affero General Public License, version 3 only (AGPL-3.0-only). It is provided without warranty. You may redistribute and modify it under those terms.</string>
+    <string name="legal_license_link" translatable="false">Read the licence text</string>
+
+    <!-- Corresponding Source (AGPL-3.0 section 13, ADDITIONAL_TERMS.md section 2) -->
+    <string name="legal_source_heading" translatable="false">Source code</string>
+    <string name="legal_source_text" translatable="false">The complete Corresponding Source of this exact version is available to everyone, at no charge, in the project repository. The commit above names the version.</string>
+
+    <!-- BookOrbit notice: ADDITIONAL_TERMS.md section 1, word for word (checked by LegalNoticesTest) -->
+    <string name="legal_bookorbit_title" translatable="false">Powered by BookOrbit</string>
+    <string name="legal_bookorbit_copyright" translatable="false">Copyright (C) 2025-2026 neon.</string>
+    <string name="legal_bookorbit_contributors" translatable="false">Additional copyright is held by the respective BookOrbit contributors.</string>
+    <string name="legal_bookorbit_original" translatable="false">Original project: https://github.com/bookorbit/bookorbit</string>
+    <string name="legal_bookorbit_license" translatable="false">Licensed under the GNU Affero General Public License, version 3 only, with additional terms. This software is provided without warranty. You may redistribute and modify it under those terms.</string>
+
+    <!-- Modified version: ADDITIONAL_TERMS.md section 3 -->
+    <string name="legal_bookorbit_modified" translatable="false">This is a modified version of BookOrbit and is not an official BookOrbit release.</string>
+    <string name="legal_bookorbit_modified_on" translatable="false">Modification date: %1$s</string>
+    <string name="legal_bookorbit_scope" translatable="false">BookOrbit material is used in the Reading tab: the board, its badges and chapters, and the buddy art.</string>
+    <string name="legal_bookorbit_terms_link" translatable="false">Read the BookOrbit additional terms</string>
+
+    <!-- Upstream projects -->
+    <string name="legal_upstream_heading" translatable="false">Based on</string>
+    <string name="legal_upstream_text" translatable="false">Based on Notable (Ethran) and Aragonite (jdkruzr), GPL-3.0.</string>
+    <string name="legal_upstream_notable" translatable="false">Notable by Ethran, GPL-3.0</string>
+    <string name="legal_upstream_aragonite" translatable="false">Aragonite by jdkruzr, GPL-3.0</string>
+
+    <!-- Other components -->
+    <string name="legal_third_party_heading" translatable="false">Other components</string>
+    <string name="legal_third_party_text" translatable="false">This app also uses open-source libraries, the Noto fonts (SIL Open Font License 1.1) and Lucide icons (ISC licence). Their licences are listed in THIRD_PARTY_NOTICES.md.</string>
+    <string name="legal_third_party_onyx" translatable="false">The Onyx Boox SDK libraries are proprietary software of Onyx International. They are not covered by the AGPL.</string>
+    <string name="legal_third_party_link" translatable="false">Read THIRD_PARTY_NOTICES.md</string>
+    <string name="legal_notice_link" translatable="false">Read NOTICE.md</string>
+</resources>

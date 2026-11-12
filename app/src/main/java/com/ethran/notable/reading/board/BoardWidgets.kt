@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+// Reading board design derived from BookOrbit (https://github.com/bookorbit/bookorbit), AGPL-3.0-only with additional terms, see licenses/bookorbit/
 package com.ethran.notable.reading.board
 
 import androidx.compose.foundation.background
@@ -151,7 +153,7 @@ fun HeroWidget(c: BoardCtx, w: Int, hh: Int) {
 
 /** The Resume pill: play icon, label, 40 dp high. White on the dark hero tile, black on a white page ([dark]). */
 @Composable
-fun PillButton(label: String, icon: String, dark: Boolean = false, onClick: () -> Unit) {
+fun PillButton(label: String, icon: String, dark: Boolean = false, fillIcon: Boolean = true, onClick: () -> Unit) {
     val bx = LocalBx.current
     val fg = if (dark) Ink.white else Ink.black
     Row(
@@ -159,7 +161,7 @@ fun PillButton(label: String, icon: String, dark: Boolean = false, onClick: () -
         verticalAlignment = Alignment.CenterVertically
     ) {
         HGap(bx.px(13))
-        Ic(icon, 14, fg, 2.25f, fill = true)
+        Ic(icon, 14, fg, 2.25f, fill = fillIcon)
         HGap(bx.px(8))
         BText(label, 14.0, bold = true, color = fg)
         HGap(bx.px(16))

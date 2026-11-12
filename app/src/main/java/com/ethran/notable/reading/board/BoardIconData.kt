@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+// Reading board design derived from BookOrbit (https://github.com/bookorbit/bookorbit), AGPL-3.0-only with additional terms, see licenses/bookorbit/
 package com.ethran.notable.reading.board
 
 // Generated from the KOReader board's lb_board_icons.lua (Lucide, ISC licence). Each icon is a list of nodes
