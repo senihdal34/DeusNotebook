@@ -122,6 +122,7 @@ fun HomeView(
     viewModel: HomeViewModel,
     onOpenPage: (String) -> Unit,
     onSettings: () -> Unit,
+    onAbout: () -> Unit = {},
     onCreateNewPage: () -> Unit = {},
     onOpenPlanner: (bookId: String, pageId: String) -> Unit = { _, _ -> }
 ) {
@@ -215,7 +216,8 @@ fun HomeView(
                 val reading by readingVm.ui.collectAsState()
                 com.ethran.notable.reading.board.ReadingBoardView(
                     reading, onOpen = { book -> com.ethran.notable.reading.ReadingLauncher.open(appContext, book.path) },
-                    modifier = Modifier.weight(1f), onSetGoal = readingVm::setGoal, onRefresh = readingVm::refresh
+                    modifier = Modifier.weight(1f), onSetGoal = readingVm::setGoal, onRefresh = readingVm::refresh,
+                    onAbout = onAbout
                 )
             } else if (section == HomeSection.Pinned) {
                 PinnedPage(state, actions)

@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+// Reading board design derived from BookOrbit (https://github.com/bookorbit/bookorbit), AGPL-3.0-only with additional terms, see licenses/bookorbit/
 package com.ethran.notable.reading.board
 
 import android.content.Context
@@ -128,7 +130,7 @@ private fun rememberLeadFamily(book: RBook?): Family? {
  * hold it for its details. Everything is sized in the plugin's own dp (see [BoardMetrics]).
  */
 @Composable
-fun ReadingBoardView(ui: ReadingUi, onOpen: (RBook) -> Unit, modifier: Modifier = Modifier, onSetGoal: ((Int) -> Unit)? = null, onRefresh: () -> Unit = {}) {
+fun ReadingBoardView(ui: ReadingUi, onOpen: (RBook) -> Unit, modifier: Modifier = Modifier, onSetGoal: ((Int) -> Unit)? = null, onRefresh: () -> Unit = {}, onAbout: (() -> Unit)? = null) {
     val context = LocalContext.current
     val density = LocalDensity.current
     var page by rememberSaveable { mutableIntStateOf(0) }
@@ -193,7 +195,7 @@ fun ReadingBoardView(ui: ReadingUi, onOpen: (RBook) -> Unit, modifier: Modifier 
                         BookDetailScreen(detail, data.highlights.filter { it.book?.id == detail.id }, ctx) { detailId = null }
                     }
                     badgesOpen -> Scrolling(g, heightPx) { BadgeListScreen(ui.badges, ctx.nowMs, java.time.ZoneId.systemDefault()) { badgesOpen = false } }
-                    goalOpen -> Scrolling(g, heightPx) { GoalScreen(data.goalBooks, bd.finishedYear, today.year, onSetGoal) { goalOpen = false } }
+                    goalOpen -> Scrolling(g, heightPx) { GoalScreen(data.goalBooks, bd.finishedYear, today.year, onSetGoal, onAbout) { goalOpen = false } }
                     searching -> Scrolling(g, heightPx) { SearchScreen(query, { query = it }, data.books, ctx) { searching = false; query = "" } }
                     sub != null -> Scrolling(g, heightPx) { SubList(sub ?: return@Scrolling, shelfKind, bd, ctx) { sub = null } }
                     !ui.sourceAvailable && ui.loaded -> BText(
@@ -447,7 +449,7 @@ private fun SearchScreen(query: String, onQuery: (String) -> Unit, books: List<R
 }
 
 @Composable
-private fun GoalScreen(goal: Int, done: Int, year: Int, onSet: ((Int) -> Unit)?, back: () -> Unit) {
+private fun GoalScreen(goal: Int, done: Int, year: Int, onSet: ((Int) -> Unit)?, onAbout: (() -> Unit)?, back: () -> Unit) {
     val bx = LocalBx.current
     ScreenTitle(stringResource(R.string.reading_goal_title, year), back)
     BText(stringResource(R.string.reading_goal_books_finished, done, goal), 14.0, color = Ink.g4)
@@ -466,6 +468,11 @@ private fun GoalScreen(goal: Int, done: Int, year: Int, onSet: ((Int) -> Unit)?,
             }
             BText(stringResource(R.string.reading_books_a_year), 13.0, color = Ink.g4)
         }
+    }
+    // The menu also leads to the legal notices that BookOrbit's additional terms require in every interface (section 1).
+    if (onAbout != null) {
+        VGap(bx.px(28))
+        Row { PillButton(stringResource(R.string.legal_title), "info", dark = true, fillIcon = false, onClick = onAbout) }
     }
 }
 

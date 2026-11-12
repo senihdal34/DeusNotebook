@@ -86,6 +86,7 @@ fun SettingsView(
     onBack: () -> Unit,
     goToWelcome: () -> Unit,
     goToSystemInfo: () -> Unit,
+    goToAbout: () -> Unit = {},
     viewModel: SettingsViewModel = hiltViewModel()
 ) {
     val context = LocalContext.current
@@ -106,6 +107,7 @@ fun SettingsView(
         onBack = onBack,
         goToWelcome = goToWelcome,
         goToSystemInfo = goToSystemInfo,
+        goToAbout = goToAbout,
         onCheckUpdate = { force ->
             viewModel.checkUpdate(context, force)
         },
@@ -137,6 +139,7 @@ fun SettingsContent(
     goToSystemInfo: () -> Unit,
     onCheckUpdate: (Boolean) -> Unit,
     onUpdateSettings: (AppSettings) -> Unit,
+    goToAbout: () -> Unit = {},
     onClearAllPages: ((onComplete: () -> Unit) -> Unit)? = null,
     onAppLanguageChange: (com.ethran.notable.i18n.AppLanguage) -> Unit = {},
     selectedTabInitial: Int = 0,
@@ -193,6 +196,11 @@ fun SettingsContent(
                         modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp)
                     )
                 }
+            }
+
+            // On every tab: the legal notices must always be one tap away (BookOrbit additional terms, section 1).
+            Box(Modifier.fillMaxWidth().padding(bottom = 16.dp), contentAlignment = Alignment.Center) {
+                HousePillButton(stringResource(R.string.legal_title), onClick = goToAbout)
             }
         }
     }
