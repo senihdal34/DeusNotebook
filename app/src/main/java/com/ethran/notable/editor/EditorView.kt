@@ -174,6 +174,8 @@ fun EditorView(
         var isInboxPage by remember { mutableStateOf(false) }
         var plannerMonday by remember(pageId) { mutableStateOf<LocalDate?>(null) }
         var plannerDay by remember(pageId) { mutableStateOf<LocalDate?>(null) }
+        // Month, quarter and year pages: each level lives in a notebook of its own.
+        var plannerLevel by remember(pageId) { mutableStateOf<com.ethran.notable.planner.PlannerLevel?>(null) }
         val selectedTags = remember { mutableStateListOf<String>() }
         // Read tags reactively — updates when VaultTagScanner.refreshCache() runs
         val suggestedTags = VaultTagScanner.cachedTags
@@ -187,6 +189,7 @@ fun EditorView(
             editorState.isInboxPage = inbox
             plannerMonday = pageData?.background?.let(PlannerWeeks::parseWeek)
             plannerDay = pageData?.background?.let(PlannerWeeks::parseDay)
+            plannerLevel = pageData?.background?.let(com.ethran.notable.planner.PlannerLevel::of)
         }
 
         // Week tool of the planner page: move to another week's page inside this notebook.
@@ -246,7 +249,13 @@ fun EditorView(
                 if (target == null || target.pageId == from) return@launch
                 syncPlannerPage(from, m, d)?.join()
                 exitSynced.markSynced(from)
-                if (!CanvasEventBus.changePage.tryEmit(target.pageId)) exitSynced.markSynced(null)
+                if (target.bookId == bookId) {
+                    if (!CanvasEventBus.changePage.tryEmit(target.pageId)) exitSynced.markSynced(null)
+                } else {
+                    // Month, quarter and year pages live in notebooks of their own: open them with the editor route
+                    // (the editor is bound to one notebook), so Back returns to the page we came from.
+                    navController.navigate(EditorDestination.createRoute(target.pageId, target.bookId))
+                }
             }
         }
         fun goToDay(day: LocalDate) = goTo { plannerService.ensureDay(day) }
@@ -336,7 +345,7 @@ fun EditorView(
                             onDiscard = { navController.popBackStack() }
                         )
                     }
-                    if (plannerMonday != null || plannerDay != null) {
+                    if (plannerMonday != null || plannerDay != null || plannerLevel != null) {
                         fun toHome(section: com.ethran.notable.ui.viewmodels.HomeSection) {
                             com.ethran.notable.ui.viewmodels.HomeSectionMemory.last = section
                             navController.navigate(com.ethran.notable.ui.views.HomeDestination.route) {
@@ -404,6 +413,7 @@ fun EditorView(
                             modifier = Modifier.align(Alignment.TopCenter)
                         )
                     }
+                    com.ethran.notable.planner.PlannerPageTaps(editorState, plannerService, onOpen = { ensure -> goTo(ensure) })
                     plannerDay?.let { day ->
                         androidx.compose.foundation.layout.BoxWithConstraints(Modifier.fillMaxSize()) {
                             val density = androidx.compose.ui.platform.LocalDensity.current

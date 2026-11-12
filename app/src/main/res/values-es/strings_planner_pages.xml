@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="planner_months_notebook">Planificador: meses</string>
+    <string name="planner_quarters_notebook">Planificador: trimestres</string>
+    <string name="planner_years_notebook">Planificador: años</string>
+    <string name="planner_month_title">Plan mensual</string>
+    <string name="planner_quarter_title">Plan trimestral</string>
+    <string name="planner_year_title">Plan anual</string>
+    <string name="planner_focus_month">Enfoque del mes</string>
+    <string name="planner_focus_quarter">Enfoque del trimestre</string>
+    <string name="planner_focus_year">Enfoque del año</string>
+    <string name="planner_goals">Objetivos</string>
+    <string name="planner_days_count">%1$d días</string>
+    <string name="planner_week_abbr">S</string>
+    <string name="planner_month_complete">Mes completado al %1$d%%</string>
+    <string name="planner_quarter_complete">Trimestre completado al %1$d%%</string>
+</resources>

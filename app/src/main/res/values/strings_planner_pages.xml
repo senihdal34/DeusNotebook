@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="planner_months_notebook">Planner Months</string>
+    <string name="planner_quarters_notebook">Planner Quarters</string>
+    <string name="planner_years_notebook">Planner Years</string>
+    <string name="planner_month_title">Monthly Planner</string>
+    <string name="planner_quarter_title">Quarterly Planner</string>
+    <string name="planner_year_title">Yearly Planner</string>
+    <string name="planner_focus_month">Focus this month</string>
+    <string name="planner_focus_quarter">Focus this quarter</string>
+    <string name="planner_focus_year">Year focus</string>
+    <string name="planner_goals">Goals</string>
+    <string name="planner_days_count">%1$d days</string>
+    <string name="planner_week_abbr">W</string>
+    <string name="planner_month_complete">Month %1$d%% complete</string>
+    <string name="planner_quarter_complete">Quarter %1$d%% complete</string>
+</resources>

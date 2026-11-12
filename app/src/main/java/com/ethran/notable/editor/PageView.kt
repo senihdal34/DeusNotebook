@@ -125,7 +125,7 @@ class PageView(
         }
 
     val isTransformationAllowed: Boolean
-        get() = if (pageFromDb?.background?.let { it.startsWith(PlannerWeeks.WEEK_PREFIX) || it.startsWith(PlannerWeeks.DAY_PREFIX) } == true) false
+        get() = if (pageFromDb?.background?.let(PlannerWeeks::isFixedPage) == true) false
         else when (pageFromDb?.backgroundType) {
             "native", null -> true
             "coverImage" -> false
