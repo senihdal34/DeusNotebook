@@ -125,12 +125,11 @@ class HomeViewModel @Inject constructor(
                         .map { it.trim() }.filter { it.isNotEmpty() && it !in hidden }.distinct()
                     val sortedTags = manualOrder.associate { it.tagName to it.sortOrder }
 
-                    val groups = allTags.map { tag ->
-                        val pageIds = (try { annotationRepository.getPageIdsByTag(tag) } catch (e: Exception) { emptyList() } +
-                            pageTags.filterValues { tag in it }.keys).distinct()
-                        val pages = try { pageRepository.getByIds(pageIds) } catch (e: Exception) { emptyList() }
-                        TopicGroup(tag = tag, pages = pages)
-                    }.sortedBy { sortedTags[it.tag] ?: Int.MAX_VALUE }
+                    // Two batched reads (chunked inside the repositories) instead of two queries per tag; grouped in memory.
+                    val tagPages = try { annotationRepository.getTagPagePairs(allTags) } catch (e: Exception) { emptyList() }
+                    val topicPageIds = pageIdsForTags(allTags, tagPages, pageTags)
+                    val topicPages = try { pageRepository.getByIds(topicPageIds) } catch (e: Exception) { emptyList() }
+                    val groups = buildTopicGroups(allTags, tagPages, pageTags, topicPages, sortedTags)
 
                     val allPages = (pinned + recent + groups.flatMap { it.pages }).distinctBy { it.id }
                     val excerpts = try {

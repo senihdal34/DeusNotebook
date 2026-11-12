@@ -123,8 +123,15 @@ class PageRepository @Inject constructor(
         return db.getById(pageId)
     }
 
+    /**
+     * Pages for [ids]. Queries in chunks of [SQLITE_VARIABLE_CHUNK] to stay under SQLite's
+     * bound-variable limit; a multi-chunk result is re-sorted by id so the order matches
+     * what a single `IN (...)` query returns (primary-key order).
+     */
     suspend fun getByIds(ids: List<String>): List<Page> {
-        return db.getByIds(ids)
+        val chunks = ids.distinct().chunked(SQLITE_VARIABLE_CHUNK)
+        if (chunks.size <= 1) return chunks.firstOrNull()?.let { db.getByIds(it) } ?: emptyList()
+        return chunks.flatMap { db.getByIds(it) }.sortedBy { it.id }
     }
 
 

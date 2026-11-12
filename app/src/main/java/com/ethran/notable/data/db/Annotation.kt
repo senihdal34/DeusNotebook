@@ -75,7 +75,14 @@ interface AnnotationDao {
 
     @Query("SELECT DISTINCT pageId FROM Annotation WHERE type = 'TAG' AND text = :tag")
     suspend fun getPageIdsByTag(tag: String): List<String>
+
+    /** Batch version of [getPageIdsByTag]: tag -> page pairs for many tags in one query. Keep [tags] under SQLite's variable limit. */
+    @Query("SELECT DISTINCT text AS tag, pageId FROM Annotation WHERE type = 'TAG' AND text IN (:tags)")
+    suspend fun getTagPagePairs(tags: List<String>): List<TagPagePair>
 }
+
+/** One (tag text, page id) row from [AnnotationDao.getTagPagePairs]. */
+data class TagPagePair(val tag: String, val pageId: String)
 
 class AnnotationRepository @Inject constructor(
     private val db: AnnotationDao
@@ -90,4 +97,8 @@ class AnnotationRepository @Inject constructor(
     // --- Home screen tag queries ---
     suspend fun getDistinctTags(): List<String> = db.getDistinctTags()
     suspend fun getPageIdsByTag(tag: String): List<String> = db.getPageIdsByTag(tag)
+
+    /** Tag -> page pairs for all [tags], one query per [SQLITE_VARIABLE_CHUNK] tags. */
+    suspend fun getTagPagePairs(tags: List<String>): List<TagPagePair> =
+        tags.distinct().chunked(SQLITE_VARIABLE_CHUNK).flatMap { db.getTagPagePairs(it) }
 }
