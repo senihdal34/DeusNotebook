@@ -372,6 +372,8 @@ fun EditorView(
                             }
                         }
                     }
+                    // Year | Quarter | Month | Week | Day zoom strip under the tab bar of every planner page.
+                    com.ethran.notable.planner.PlannerZoomHost(pageId, appRepository, plannerService, onGo = { ensure -> goTo(ensure) })
                     plannerMonday?.let { monday ->
                         // The date number of each row is a tap zone: it opens that day's page.
                         androidx.compose.foundation.layout.BoxWithConstraints(Modifier.fillMaxSize()) {
