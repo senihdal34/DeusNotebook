@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="welcome_view_title">%1$s uygulamasına hoş geldin</string>
+    <string name="welcome_view_subtitle">Bu adımları bir kez yap. Yalnızca dosya erişimi zorunlu.</string>
+    <string name="welcome_step_label">%1$d. adım</string>
+    <string name="welcome_optional">İsteğe bağlı</string>
+    <string name="welcome_step_done">Tamam</string>
+    <string name="welcome_language_title">Dil</string>
+    <string name="welcome_language_body">Uygulamanın dilini ve elle yazdığın dili seç. Uygulama dilini değiştirirsen uygulama yeniden başlar ve bu sayfa geri gelir.</string>
+    <string name="welcome_view_file_access">Dosya erişimi</string>
+    <string name="welcome_view_file_access_explanation">%1$s notlarını dosya olarak kaydeder. Bunun için iznine ihtiyaç duyar.</string>
+    <string name="welcome_view_permissions_button">Erişime izin ver</string>
+    <string name="welcome_view_permissions_granted">İzin verildi</string>
+    <string name="welcome_view_refresh_mode">Yenileme modu</string>
+    <string name="welcome_view_refresh_mode_details">HD veya Regal modu ekranda en net yazıyı verir.</string>
+    <string name="welcome_view_refresh_mode_applied">%1$s kullanılıyor</string>
+    <string name="welcome_view_refresh_mode_set_hd_mode">HD modunu kullan (şu an %1$s)</string>
+    <string name="welcome_view_prevent_frozen">%1$s dondurulmasın</string>
+    <string name="welcome_view_prevent_frozen_details">Boox tabletler pil tasarrufu için arka plandaki uygulamaları dondurabilir. Donan uygulama kapanır ve yazdıkların kaybolabilir.</string>
+    <string name="welcome_view_prevent_frozen_instructions_title">Dondurmayı nasıl kapatırsın</string>
+    <string name="welcome_view_prevent_frozen_instructions">1. Boox ana ekranında %1$s simgesine uzun bas.\n2. \"Uygulamanın dondurulmasını kaldır\" seçeneğine dokun.</string>
+    <string name="welcome_view_prevent_frozen_recommended">Şiddetle önerilir.</string>
+    <string name="welcome_view_quick_start_title">Kısa rehber</string>
+    <string name="welcome_view_quick_start_navigation">Gezinme</string>
+    <string name="welcome_view_quick_start_navigation_details">• Yukarı/aşağı kaydır: Sayfayı kaydırır\n• Sola/sağa kaydır: Önceki/sonraki sayfa\n• 2 parmakla sıkıştır: Yakınlaştırma\n• Sayfa numarasına dokun: Hızlı atlama\n• İki parmakla sola/sağa kaydır: Araç çubuğunu göster/gizle</string>
+    <string name="welcome_view_quick_start_selection_editing_title"><![CDATA[Seçme ve düzenleme]]></string>
+    <string name="welcome_view_quick_start_selection_editing_details"><![CDATA[• Basılı tutup sürükle: Öğeleri seç\n• Çift dokunma: Geri al\n• Seçimde çift dokunma: Kopyala\n• Seçimi sürükle: Taşı\n• Karalayarak sil (etkinse)]]></string>
+    <string name="welcome_view_quick_start_tips_title">İpuçları</string>
+    <string name="welcome_view_quick_start_tips_details">• Bir sayfaya atlamak için sayfa numarasına dokun.\n• Kâğıttaki gibi silmek için Ayarlar\'dan karalayarak silmeyi aç.\n• Seçimi görsel olarak paylaşmak için seçimdeki dışa aktarma seçeneğini kullan.\n• %1$s, LaTeX PDF\'ini canlı gösterebilir. README\'ye bak.\n• Her hareketi Ayarlar\'dan değiştirebilirsin.</string>
+    <string name="welcome_view_continue">Devam</string>
+    <string name="welcome_view_complete_setup_first">Devam etmek için dosya erişimine izin ver</string>
+</resources>

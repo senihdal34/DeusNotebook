@@ -24,7 +24,8 @@
     <string name="sync_step5_title">Deja que tu IA lea tus notas</string>
     <string name="sync_step5_body">Cada nota es un archivo .md con título, fecha y #etiquetas, más las imágenes de sus páginas. Apunta tu herramienta o agente de IA a esa carpeta del ordenador y podrá buscar y leer tus notas como texto. Obsidian las muestra como notas normales.</string>
     <string name="sync_private_note">Solo los dispositivos que apruebes en Syncthing reciben tus notas.</string>
-    <string name="welcome_sync_title">Opcional: sincroniza las notas con tu ordenador</string>
-    <string name="welcome_sync_body">Comparte tus notas en Markdown con Obsidian o tus herramientas de IA usando Syncthing. Lleva unos cinco minutos y puedes hacerlo luego en Ajustes, Sincronizar.</string>
+    <string name="welcome_sync_title">Sincroniza tus notas con tu ordenador</string>
+    <string name="welcome_sync_body">Envía tus notas como Markdown a Obsidian o a tus herramientas de IA con Syncthing. Lleva unos cinco minutos. También puedes hacerlo luego en Ajustes, Sincronizar.</string>
     <string name="welcome_sync_button">Configurar sincronización</string>
+    <string name="welcome_sync_needs_access">Primero permite el acceso a archivos.</string>
 </resources>

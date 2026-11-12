@@ -12,6 +12,7 @@ object LanguagePrefs {
     private const val KEY_APP = "app_language"
     private const val KEY_WRITING = "writing_language"
     private const val KEY_WRITING_PENDING = "writing_language_pending"
+    private const val KEY_RESUME_WELCOME = "resume_welcome"
 
     private fun prefs(context: Context): SharedPreferences =
         context.applicationContext.getSharedPreferences(FILE, Context.MODE_PRIVATE)
@@ -37,5 +38,12 @@ object LanguagePrefs {
         prefs(context).edit().apply {
             if (language == null) remove(KEY_WRITING_PENDING) else putString(KEY_WRITING_PENDING, language.code)
         }.commit()
+    }
+
+    /** Set when the app language is changed on the welcome page: after the restart the page opens again. */
+    fun resumeWelcome(context: Context): Boolean = prefs(context).getBoolean(KEY_RESUME_WELCOME, false)
+
+    fun setResumeWelcome(context: Context, value: Boolean) {
+        prefs(context).edit().putBoolean(KEY_RESUME_WELCOME, value).commit()   // synchronous: the app restarts right after
     }
 }

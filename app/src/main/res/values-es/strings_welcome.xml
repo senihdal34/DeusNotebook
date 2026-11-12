@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="welcome_view_title">Te damos la bienvenida a %1$s</string>
+    <string name="welcome_view_subtitle">Haz estos pasos una sola vez. Solo el acceso a archivos es obligatorio.</string>
+    <string name="welcome_step_label">Paso %1$d</string>
+    <string name="welcome_optional">Opcional</string>
+    <string name="welcome_step_done">Hecho</string>
+    <string name="welcome_language_title">Idioma</string>
+    <string name="welcome_language_body">Elige el idioma de la app y el idioma en el que escribes a mano. Si cambias el idioma de la app, esta se reinicia y vuelves a esta página.</string>
+    <string name="welcome_view_file_access">Acceso a archivos</string>
+    <string name="welcome_view_file_access_explanation">%1$s guarda tus notas como archivos. Para eso necesita tu permiso.</string>
+    <string name="welcome_view_permissions_button">Permitir acceso</string>
+    <string name="welcome_view_permissions_granted">Permitido</string>
+    <string name="welcome_view_refresh_mode">Modo de actualización</string>
+    <string name="welcome_view_refresh_mode_details">El modo HD o Regal da la tinta más nítida en pantalla.</string>
+    <string name="welcome_view_refresh_mode_applied">Usando %1$s</string>
+    <string name="welcome_view_refresh_mode_set_hd_mode">Usar modo HD (ahora %1$s)</string>
+    <string name="welcome_view_prevent_frozen">Evita que %1$s se congele</string>
+    <string name="welcome_view_prevent_frozen_details">Las tabletas Boox pueden congelar las apps en segundo plano para ahorrar batería. Una app congelada se cierra y puedes perder trabajo.</string>
+    <string name="welcome_view_prevent_frozen_instructions_title">Cómo descongelar la app</string>
+    <string name="welcome_view_prevent_frozen_instructions">1. Mantén pulsado el icono de %1$s en la pantalla de inicio de Boox.\n2. Pulsa \"Descongelar aplicación\".</string>
+    <string name="welcome_view_prevent_frozen_recommended">Muy recomendado.</string>
+    <string name="welcome_view_quick_start_title">Guía rápida</string>
+    <string name="welcome_view_quick_start_navigation">Navegación</string>
+    <string name="welcome_view_quick_start_navigation_details">• Deslizar arriba/abajo: desplazar la página\n• Deslizar a izquierda/derecha: página anterior/siguiente\n• Pellizcar con 2 dedos: zoom\n• Tocar el número de página: salto rápido\n• Deslizar con dos dedos a izquierda/derecha: mostrar/ocultar la barra de herramientas</string>
+    <string name="welcome_view_quick_start_selection_editing_title"><![CDATA[Selección y edición]]></string>
+    <string name="welcome_view_quick_start_selection_editing_details"><![CDATA[• Mantener y arrastrar: seleccionar elementos\n• Doble toque: deshacer\n• Doble toque sobre la selección: copiar\n• Arrastrar la selección: mover\n• Garabatear para borrar (si está activado)]]></string>
+    <string name="welcome_view_quick_start_tips_title">Consejos</string>
+    <string name="welcome_view_quick_start_tips_details">• Toca el número de página para saltar a otra página.\n• Activa el borrado por garabateo en Ajustes para borrar como en papel.\n• Usa la opción de exportar en una selección para compartirla como imagen.\n• %1$s puede mostrar un PDF de LaTeX en vivo. Consulta el README.\n• Puedes cambiar cada gesto en Ajustes.</string>
+    <string name="welcome_view_continue">Continuar</string>
+    <string name="welcome_view_complete_setup_first">Permite el acceso a archivos para continuar</string>
+</resources>

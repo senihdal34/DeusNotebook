@@ -24,7 +24,8 @@
     <string name="sync_step5_title">Let your AI read your notes</string>
     <string name="sync_step5_body">Every note is a .md file with a title, date and #tags, plus its page images. Point your AI tool or agent at that folder on your computer and it can search and read your notes as text. Obsidian shows them as normal notes.</string>
     <string name="sync_private_note">Only devices you approve in Syncthing receive your notes.</string>
-    <string name="welcome_sync_title">Optional: sync notes to your computer</string>
-    <string name="welcome_sync_body">Share your notes as Markdown with Obsidian or your AI tools using Syncthing. It takes about five minutes, and you can do it later in Settings, Sync.</string>
+    <string name="welcome_sync_title">Sync notes to your computer</string>
+    <string name="welcome_sync_body">Send your notes as Markdown to Obsidian or your AI tools with Syncthing. It takes about five minutes. You can also do it later in Settings, Sync.</string>
     <string name="welcome_sync_button">Set up sync</string>
+    <string name="welcome_sync_needs_access">Allow file access first.</string>
 </resources>
