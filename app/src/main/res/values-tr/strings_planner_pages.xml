@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="planner_months_notebook">Planlayıcı Aylar</string>
+    <string name="planner_quarters_notebook">Planlayıcı Çeyrekler</string>
+    <string name="planner_years_notebook">Planlayıcı Yıllar</string>
+    <string name="planner_month_title">Aylık Plan</string>
+    <string name="planner_quarter_title">Çeyreklik Plan</string>
+    <string name="planner_year_title">Yıllık Plan</string>
+    <string name="planner_focus_month">Bu ayın odağı</string>
+    <string name="planner_focus_quarter">Bu çeyreğin odağı</string>
+    <string name="planner_focus_year">Yılın odağı</string>
+    <string name="planner_goals">Hedefler</string>
+    <string name="planner_days_count">%1$d gün</string>
+    <string name="planner_week_abbr">H</string>
+    <string name="planner_month_complete">Ay %%%1$d tamamlandı</string>
+    <string name="planner_quarter_complete">Çeyrek %%%1$d tamamlandı</string>
+</resources>

@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="planner_months_notebook">计划本·月</string>
+    <string name="planner_quarters_notebook">计划本·季度</string>
+    <string name="planner_years_notebook">计划本·年</string>
+    <string name="planner_month_title">每月计划</string>
+    <string name="planner_quarter_title">每季计划</string>
+    <string name="planner_year_title">每年计划</string>
+    <string name="planner_focus_month">本月重点</string>
+    <string name="planner_focus_quarter">本季重点</string>
+    <string name="planner_focus_year">全年重点</string>
+    <string name="planner_goals">目标</string>
+    <string name="planner_days_count">%1$d 天</string>
+    <string name="planner_week_abbr">周</string>
+    <string name="planner_month_complete">本月已过 %1$d%%</string>
+    <string name="planner_quarter_complete">本季已过 %1$d%%</string>
+</resources>

@@ -404,6 +404,7 @@ fun EditorView(
                             modifier = Modifier.align(Alignment.TopCenter)
                         )
                     }
+                    com.ethran.notable.planner.PlannerPageTaps(editorState, plannerService, navController)
                     plannerDay?.let { day ->
                         androidx.compose.foundation.layout.BoxWithConstraints(Modifier.fillMaxSize()) {
                             val density = androidx.compose.ui.platform.LocalDensity.current

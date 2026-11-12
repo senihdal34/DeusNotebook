@@ -4,6 +4,9 @@ import com.ethran.notable.R
 import com.ethran.notable.i18n.AppLanguage
 import com.ethran.notable.i18n.AppStrings
 import java.time.LocalDate
+import java.time.YearMonth
+import java.time.format.TextStyle
+import java.util.Locale
 
 /**
  * Names the planner gives its notebook and pages. They follow the app language, so changing the language renames
@@ -21,6 +24,40 @@ object PlannerNames {
         return "${PlannerWeeks.dayFull(day.dayOfWeek.value - 1, locale)} ${PlannerWeeks.shortDate(day, locale)}"
     }
 
+    /** "November 2026", "Kasım 2026", "2026年11月". Pure text from the language's calendar names, no string resources. */
+    fun monthTitle(month: YearMonth, language: AppLanguage = AppStrings.language): String {
+        val locale = language.locale
+        return if (locale.language == "zh") "${month.year}年${month.monthValue}月" else "${monthLabel(month, locale)} ${month.year}"
+    }
+
+    /** "Q4 2026"; Chinese "2026年第4季度". */
+    fun quarterTitle(year: Int, quarter: Int, language: AppLanguage = AppStrings.language): String =
+        if (language.locale.language == "zh") "${year}年第${quarter}季度" else "Q$quarter $year"
+
+    fun yearTitle(year: Int): String = year.toString()
+
+    /** Full month name on its own: "November", "listopad" (not "listopada"), "11月". */
+    fun monthLabel(month: YearMonth, locale: Locale = AppStrings.locale): String =
+        if (locale.language == "zh") "${month.monthValue}月"
+        else month.month.getDisplayName(TextStyle.FULL_STANDALONE, locale).replaceFirstChar { it.titlecase(locale) }
+
+    /** Short month name for the year page: "Nov", "Kas", "11月". */
+    fun monthShort(month: YearMonth, locale: Locale = AppStrings.locale): String =
+        if (locale.language == "zh") "${month.monthValue}月"
+        else month.month.getDisplayName(TextStyle.SHORT_STANDALONE, locale).trimEnd('.').replaceFirstChar { it.titlecase(locale) }
+
+    /** Name of the notebook that holds all pages of one level. */
+    fun levelNotebookTitle(level: PlannerLevel, language: AppLanguage = AppStrings.language): String =
+        AppStrings.getIn(language, levelNotebookRes(level))
+
+    fun allLevelNotebookTitles(level: PlannerLevel): List<String> = AppLanguage.entries.map { levelNotebookTitle(level, it) }.distinct()
+
+    private fun levelNotebookRes(level: PlannerLevel) = when (level) {
+        PlannerLevel.Month -> R.string.planner_months_notebook
+        PlannerLevel.Quarter -> R.string.planner_quarters_notebook
+        PlannerLevel.Year -> R.string.planner_years_notebook
+    }
+
     /** The notebook's name in every language (and the name before the app was translated). */
     fun allNotebookTitles(): List<String> = AppLanguage.entries.map { notebookTitle(it) }.distinct() + LEGACY_NOTEBOOK
 
@@ -30,7 +67,22 @@ object PlannerNames {
         val known: Set<String>
         val week = PlannerWeeks.parseWeek(background)
         val day = PlannerWeeks.parseDay(background)
+        val month = PlannerWeeks.parseMonth(background)
+        val quarter = PlannerWeeks.parseQuarter(background)
+        val year = PlannerWeeks.parseYear(background)
         when {
+            month != null -> {
+                wanted = monthTitle(month, language)
+                known = AppLanguage.entries.map { monthTitle(month, it) }.toSet()
+            }
+            quarter != null -> {
+                wanted = quarterTitle(quarter.year, quarter.quarter, language)
+                known = AppLanguage.entries.map { quarterTitle(quarter.year, quarter.quarter, it) }.toSet()
+            }
+            year != null -> {
+                wanted = yearTitle(year)
+                known = setOf(wanted)
+            }
             week != null -> {
                 wanted = weekTitle(week, language)
                 known = AppLanguage.entries.map { weekTitle(week, it) }.toSet()

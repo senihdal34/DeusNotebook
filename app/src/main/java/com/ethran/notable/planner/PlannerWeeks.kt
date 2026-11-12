@@ -2,6 +2,7 @@ package com.ethran.notable.planner
 
 import java.time.DayOfWeek
 import java.time.LocalDate
+import java.time.YearMonth
 import java.time.temporal.IsoFields
 import java.time.temporal.TemporalAdjusters
 import java.time.format.TextStyle
@@ -16,6 +17,10 @@ object PlannerWeeks {
     const val WEEK_PREFIX = "planner-week:"
     /** To-do/notes page of the first version; no longer created, pages that have ink still draw. */
     const val TODO_PREFIX = "planner-todo:"
+    /** One page per month, quarter and year, each level in its own notebook: `planner-month:2026-11`, `planner-quarter:2026-Q4`, `planner-year:2026`. */
+    const val MONTH_PREFIX = "planner-month:"
+    const val QUARTER_PREFIX = "planner-quarter:"
+    const val YEAR_PREFIX = "planner-year:"
     /** Weeks created in advance after the current one, so swiping to the next page stays inside the planner. */
     const val WEEKS_AHEAD = 8
 
@@ -31,6 +36,11 @@ object PlannerWeeks {
 
     fun weekBackground(monday: LocalDate) = WEEK_PREFIX + monday
     fun dayBackground(day: LocalDate) = DAY_PREFIX + day
+    fun monthBackground(month: YearMonth) = MONTH_PREFIX + "${pad(month.year, 4)}-${pad(month.monthValue, 2)}"
+    fun quarterBackground(year: Int, quarter: Int) = QUARTER_PREFIX + "${pad(year, 4)}-Q$quarter"
+    fun yearBackground(year: Int) = YEAR_PREFIX + pad(year, 4)
+
+    private fun pad(n: Int, width: Int) = n.toString().padStart(width, '0')
 
     /** Mondays of the weeks that exist from the start: this week and the next [ahead] weeks. */
     fun weeksToEnsure(today: LocalDate, ahead: Int = WEEKS_AHEAD): List<LocalDate> {
@@ -38,8 +48,15 @@ object PlannerWeeks {
         return (0..ahead).map { first.plusWeeks(it.toLong()) }
     }
 
-    /** Sort key that keeps the planner notebook in date order: a week page, then its seven day pages. */
+    /**
+     * Sort key that keeps a planner notebook in date order. The week and day notebook: a week page, then its seven day
+     * pages. The month, quarter and year notebooks: the first day of the period. Keys of different levels are never
+     * compared, because every level has its own notebook.
+     */
     fun sortKey(background: String): Long? {
+        parseMonth(background)?.let { return it.atDay(1).toEpochDay() }
+        parseQuarter(background)?.let { return it.start.toEpochDay() }
+        parseYear(background)?.let { return LocalDate.of(it, 1, 1).toEpochDay() }
         parseWeek(background)?.let { return mondayOf(it).toEpochDay() * 10 }
         parseDay(background)?.let { return mondayOf(it).toEpochDay() * 10 + 1 + (it.dayOfWeek.value - 1) }
         parseTodo(background)?.let { return mondayOf(it).toEpochDay() * 10 + 9 }
@@ -50,7 +67,46 @@ object PlannerWeeks {
     fun parseTodo(background: String): LocalDate? = parse(background, TODO_PREFIX)
     fun parseWeek(background: String): LocalDate? = parse(background, WEEK_PREFIX)
     fun parseDay(background: String): LocalDate? = parse(background, DAY_PREFIX)
+    /** Every planner page, also keys of a newer app version that this one cannot draw. */
     fun isPlanner(background: String) = background.startsWith("planner-")
+
+    /** Pages whose layout is fixed to the screen (no zoom or pan): week, day, month, quarter and year. */
+    fun isFixedPage(background: String) = background.startsWith(WEEK_PREFIX) || background.startsWith(DAY_PREFIX) ||
+        background.startsWith(MONTH_PREFIX) || background.startsWith(QUARTER_PREFIX) || background.startsWith(YEAR_PREFIX)
+
+    /** A quarter of a calendar year, [quarter] 1..4. */
+    data class YearQuarter(val year: Int, val quarter: Int) {
+        val start: LocalDate get() = LocalDate.of(year, (quarter - 1) * 3 + 1, 1)
+        val end: LocalDate get() = start.plusMonths(3).minusDays(1)
+        val months: List<YearMonth> get() = (0..2).map { YearMonth.of(year, (quarter - 1) * 3 + 1 + it) }
+        fun plusQuarters(n: Int): YearQuarter = of(start.plusMonths(3L * n))
+        companion object {
+            fun of(date: LocalDate) = YearQuarter(date.year, (date.monthValue - 1) / 3 + 1)
+        }
+    }
+
+    private val MONTH_KEY = Regex("""(\d{4})-(\d{2})""")
+    private val QUARTER_KEY = Regex("""(\d{4})-Q([1-4])""")
+    private val YEAR_KEY = Regex("""\d{4}""")
+
+    fun parseMonth(background: String): YearMonth? {
+        if (!background.startsWith(MONTH_PREFIX)) return null
+        val m = MONTH_KEY.matchEntire(background.removePrefix(MONTH_PREFIX)) ?: return null
+        val month = m.groupValues[2].toInt()
+        return if (month in 1..12) YearMonth.of(m.groupValues[1].toInt(), month) else null
+    }
+
+    fun parseQuarter(background: String): YearQuarter? {
+        if (!background.startsWith(QUARTER_PREFIX)) return null
+        val m = QUARTER_KEY.matchEntire(background.removePrefix(QUARTER_PREFIX)) ?: return null
+        return YearQuarter(m.groupValues[1].toInt(), m.groupValues[2].toInt())
+    }
+
+    fun parseYear(background: String): Int? {
+        if (!background.startsWith(YEAR_PREFIX)) return null
+        val key = background.removePrefix(YEAR_PREFIX)
+        return if (YEAR_KEY.matches(key)) key.toInt() else null
+    }
 
     private fun parse(background: String, prefix: String): LocalDate? =
         if (background.startsWith(prefix)) runCatching { LocalDate.parse(background.removePrefix(prefix)) }.getOrNull() else null

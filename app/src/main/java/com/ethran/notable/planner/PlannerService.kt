@@ -8,6 +8,7 @@ import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 import java.time.LocalDate
+import java.time.YearMonth
 import java.time.ZoneId
 import java.util.Date
 import javax.inject.Inject
@@ -37,6 +38,70 @@ class PlannerService @Inject constructor(private val appRepository: AppRepositor
 
     /** The long to-do page of one day, created when missing (the week page exists too). */
     suspend fun ensureDay(day: LocalDate): Target = ensureWeeks(listOf(PlannerWeeks.mondayOf(day)), listOf(day)).getValue(day)
+
+    /** The page of the month [date] is in, created when missing (with the next months, so swiping stays inside the notebook). */
+    suspend fun ensureMonth(date: LocalDate): Target {
+        val first = YearMonth.from(date)
+        return ensureLevel(PlannerLevel.Month, (0..MONTHS_AHEAD).map { first.plusMonths(it.toLong()) }.map {
+            Want(PlannerWeeks.monthBackground(it), PlannerNames.monthTitle(it), it.atDay(1))
+        })
+    }
+
+    /** The page of the quarter [date] is in, created when missing (with the next quarters). */
+    suspend fun ensureQuarter(date: LocalDate): Target {
+        val first = PlannerWeeks.YearQuarter.of(date)
+        return ensureLevel(PlannerLevel.Quarter, (0..QUARTERS_AHEAD).map { first.plusQuarters(it) }.map {
+            Want(PlannerWeeks.quarterBackground(it.year, it.quarter), PlannerNames.quarterTitle(it.year, it.quarter), it.start)
+        })
+    }
+
+    /** The page of the year [date] is in, created when missing (with the next years). */
+    suspend fun ensureYear(date: LocalDate): Target =
+        ensureLevel(PlannerLevel.Year, (0..YEARS_AHEAD).map { date.year + it }.map {
+            Want(PlannerWeeks.yearBackground(it), PlannerNames.yearTitle(it), LocalDate.of(it, 1, 1))
+        })
+
+    private data class Want(val background: String, val title: String, val date: LocalDate)
+
+    /**
+     * Finds or creates the notebook of one level and its pages for [wants] (the first one is returned), in date order.
+     * Same lock and the same create-on-demand rule as the week pages; only pages that are missing are created.
+     */
+    private suspend fun ensureLevel(level: PlannerLevel, wants: List<Want>): Target = withContext(NonCancellable) {
+        mutex.withLock {
+            val books = appRepository.bookRepository
+            val pages = appRepository.pageRepository
+
+            var book = findBook(PlannerNames.allLevelNotebookTitles(level))
+            if (book == null) {
+                book = Notebook(title = PlannerNames.levelNotebookTitle(level), defaultBackground = "blank")
+                books.createEmpty(book)
+            }
+            var existing = book.pageIds.chunked(400).flatMap { pages.getByIds(it) }
+            if (relocalize(book, existing, PlannerNames.levelNotebookTitle(level), PlannerNames.allLevelNotebookTitles(level))) {
+                book = findBook(PlannerNames.allLevelNotebookTitles(level)) ?: book
+                existing = book.pageIds.chunked(400).flatMap { pages.getByIds(it) }
+            }
+
+            val byBackground = existing.associateBy { it.background }.toMutableMap()
+            val ids = book.pageIds.toMutableList()
+            var changed = false
+            var first: Page? = null
+            for (want in wants) {
+                val page = byBackground[want.background] ?: Page(
+                    notebookId = book.id, background = want.background, backgroundType = "native",
+                    createdAt = Date.from(want.date.atStartOfDay(ZoneId.systemDefault()).toInstant()), title = want.title
+                ).also { pages.create(it); ids.add(it.id); byBackground[want.background] = it; changed = true }
+                if (first == null) first = page
+            }
+            if (changed) {
+                val background = byBackground.values.associate { it.id to it.background }
+                val sorted = ids.sortedBy { id -> background[id]?.let(PlannerWeeks::sortKey) ?: Long.MAX_VALUE }
+                books.update(book.copy(pageIds = sorted))
+            }
+            Target(book.id, requireNotNull(first).id)
+        }
+    }
 
     /** Returns targets keyed by Monday for the weeks and by date for the extra [days]. */
     private suspend fun ensureWeeks(mondays: List<LocalDate>, days: List<LocalDate> = emptyList()): Map<LocalDate, Target> = withContext(NonCancellable) {
@@ -94,9 +159,9 @@ class PlannerService @Inject constructor(private val appRepository: AppRepositor
     }
 
     /** The planner notebook, whichever language its name was given in. */
-    private suspend fun findBook(): Notebook? {
+    private suspend fun findBook(titles: List<String> = PlannerNames.allNotebookTitles()): Notebook? {
         val books = appRepository.bookRepository
-        for (title in PlannerNames.allNotebookTitles()) books.findByTitle(title)?.let { return it }
+        for (title in titles) books.findByTitle(title)?.let { return it }
         return null
     }
 
@@ -104,10 +169,12 @@ class PlannerService @Inject constructor(private val appRepository: AppRepositor
      * Gives the planner notebook and its pages the names of the current app language. Only names the app made are
      * changed: pages and strokes, and names typed by the user, are not touched. Returns true when anything changed.
      */
-    private suspend fun relocalize(book: Notebook, pagesOfBook: List<Page>): Boolean {
+    private suspend fun relocalize(
+        book: Notebook, pagesOfBook: List<Page>, title: String = PlannerNames.notebookTitle(),
+        allTitles: List<String> = PlannerNames.allNotebookTitles()
+    ): Boolean {
         var changed = false
-        val title = PlannerNames.notebookTitle()
-        if (book.title != title && book.title in PlannerNames.allNotebookTitles()) {
+        if (book.title != title && book.title in allTitles) {
             appRepository.bookRepository.update(book.copy(title = title))
             changed = true
         }
@@ -122,13 +189,22 @@ class PlannerService @Inject constructor(private val appRepository: AppRepositor
     /** Renames the planner after an app language change. Does nothing when there is no planner notebook yet. */
     suspend fun relocalize(): Unit = withContext(NonCancellable) {
         mutex.withLock {
-            val book = findBook() ?: return@withLock
-            val pages = book.pageIds.chunked(400).flatMap { appRepository.pageRepository.getByIds(it) }
-            relocalize(book, pages)
+            findBook()?.let { book ->
+                relocalize(book, book.pageIds.chunked(400).flatMap { appRepository.pageRepository.getByIds(it) })
+            }
+            for (level in PlannerLevel.entries) {
+                val all = PlannerNames.allLevelNotebookTitles(level)
+                val book = findBook(all) ?: continue
+                relocalize(book, book.pageIds.chunked(400).flatMap { appRepository.pageRepository.getByIds(it) }, PlannerNames.levelNotebookTitle(level), all)
+            }
         }
     }
 
     private companion object {
+        const val MONTHS_AHEAD = 3
+        const val QUARTERS_AHEAD = 2
+        const val YEARS_AHEAD = 2
+
         // One lock for every instance: the editor's week tool and Home both create pages.
         val mutex = Mutex()
     }
