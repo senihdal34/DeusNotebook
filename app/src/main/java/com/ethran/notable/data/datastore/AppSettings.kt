@@ -30,7 +30,12 @@ data class AppSettings(
     val quickNavPages: List<String> = listOf(),
     val neoTools: Boolean = false,
     val scribbleToEraseEnabled: Boolean = false,
+    /** Replaced by [toolbarSide]. Kept only so settings saved by older versions still decode; ignored. */
     val toolbarPosition: Position = Position.Top,
+    /** Which edge of the editor holds the tool rail (Right is for left-handed use). Old Top/Bottom settings fall back to Left. */
+    val toolbarSide: ToolbarSide = ToolbarSide.Left,
+    /** The tool rail folds into a thin handle after a few seconds of pen writing. */
+    val toolbarAutoHide: Boolean = true,
     val smoothScroll: Boolean = true,
     val continuousZoom: Boolean = false,
     val continuousStrokeSlider: Boolean = false,
@@ -82,7 +87,12 @@ data class AppSettings(
         Undo, Redo, PreviousPage, NextPage, ChangeTool, ToggleZen, Select
     }
 
+    /** Legacy: only here so old saved settings decode. */
     enum class Position {
         Top, Bottom, // Left,Right,
     }
 }
+
+/** Edge of the editor that holds the tool rail. */
+@Serializable
+enum class ToolbarSide { Left, Right }

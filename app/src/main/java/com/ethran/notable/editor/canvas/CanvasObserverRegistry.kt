@@ -182,6 +182,12 @@ class CanvasObserverRegistry(
             }
         }
         coroutineScope.launch {
+            snapshotFlow { state.lineDashed }.drop(1).collect {
+                logCanvasObserver.v("line style change: dashed=${state.lineDashed}")
+                inputHandler.updatePenAndStroke()
+            }
+        }
+        coroutineScope.launch {
             snapshotFlow { state.eraser }.drop(1).collect {
                 logCanvasObserver.v("eraser change: ${state.eraser}")
                 inputHandler.updatePenAndStroke()

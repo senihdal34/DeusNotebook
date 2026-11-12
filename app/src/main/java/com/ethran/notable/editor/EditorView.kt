@@ -23,11 +23,12 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.navigation.NavController
 import com.ethran.notable.data.AppRepository
 import com.ethran.notable.data.datastore.EditorSettingCacheManager
+import com.ethran.notable.data.datastore.GlobalAppSettings
 import com.ethran.notable.editor.state.EditorState
 import com.ethran.notable.editor.state.History
-import com.ethran.notable.editor.ui.EditorSidebar
+import com.ethran.notable.editor.ui.rail.EditorToolRail
+import com.ethran.notable.editor.ui.rail.RailRow
 import com.ethran.notable.editor.ui.EditorSurface
-import com.ethran.notable.editor.ui.SIDEBAR_WIDTH
 import com.ethran.notable.editor.ui.HorizontalScrollIndicator
 import com.ethran.notable.editor.ui.InboxToolbar
 import com.ethran.notable.editor.ui.PlannerWeekBar
@@ -274,6 +275,7 @@ fun EditorView(
         // TODO put in editorSetting class
         LaunchedEffect(
             editorState.isToolbarOpen,
+            editorState.lineDashed,
             editorState.pen,
             editorState.penSettings,
             editorState.mode,
@@ -287,7 +289,8 @@ fun EditorView(
                     mode = editorState.mode,
                     pen = editorState.pen,
                     eraser = editorState.eraser,
-                    penSettings = editorState.penSettings
+                    penSettings = editorState.penSettings,
+                    lineDashed = editorState.lineDashed
                 )
             )
         }
@@ -295,10 +298,28 @@ fun EditorView(
 
 
         InkaTheme {
-            Row(modifier = Modifier.fillMaxSize()) {
-                // Left-edge sidebar — physically outside the canvas SurfaceView
-                // so finger taps always work even when Onyx SDK raw drawing is active
-                EditorSidebar(exportEngine, navController, appRepository, editorState, editorControlTower)
+            // Tool rail in a fixed-width gutter beside the canvas (left, or right for left-handed use) — physically
+            // outside the canvas SurfaceView so finger taps always work even when Onyx SDK raw drawing is active.
+            // The gutter keeps its width whether the rail is open or folded, so the canvas size never changes.
+            RailRow(
+                side = GlobalAppSettings.current.toolbarSide,
+                rail = {
+                    EditorToolRail(
+                        exportEngine, navController, appRepository, editorState, editorControlTower,
+                        isPlannerPage = plannerMonday != null || plannerDay != null || plannerLevel != null,
+                        isInboxPage = isInboxPage,
+                        onBack = {
+                            // Inbox pages: same as the inbox bar's "Save & Exit". Other pages: leave the editor.
+                            if (isInboxPage) {
+                                SyncState.launchSync(appRepository, pageId, selectedTags.toList(), context, exportEngine)
+                            }
+                            if (!navController.popBackStack()) {
+                                navController.navigate(com.ethran.notable.ui.views.HomeDestination.route)
+                            }
+                        }
+                    )
+                }
+            ) {
                 // Canvas area takes remaining space
                 Box(modifier = Modifier.weight(1f).fillMaxHeight()) {
                     EditorGestureReceiver(controlTower = editorControlTower)

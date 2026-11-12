@@ -6,7 +6,6 @@ import android.graphics.RectF
 import android.util.Log
 import androidx.compose.ui.unit.dp
 import androidx.core.graphics.toRect
-import com.ethran.notable.data.datastore.AppSettings
 import com.ethran.notable.data.datastore.GlobalAppSettings
 import com.ethran.notable.editor.PageView
 import com.ethran.notable.editor.ui.INBOX_TOOLBAR_COLLAPSED_HEIGHT
@@ -87,6 +86,7 @@ class OnyxInputHandler(
 
         override fun onBeginRawDrawing(p0: Boolean, p1: TouchPoint?) {
             com.ethran.notable.gestures.PalmGuard.penSeen()
+            state.lastWritingMs = android.os.SystemClock.uptimeMillis()
         }
 
         override fun onEndRawDrawing(p0: Boolean, p1: TouchPoint?) {
@@ -95,6 +95,7 @@ class OnyxInputHandler(
 
         override fun onRawDrawingTouchPointMoveReceived(p0: TouchPoint?) {
             com.ethran.notable.gestures.PalmGuard.penSeen()
+            state.lastWritingMs = android.os.SystemClock.uptimeMillis()
         }
 
         override fun onRawDrawingTouchPointListReceived(plist: TouchPointList) =
@@ -158,9 +159,17 @@ class OnyxInputHandler(
         when (state.mode) {
             Mode.Draw, Mode.Line -> {
                 val setting = state.penSettings[state.pen.penName] ?: return
-                touchHelper!!.setStrokeStyle(state.pen.strokeStyle)
+                // Line mode can draw dashed lines: same size and colour, dashed stroke style.
+                val drawPen = state.linePen
+                touchHelper!!.setStrokeStyle(drawPen.strokeStyle)
                     ?.setStrokeWidth(setting.strokeSize * page.zoomLevel.value)
                     ?.setStrokeColor(setting.color)
+                if (drawPen == Pen.DASHED) {
+                    Device.currentDevice().setStrokeParameters(
+                        Pen.DASHED.strokeStyle,
+                        floatArrayOf(5f, 9f, 9f, 0f)
+                    )
+                }
             }
 
             Mode.Erase -> when (state.eraser) {
@@ -223,14 +232,12 @@ class OnyxInputHandler(
             return toolbarHeight to penToolbarHeight
         }
 
+        // Unchanged from the old default (toolbar position Top): while the toolbar is open, the top strip is not drawn on.
+        // The tool rail itself sits beside the page area, outside the drawing surface.
         val toolbarHeight = if (state.isToolbarOpen) {
             convertDpToPixel(40.dp, drawCanvas.context).toInt()
         } else 0
-
-        return when (GlobalAppSettings.current.toolbarPosition) {
-            AppSettings.Position.Top -> toolbarHeight to 0
-            AppSettings.Position.Bottom -> 0 to toolbarHeight
-        }
+        return toolbarHeight to 0
     }
     private fun onRawDrawingList(plist: TouchPointList) {
         if (touchHelper == null) return
@@ -290,7 +297,7 @@ class OnyxInputHandler(
                             strokeHistoryBatch,
                             drawCanvas.getActualState().penSettings[drawCanvas.getActualState().pen.penName]!!.strokeSize,
                             drawCanvas.getActualState().penSettings[drawCanvas.getActualState().pen.penName]!!.color,
-                            drawCanvas.getActualState().pen,
+                            drawCanvas.getActualState().linePen,
                             linePoints
                         )
 

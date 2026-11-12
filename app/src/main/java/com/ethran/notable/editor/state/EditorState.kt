@@ -7,6 +7,7 @@ import androidx.compose.runtime.setValue
 import com.ethran.notable.data.AppRepository
 import com.ethran.notable.data.datastore.EditorSettingCacheManager
 import com.ethran.notable.editor.PageView
+import com.ethran.notable.editor.rail.PenMigration
 import com.ethran.notable.editor.utils.Eraser
 import com.ethran.notable.editor.utils.Pen
 import com.ethran.notable.editor.utils.PenSetting
@@ -91,8 +92,21 @@ class EditorState(
 
     private val log = ShipBook.getLogger("EditorState")
 
+    // Saved state may name a pen the interface no longer offers (red/blue/green ballpoint, pencil, brush, dashed).
+    private val migratedPen = persistedEditorSettings?.let {
+        val m = PenMigration.migrate(it.pen, it.penSettings)
+        m.copy(lineDashed = it.lineDashed || m.lineDashed)
+    }
+
     var mode by mutableStateOf(persistedEditorSettings?.mode ?: Mode.Draw)
-    var pen by mutableStateOf(persistedEditorSettings?.pen ?: Pen.DEFAULT)
+    var pen by mutableStateOf(migratedPen?.pen ?: Pen.DEFAULT)
+    /** Line mode draws dashed lines (set from the line popover of the tool rail). */
+    var lineDashed by mutableStateOf(migratedPen?.lineDashed ?: false)
+    /** The pen a stroke is made with in the current mode: Line mode can use the dashed pen. */
+    val linePen: Pen get() = if (mode == Mode.Line && lineDashed) Pen.DASHED else pen
+
+    /** Uptime (ms) of the last raw pen drawing event; the tool rail folds away after some seconds of writing. */
+    @Volatile var lastWritingMs: Long = 0L
     var eraser by mutableStateOf(persistedEditorSettings?.eraser ?: Eraser.PEN)
     var isDrawing by mutableStateOf(true)
 
@@ -100,8 +114,8 @@ class EditorState(
     var isInboxTagsExpanded by mutableStateOf(false)
     var annotationMode by mutableStateOf(AnnotationMode.None)
 
-    var isToolbarOpen by mutableStateOf(persistedEditorSettings?.isToolbarOpen ?: false)
-    var penSettings by mutableStateOf(persistedEditorSettings?.penSettings ?: Pen.DEFAULT_SETTINGS)
+    var isToolbarOpen by mutableStateOf(persistedEditorSettings?.isToolbarOpen ?: true)
+    var penSettings by mutableStateOf(migratedPen?.penSettings ?: Pen.DEFAULT_SETTINGS)
 
     val selectionState = SelectionState()
 
