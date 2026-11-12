@@ -158,22 +158,6 @@ DeusNotebook is free software under the **GNU Affero General Public License, ver
 | [jdkruzr/aragonite](https://github.com/jdkruzr/aragonite) | GPL-3.0 | Obsidian capture, tags, handwriting recognition, sync |
 | [bookorbit/bookorbit](https://github.com/bookorbit/bookorbit) | AGPL-3.0 only, plus [additional terms](./licenses/bookorbit/ADDITIONAL_TERMS.md) | the Reading tab (board, badges, chapters, buddy art) |
 
-GPL-3.0 code may be combined with AGPL-3.0 code (section 13 of both licences). The combined work is distributed under
-the AGPL-3.0-only; the GPL parts keep their GPL terms (text in [licenses/GPL-3.0.txt](./licenses/GPL-3.0.txt)).
-BookOrbit's additional terms apply to the parts derived from it. They require, among other things, an About screen with
-the BookOrbit notice and a link to the complete source of the exact version you run: open **Settings, About and legal
-notices**, or the menu of the Reading tab. If you distribute a modified version, keep that screen, keep
-[NOTICE.md](./NOTICE.md) and `licenses/` and say what you changed and when. This is not an official BookOrbit release,
-and the app does not use the BookOrbit name or logo as its own.
-
-Where everything comes from: [NOTICE.md](./NOTICE.md) (upstream code and what was modified) and
-[THIRD_PARTY_NOTICES.md](./THIRD_PARTY_NOTICES.md) (libraries, Noto fonts under the SIL Open Font License, Lucide icons).
-
-**Onyx SDK caveat.** The Onyx Boox SDK (`onyxsdk-*`, also the `.aar` files in `app/libs`) is proprietary software of
-Onyx International. It comes with the upstream projects, is not covered by the AGPL and is not part of this project's
-source. Check Onyx's terms before you redistribute a build. One image, `iris.jpg`, has an unverified origin (see
-THIRD_PARTY_NOTICES.md).
-
 ## Contributing
 
 Pull requests are welcome. By contributing you agree that your contribution is licensed under the AGPL-3.0-only (and,
