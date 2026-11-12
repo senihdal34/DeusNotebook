@@ -306,7 +306,7 @@ fun EditorView(
                 rail = {
                     EditorToolRail(
                         exportEngine, navController, appRepository, editorState, editorControlTower,
-                        isPlannerPage = plannerMonday != null || plannerDay != null,
+                        isPlannerPage = plannerMonday != null || plannerDay != null || plannerLevel != null,
                         isInboxPage = isInboxPage,
                         onBack = {
                             // Inbox pages: same as the inbox bar's "Save & Exit". Other pages: leave the editor.
