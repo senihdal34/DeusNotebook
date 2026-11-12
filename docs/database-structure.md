@@ -1,6 +1,6 @@
-# Notable Persistent Data Model and Stroke Encoding Specification
+# DeusNotebook Persistent Data Model and Stroke Encoding Specification
 
-This document defines the persistent data model of Notable and the storage of stroke point lists as implemented.
+This document defines the persistent data model of DeusNotebook (a fork of Notable) and the storage of stroke point lists as implemented.
 It describes the structures and fields that actually exist in the codebase.
 It is a specification of the current structure, not a change log.
 **It was created by AI, and roughly checked for correctness.

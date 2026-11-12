@@ -1,6 +1,7 @@
 package com.ethran.notable.ui.views
 
 import android.content.Context
+import com.ethran.notable.utils.ProjectLinks
 import android.content.Intent
 import android.widget.Toast
 import androidx.compose.foundation.horizontalScroll
@@ -70,9 +71,10 @@ fun BugReportScreen(
         try {
             val title = viewModel.getIssueTitle()
             val body = uiState.finalMarkdown
-            val url = "https://github.com/ethran/notable/issues/new?" +
-                    "title=${URLEncoder.encode("Bug: $title", "UTF-8")}" +
-                    "&body=${URLEncoder.encode(body, "UTF-8")}"
+            val url = ProjectLinks.newIssueUrl(
+                encodedTitle = URLEncoder.encode("Bug: $title", "UTF-8"),
+                encodedBody = URLEncoder.encode(body, "UTF-8")
+            )
 
             context.startActivity(Intent(Intent.ACTION_VIEW, url.toUri()))
         } catch (e: Exception) {

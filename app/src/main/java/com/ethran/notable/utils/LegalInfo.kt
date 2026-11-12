@@ -4,10 +4,13 @@ package com.ethran.notable.utils
 /** Facts and links for the About and legal notices screen (see NOTICE.md, licenses/bookorbit/ADDITIONAL_TERMS.md). */
 object LegalInfo {
     /** The complete Corresponding Source of this app (AGPL-3.0 section 13). */
-    const val SOURCE_URL = "https://github.com/senihdal34/DeusNotebook"
+    const val SOURCE_URL = ProjectLinks.REPO_URL
     const val BOOKORBIT_URL = "https://github.com/bookorbit/bookorbit"
     const val NOTABLE_URL = "https://github.com/Ethran/notable"
     const val ARAGONITE_URL = "https://github.com/jdkruzr/aragonite"
+
+    /** The original author's sponsor page. Credit to the upstream project, not a link for this app's own support. */
+    const val NOTABLE_SPONSOR_URL = "https://github.com/sponsors/ethran"
 
     /** Date of the last change to BookOrbit-derived material that was noted in NOTICE.md (ISO 8601). */
     const val MODIFIED_ON = "2026-11-12"

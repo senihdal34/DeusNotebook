@@ -74,6 +74,7 @@ import com.ethran.notable.ui.components.GesturesSettings
 import com.ethran.notable.ui.theme.InkaTheme
 import com.ethran.notable.ui.viewmodels.GestureRowModel
 import com.ethran.notable.ui.viewmodels.SettingsViewModel
+import com.ethran.notable.utils.ProjectLinks
 import com.ethran.notable.utils.isNext
 
 
@@ -190,7 +191,6 @@ fun SettingsContent(
                     modifier = Modifier.padding(bottom = 16.dp),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
-                    GitHubSponsorButton(Modifier.padding(vertical = 8.dp))
                     UpdateActions(
                         isLatestVersion = isLatestVersion, onCheckUpdate = onCheckUpdate,
                         modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp)
@@ -255,14 +255,6 @@ private fun SettingsTabRow(tabs: List<String>, selectedTab: Int, onTabSelected: 
 }
 
 @Composable
-fun GitHubSponsorButton(modifier: Modifier = Modifier) {
-    val context = LocalContext.current
-    HousePillButton(stringResource(R.string.sponsor_button_text), modifier) {
-        openInBrowser(context, "https://github.com/sponsors/ethran")
-    }
-}
-
-@Composable
 fun UpdateActions(
     isLatestVersion: Boolean, onCheckUpdate: (Boolean) -> Unit, modifier: Modifier = Modifier
 ) {
@@ -275,7 +267,7 @@ fun UpdateActions(
             )
             Spacer(Modifier.height(10.dp))
             HousePillButton(stringResource(R.string.app_see_release), filled = true) {
-                openInBrowser(context, "https://github.com/ethran/notable/releases")
+                openInBrowser(context, ProjectLinks.RELEASES_URL)
             }
         }
     } else {

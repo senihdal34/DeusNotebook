@@ -139,6 +139,11 @@ fun AboutContent(
                         LinkText(stringResource(R.string.legal_upstream_notable), LegalInfo.NOTABLE_URL, onOpenUrl)
                         LinkText(stringResource(R.string.legal_upstream_aragonite), LegalInfo.ARAGONITE_URL, onOpenUrl)
                         LinkText(stringResource(R.string.legal_notice_link), LegalInfo.blobUrl("NOTICE.md"), onOpenUrl)
+                        // Credit to the upstream author, clearly labelled as upstream; not a way to support this app.
+                        LinkText(
+                            stringResource(R.string.about_support_notable_author), LegalInfo.NOTABLE_SPONSOR_URL,
+                            onOpenUrl
+                        )
                     }
 
                     Section(stringResource(R.string.legal_third_party_heading)) {

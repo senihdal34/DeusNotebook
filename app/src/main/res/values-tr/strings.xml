@@ -39,7 +39,7 @@
     <string name="work_in_progress">(geliştirme aşamasında)</string>
     <string name="toolbar_position_top">Üst</string>
     <string name="toolbar_position_bottom">Alt</string>
-    <string name="sponsor_button_text">Destekle</string>
+    <string name="about_support_notable_author">Notable\'ın özgün yazarını destekle</string>
     <string name="gesture_action_undo">Geri al</string>
     <string name="gesture_action_redo">Yinele</string>
     <string name="gesture_action_previous_page">Önceki sayfa</string>

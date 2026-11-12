@@ -40,7 +40,7 @@
     <string name="work_in_progress">(work in progress)</string>
     <string name="toolbar_position_top">Top</string>
     <string name="toolbar_position_bottom">Bottom</string>
-    <string name="sponsor_button_text">Sponsor</string>
+    <string name="about_support_notable_author">Support the original author of Notable</string>
     <string name="gesture_action_undo">Undo</string>
     <string name="gesture_action_redo">Redo</string>
     <string name="gesture_action_previous_page">Previous Page</string>

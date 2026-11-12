@@ -39,7 +39,7 @@
     <string name="work_in_progress">（开发中）</string>
     <string name="toolbar_position_top">顶部</string>
     <string name="toolbar_position_bottom">底部</string>
-    <string name="sponsor_button_text">赞助</string>
+    <string name="about_support_notable_author">支持 Notable 的原作者</string>
     <string name="gesture_action_undo">撤销</string>
     <string name="gesture_action_redo">重做</string>
     <string name="gesture_action_previous_page">上一页</string>

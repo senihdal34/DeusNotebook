@@ -51,7 +51,7 @@
     <string name="work_in_progress">(w trakcie implementacji)</string>
     <string name="toolbar_position_top">Góra</string>
     <string name="toolbar_position_bottom">Dół</string>
-    <string name="sponsor_button_text">Wesprzyj</string>
+    <string name="about_support_notable_author">Wesprzyj oryginalnego autora Notable</string>
 
     <!-- Notebook details -->
     <string name="gesture_action_select">Zaznaczenie</string>

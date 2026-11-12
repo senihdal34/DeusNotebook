@@ -1,6 +1,7 @@
 package com.ethran.notable.ui.views
 
 import android.content.Context
+import com.ethran.notable.utils.ProjectLinks
 import android.content.Intent
 import android.content.IntentFilter
 import android.content.pm.PackageManager
@@ -52,9 +53,10 @@ class BugReportGenerator(
         val logFooter = "\n```"
         val logBoxLength = URLEncoder.encode(logFooter + logHeader, "UTF-8").length
         // Calculate space available for logs
-        val urlPrefixLength = ("https://github.com/ethran/notable/issues/new?" +
-                "title=${URLEncoder.encode("Bug: ${getTitle(description)}", "UTF-8")}" +
-                "&body=").length
+        val urlPrefixLength = ProjectLinks.newIssueUrl(
+            encodedTitle = URLEncoder.encode("Bug: ${getTitle(description)}", "UTF-8"),
+            encodedBody = ""
+        ).length
 
         val encodedBaseLength = URLEncoder.encode(baseReport, "UTF-8").length
 

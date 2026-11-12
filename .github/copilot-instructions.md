@@ -1,6 +1,6 @@
-# Copilot Instructions for Notable
+# Copilot Instructions for DeusNotebook
 
-**Notable** is an Android note-taking app for **Onyx BOOX e-ink tablets** (Kotlin · Jetpack Compose · Hilt · Room · OpenGL canvas · minSdk 29). Performance and responsiveness are the top priorities.
+**DeusNotebook** (a fork of Notable) is an Android note-taking app for **Onyx BOOX e-ink tablets** (Kotlin · Jetpack Compose · Hilt · Room · OpenGL canvas · minSdk 29). Performance and responsiveness are the top priorities.
 
 ## Code Review Guidelines
 

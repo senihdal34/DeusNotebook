@@ -29,10 +29,10 @@ jobs:
       - name: Rename APK
         run: |
           mv app/build/outputs/apk/debug/app-debug.apk \
-             app/build/outputs/apk/debug/aragonite-next.apk
+             app/build/outputs/apk/debug/deusnotebook-next.apk
 
       - name: Upload APK artifact
         uses: actions/upload-artifact@v4
         with:
-          name: aragonite-tr-debug
-          path: app/build/outputs/apk/debug/aragonite-next.apk
+          name: deusnotebook-debug
+          path: app/build/outputs/apk/debug/deusnotebook-next.apk

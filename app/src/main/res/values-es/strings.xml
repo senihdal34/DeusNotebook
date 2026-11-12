@@ -39,7 +39,7 @@
     <string name="work_in_progress">(en desarrollo)</string>
     <string name="toolbar_position_top">Arriba</string>
     <string name="toolbar_position_bottom">Abajo</string>
-    <string name="sponsor_button_text">Patrocinar</string>
+    <string name="about_support_notable_author">Apoya al autor original de Notable</string>
     <string name="gesture_action_undo">Deshacer</string>
     <string name="gesture_action_redo">Rehacer</string>
     <string name="gesture_action_previous_page">Página anterior</string>
