@@ -18,7 +18,25 @@ object ReadingStats {
     fun dayOf(timeMs: Long, zone: ZoneId): LocalDate =
         Instant.ofEpochMilli(timeMs).atZone(zone).minusHours(DAY_START_HOUR.toLong()).toLocalDate()
 
-    private fun norm(path: String) = path.replace("/storage/emulated/0", "/sdcard")
+    /** `/storage/emulated/<user>/...` is the same place as `/sdcard/...` for the owner (user 0) and for work profiles. */
+    private val storageRoot = Regex("^/storage/emulated/\\d+")
+    private fun norm(path: String) = storageRoot.replaceFirst(path, "/sdcard")
+
+    private val BOOK_EXTENSIONS = setOf("pdf", "epub", "mobi", "azw3", "azw", "fb2", "djvu", "cbz", "txt")
+    /** Folders that hold the tablet's own notes and exports, never books. */
+    private val NOT_BOOK_FOLDERS = listOf("/sdcard/note/", "/sdcard/Note/", "/sdcard/Notes/", "/sdcard/Handnotes/", "/sdcard/Documents/")
+
+    /**
+     * Which library entries are books. With a [booksDir] only that folder counts. Without one the usual `/sdcard/Books`
+     * is used when the library has anything there, otherwise every book-type file outside the notes folders counts,
+     * so a library kept in Download or an ebooks folder still shows up.
+     */
+    internal fun isBook(path: String, booksDir: String?, anyInBooks: Boolean): Boolean {
+        val p = norm(path)
+        if (booksDir != null) return p.startsWith("${booksDir.trimEnd('/')}/")
+        if (anyInBooks) return p.startsWith("/sdcard/Books/")
+        return p.substringAfterLast('.', "").lowercase() in BOOK_EXTENSIONS && NOT_BOOK_FOLDERS.none { p.startsWith(it) }
+    }
 
     fun coverKey(path: String): String =
         MessageDigest.getInstance("MD5").digest(norm(path).toByteArray()).joinToString("") { "%02x".format(it) }
@@ -26,10 +44,11 @@ object ReadingStats {
     fun build(
         books: List<NrBook>, events: List<NrEvent>, highlights: List<NrHighlight>, now: Long,
         zone: ZoneId = ZoneId.systemDefault(), name: String = "", goalBooks: Int = 15,
-        booksDir: String = "/sdcard/Books", exists: (String) -> Boolean = { File(it).exists() },
+        booksDir: String? = null, exists: (String) -> Boolean = { File(it).exists() },
         coverDir: File? = null, thumbnails: Map<String, File> = emptyMap(), seed: Long = 0L
     ): ReadingData {
-        val inBooks = books.filter { norm(it.path).startsWith("$booksDir/") && exists(it.path) }
+        val anyInBooks = booksDir == null && books.any { norm(it.path).startsWith("/sdcard/Books/") && exists(it.path) }
+        val inBooks = books.filter { isBook(it.path, booksDir, anyInBooks) && exists(it.path) }
         val byPath = inBooks.associateBy { norm(it.path) }
 
         // Events carry the file path only on their "opened" rows; docId links the rest to it.
@@ -93,7 +112,8 @@ object ReadingStats {
             }
             val finished = b.finished || pct >= FINISHED_AT
             val last = maxOf(b.lastAccess, lastRead[key] ?: 0L).takeIf { it > 0L && (pct > 0.0 || it == (lastRead[key] ?: -1L)) }
-            val secPerPage = if ((pagesRead[key] ?: 0) >= 5) (msRead[key] ?: 0L) / 1000.0 / pagesRead[key]!! else 60.0
+            val turned = pagesRead[key] ?: 0
+            val secPerPage = if (turned >= 5) (msRead[key] ?: 0L) / 1000.0 / turned else 60.0
             val left = if (b.progressTotal > 0 && !finished) ((b.progressTotal - b.progressPage) * secPerPage / 60.0).toInt().coerceAtLeast(1) else null
             val cover = coverDir?.let { File(it, coverKey(b.path) + ".jpg") }?.takeIf { it.exists() } ?: thumbnails[key]
             RBook(

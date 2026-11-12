@@ -36,7 +36,7 @@ data class ReadingUi(
 @HiltViewModel
 class ReadingViewModel @Inject constructor(@ApplicationContext private val context: Context) : ViewModel() {
     private val prefs = context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
-    private var goal = ReadingGoal.clamp(prefs.getInt(KEY_GOAL, ReadingGoal.DEFAULT))
+    @Volatile private var goal = ReadingGoal.clamp(prefs.getInt(KEY_GOAL, ReadingGoal.DEFAULT))
 
     private val _ui = MutableStateFlow(ReadingUi(ReadingData.Empty.copy(goalBooks = goal)))
     val ui: StateFlow<ReadingUi> = _ui.asStateFlow()
@@ -65,7 +65,7 @@ class ReadingViewModel @Inject constructor(@ApplicationContext private val conte
                 runCatching { BadgeEngine.evaluate(BadgeFacts.from(data, ReadingInsights.today(data)), PrefsBadgeStore(prefs), data.now) }
                     .onFailure { Log.w(TAG, "badges failed: ${it.javaClass.simpleName}: ${it.message}") }.getOrNull()
             } else null
-            _ui.update { ReadingUi(data, loaded = true, sourceAvailable = books.isNotEmpty(), badges = badges ?: it.badges, chapters = it.chapters) }
+            _ui.update { ReadingUi(data.copy(goalBooks = goal), loaded = true, sourceAvailable = books.isNotEmpty(), badges = badges ?: it.badges, chapters = it.chapters) }
             loadChapters(data.continueReading.firstOrNull())
         }
     }
@@ -93,7 +93,7 @@ class ReadingViewModel @Inject constructor(@ApplicationContext private val conte
     fun setGoal(books: Int) {
         goal = ReadingGoal.clamp(books)
         prefs.edit().putInt(KEY_GOAL, goal).apply()
-        _ui.value = _ui.value.let { it.copy(data = it.data.copy(goalBooks = goal)) }
+        _ui.update { it.copy(data = it.data.copy(goalBooks = goal)) }
     }
 
     /**

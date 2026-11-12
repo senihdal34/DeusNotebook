@@ -36,8 +36,12 @@ object TextSanitizer {
     }
 
     /** Single-line text (title, file name, tag). All whitespace, newlines included, becomes one space. */
+    private val whitespaceRun = Regex("\\s+")
+    private val blankLines = Regex("\n{3,}")
+    private val nonIndent = Regex("[^ \\t]")
+
     fun cleanLine(text: String?): String =
-        clean(text).replace(Regex("\\s+"), " ").trim()
+        clean(text).replace(whitespaceRun, " ").trim()
 
     /**
      * A note or file name turned into tag text: cleaned, no leading '#', spaces become '-'.
@@ -216,7 +220,7 @@ object TextSanitizer {
             // keep leading indentation (Markdown lists/code), squeeze everything after it
             var indentEnd = 0
             while (indentEnd < line.length && isSpaceLike(line[indentEnd])) indentEnd++
-            val indent = line.substring(0, indentEnd).replace(' ', ' ').replace(Regex("[^ \\t]"), " ")
+            val indent = line.substring(0, indentEnd).replace(' ', ' ').replace(nonIndent, " ")
             val body = line.substring(indentEnd)
             val squeezed = StringBuilder(body.length)
             var lastSpace = false
@@ -233,7 +237,7 @@ object TextSanitizer {
             if (trimmed.isEmpty()) "" else indent + trimmed
         }
         return lines.joinToString("\n")
-            .replace(Regex("\n{3,}"), "\n\n")
+            .replace(blankLines, "\n\n")
             .trim('\n')
     }
 }

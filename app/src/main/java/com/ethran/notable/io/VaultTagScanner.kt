@@ -55,8 +55,8 @@ object VaultTagScanner {
             val tags = parseFrontmatterTags(file)
             val fileTime = file.lastModified()
             for (tag in tags) {
-                // Root-locale lowercase turns "İ" into "i" + U+0307; cleanLine repairs that to a plain "i".
-                val normalized = TextSanitizer.cleanLine(tag.lowercase())
+                // Turkish lowercase: "I" -> "ı", "İ" -> "i" (the root locale would turn "I" into "i" and "İ" into "i" + U+0307).
+                val normalized = TextSanitizer.cleanLine(tag.lowercase(java.util.Locale("tr", "TR")))
                 if (normalized.isEmpty()) continue
                 val existing = tagScores[normalized]
                 tagScores[normalized] = TagScore(
@@ -85,44 +85,33 @@ object VaultTagScanner {
 
     private fun parseFrontmatterTags(file: File): List<String> {
         try {
-            val lines = file.readLines()
-            if (lines.isEmpty() || lines[0].trim() != "---") return emptyList()
-
-            var inFrontmatter = true
-            var inTagsBlock = false
-            val tags = mutableListOf<String>()
-
-            for (i in 1 until lines.size) {
-                val line = lines[i]
-                if (line.trim() == "---") break // end of frontmatter
-
-                if (line.startsWith("tags:")) {
-                    // Inline tags: tags: [a, b, c] or tags: a, b
-                    val inline = line.substringAfter("tags:").trim()
-                    if (inline.isNotEmpty()) {
-                        // Handle [a, b, c] or a, b formats
-                        val cleaned = inline.trimStart('[').trimEnd(']')
-                        tags.addAll(
-                            cleaned.split(",")
-                                .map { it.trim().trimStart('#') }
-                                .filter { it.isNotEmpty() }
-                        )
+            // Only the front matter is needed: stop at the closing "---" instead of reading the whole note.
+            return file.useLines { seq ->
+                val it = seq.iterator()
+                if (!it.hasNext() || it.next().trim() != "---") return@useLines emptyList()
+                var inTagsBlock = false
+                val tags = mutableListOf<String>()
+                while (it.hasNext()) {
+                    val line = it.next()
+                    if (line.trim() == "---") break // end of frontmatter
+                    if (line.startsWith("tags:")) {
+                        // Inline tags: tags: [a, b, c] or tags: a, b
+                        val inline = line.substringAfter("tags:").trim()
+                        if (inline.isNotEmpty()) {
+                            val cleaned = inline.trimStart('[').trimEnd(']')
+                            tags.addAll(cleaned.split(",").map { t -> t.trim().trimStart('#') }.filter { t -> t.isNotEmpty() })
+                        }
+                        inTagsBlock = true
+                        continue
                     }
-                    inTagsBlock = true
-                    continue
-                }
-
-                if (inTagsBlock) {
-                    val trimmed = line.trim()
-                    if (trimmed.startsWith("- ")) {
-                        tags.add(trimmed.removePrefix("- ").trim().trimStart('#'))
-                    } else {
-                        inTagsBlock = false
+                    if (inTagsBlock) {
+                        val trimmed = line.trim()
+                        if (trimmed.startsWith("- ")) tags.add(trimmed.removePrefix("- ").trim().trimStart('#'))
+                        else inTagsBlock = false
                     }
                 }
+                tags
             }
-
-            return tags
         } catch (e: Exception) {
             log.e("Failed to parse tags from ${file.name}: ${e.message}")
             return emptyList()

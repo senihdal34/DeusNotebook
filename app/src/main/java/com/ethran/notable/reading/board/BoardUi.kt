@@ -17,7 +17,11 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicText
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.produceState
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import kotlinx.coroutines.withContext
+import kotlinx.coroutines.Dispatchers
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -274,12 +278,16 @@ fun BHeadAction(label: String, onClick: (() -> Unit)? = null) {
 
 // ------------------------------------------------------------------ covers
 private val aspects = ConcurrentHashMap<String, Float>()
+/** Covers whose header could not be read: asked once, not on every draw. */
+private val unreadableCovers: MutableSet<String> = ConcurrentHashMap.newKeySet()
 
-/** The cover's native width over height, read from the file header once. */
+/** The cover's native width over height, read from the file header once. Reads the file: call it off the main thread. */
 fun coverAspect(file: File): Float? = aspects[file.path] ?: run {
+    if (file.path in unreadableCovers) return null
     val o = BitmapFactory.Options().apply { inJustDecodeBounds = true }
     BitmapFactory.decodeFile(file.path, o)
-    if (o.outWidth > 0 && o.outHeight > 0) (o.outWidth.toFloat() / o.outHeight).also { aspects[file.path] = it } else null
+    if (o.outWidth > 0 && o.outHeight > 0) (o.outWidth.toFloat() / o.outHeight).also { aspects[file.path] = it }
+    else { unreadableCovers.add(file.path); null }
 }
 
 /**
@@ -291,19 +299,23 @@ fun BCover(book: RBook?, w: Int, h: Int, border: Int = -1, borderCol: Color = In
     val bx = LocalBx.current
     val edge = if (border < 0) maxOf(1, bx.px(0.75)) else border
     val file = book?.cover
-    val aspect = remember(file) { file?.let { coverAspect(it) } }
-    if (file == null || aspect == null) {
+    // The header is read off the main thread; a cover already known is available on the first frame.
+    val aspect by produceState(file?.let { aspects[it.path] }, file) {
+        value = file?.let { f -> aspects[f.path] ?: withContext(Dispatchers.IO) { coverAspect(f) } }
+    }
+    val aspectKnown = aspect
+    if (file == null || aspectKnown == null) {
         BCoverPlaceholder(book?.title.orEmpty(), w, h, modifier)
         return
     }
     val boxAspect = w.toFloat() / h
-    val crop = Math.abs(aspect - boxAspect) / boxAspect <= 0.12f
+    val crop = Math.abs(aspectKnown - boxAspect) / boxAspect <= 0.12f
     val ctx = LocalContext.current
     val dw: Int
     val dh: Int
     if (crop) { dw = w; dh = h } else {
-        val sc = minOf(w / aspect, h.toFloat())      // height that fits
-        dh = Math.round(sc); dw = Math.round(sc * aspect)
+        val sc = minOf(w / aspectKnown, h.toFloat())      // height that fits
+        dh = Math.round(sc); dw = Math.round(sc * aspectKnown)
     }
     val request = remember(file, dw, dh) { ImageRequest.Builder(ctx).data(file).size(Size(maxOf(1, dw), maxOf(1, dh))).crossfade(false).build() }
     val painter = rememberAsyncImagePainter(request)

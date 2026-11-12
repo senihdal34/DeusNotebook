@@ -72,6 +72,8 @@ class HomeViewModel @Inject constructor(
         viewModelScope.launch {
             val target = try {
                 withContext(Dispatchers.IO) { plannerService.openCurrentWeek() }
+            } catch (e: kotlinx.coroutines.CancellationException) {
+                throw e
             } catch (e: Exception) { null }
             if (target != null) onReady(target.bookId, target.pageId)
         }
@@ -94,8 +96,18 @@ class HomeViewModel @Inject constructor(
         _inputTag.value = value
     }
 
+    /** The load in flight: a new one replaces it, so a slow older load can never publish after a newer one. */
+    private var loadJob: kotlinx.coroutines.Job? = null
+
     private fun loadData() {
-        viewModelScope.launch {
+        synchronized(this) {
+            loadJob?.cancel()
+            loadJob = launchLoad()
+        }
+    }
+
+    private fun launchLoad(): kotlinx.coroutines.Job {
+        return viewModelScope.launch {
             try {
                 withContext(Dispatchers.IO) {
                     // Single-shot reads
@@ -104,13 +116,14 @@ class HomeViewModel @Inject constructor(
 
                     // Combine annotation tags + manually added tags (TagPriority)
                     val annotTags = try { annotationRepository.getDistinctTags() } catch (e: Exception) { emptyList() }
-                    val manualTags = try { tagPriorityDao.getAllSorted().map { it.tagName } } catch (e: Exception) { emptyList() }
+                    val manualOrder = try { tagPriorityDao.getAllSorted() } catch (e: Exception) { emptyList() }
+                    val manualTags = manualOrder.map { it.tagName }
                     val pageTags = try { pageTagRepository.all() } catch (e: Exception) { emptyMap() }
                     val vaultTags = try { VaultTagScanner.cachedTags } catch (e: Exception) { emptyList() }
                     val hidden = try { pageTagRepository.hidden() } catch (e: Exception) { emptySet() }
                     val allTags = (annotTags + manualTags + pageTags.values.flatten() + vaultTags)
                         .map { it.trim() }.filter { it.isNotEmpty() && it !in hidden }.distinct()
-                    val sortedTags = try { tagPriorityDao.getAllSorted().associate { it.tagName to it.sortOrder } } catch (e: Exception) { emptyMap() }
+                    val sortedTags = manualOrder.associate { it.tagName to it.sortOrder }
 
                     val groups = allTags.map { tag ->
                         val pageIds = (try { annotationRepository.getPageIdsByTag(tag) } catch (e: Exception) { emptyList() } +
@@ -121,7 +134,7 @@ class HomeViewModel @Inject constructor(
 
                     val allPages = (pinned + recent + groups.flatMap { it.pages }).distinctBy { it.id }
                     val excerpts = try {
-                        ExportedExcerpts.load(ExportedExcerpts.inboxDir(GlobalAppSettings.current.obsidianInboxPath), (pinned + recent + groups.flatMap { it.pages }).distinctBy { it.id })
+                        ExportedExcerpts.load(ExportedExcerpts.inboxDir(GlobalAppSettings.current.obsidianInboxPath), allPages)
                     } catch (e: Exception) { emptyMap() }
                     if (_selectedTopic.value != null && groups.none { it.tag == _selectedTopic.value }) _selectedTopic.value = null
                     _uiState.update {
@@ -130,8 +143,10 @@ class HomeViewModel @Inject constructor(
                             isLoading = false, pageTags = pageTags, excerpts = excerpts
                         )
                     }
-                    generateMissingThumbnails((pinned + recent + groups.flatMap { it.pages }).map { it.id }.distinct())
+                    generateMissingThumbnails(allPages.map { it.id })
                 }
+            } catch (e: kotlinx.coroutines.CancellationException) {
+                throw e
             } catch (e: Exception) {
                 _uiState.update { it.copy(isLoading = false) }
             }
@@ -180,7 +195,7 @@ class HomeViewModel @Inject constructor(
             pageRepository.setPinned(pageId, !currentPinned)
             val pinned = pageRepository.getPinnedPagesList()
             val recent = pageRepository.getRecentPagesList(10)
-            _uiState.value = _uiState.value.copy(pinnedPages = pinned, recentPages = recent)
+            _uiState.update { it.copy(pinnedPages = pinned, recentPages = recent) }
         }
     }
 

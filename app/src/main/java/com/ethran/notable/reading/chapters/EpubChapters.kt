@@ -118,7 +118,7 @@ object EpubChapters {
             for ((k, m) in members.withIndex()) {
                 val frag = hits[m].e.fragment
                 val found = if (text != null && frag.isNotEmpty()) offsetOfId(text, frag) else -1
-                val frac = if (found >= 0 && text!!.isNotEmpty()) found.toDouble() / text.length else if (k == 0 && frag.isEmpty()) 0.0 else prev
+                val frac = if (found >= 0 && text != null && text.isNotEmpty()) found.toDouble() / text.length else if (k == 0 && frag.isEmpty()) 0.0 else prev
                 prev = maxOf(prev, frac)
                 within[m] = prev
             }

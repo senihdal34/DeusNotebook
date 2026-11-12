@@ -84,4 +84,30 @@ class ReadingStatsTest {
         val d = ReadingStats.build(listOf(book), emptyList(), emptyList(), ms(2026, 10, 31), zone, exists = { false })
         assertEquals(0, d.totalBooks)
     }
+
+    @Test fun aLibraryKeptOutsideBooksStillShowsWhenNothingIsInBooks() {
+        val dl = book.copy(path = "/storage/emulated/0/Download/Ebooks/B.epub", title = "B")
+        val notes = book.copy(path = "/storage/emulated/0/note/Plan/Plan.pdf", title = "Note export")
+        val photo = book.copy(path = "/storage/emulated/0/Download/pic.jpg", title = "Picture")
+        val d = run(emptyList(), ms(2026, 10, 31), listOf(dl, notes, photo))
+        assertEquals(listOf("B"), d.books.map { it.title })
+    }
+
+    @Test fun booksFolderWinsWhenTheLibraryHasBooksThere() {
+        val dl = book.copy(path = "/storage/emulated/0/Download/B.epub", title = "B")
+        val d = run(emptyList(), ms(2026, 10, 31), listOf(book, dl))
+        assertEquals(listOf("A"), d.books.map { it.title })
+    }
+
+    @Test fun anExplicitFolderIsUsedAsGiven() {
+        val dl = book.copy(path = "/storage/emulated/0/Download/B.epub", title = "B")
+        val d = ReadingStats.build(listOf(book, dl), emptyList(), emptyList(), ms(2026, 10, 31), zone, booksDir = "/sdcard/Download", exists = { true })
+        assertEquals(listOf("B"), d.books.map { it.title })
+    }
+
+    @Test fun otherUsersStorageRootIsTheSamePlace() {
+        val work = book.copy(path = "/storage/emulated/10/Books/W.pdf", title = "W")
+        assertEquals(listOf("W"), run(emptyList(), ms(2026, 10, 31), listOf(work)).books.map { it.title })
+    }
 }
+

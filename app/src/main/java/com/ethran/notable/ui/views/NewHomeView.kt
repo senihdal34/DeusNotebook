@@ -113,6 +113,10 @@ private val Sans = FontFamily.SansSerif
 private val Serif = FontFamily.Serif
 private val Pill = androidx.compose.foundation.shape.RoundedCornerShape(50)
 
+/** A title or topic cleaned of broken characters, worked out once per value instead of on every recomposition. */
+@Composable
+private fun cleanText(raw: String?): String = remember(raw) { TextSanitizer.cleanLine(raw) }
+
 @Composable
 fun HomeView(
     viewModel: HomeViewModel,
@@ -355,7 +359,7 @@ private fun PinnedStrip(state: HomeUiState, a: HomeActions) {
                     PagePreview(Modifier.fillMaxSize(), p.id, state.thumbRevision, ContentScale.FillWidth, Alignment.TopCenter, Color.White)
                 }
                 Spacer(Modifier.width(10.dp))
-                Text(TextSanitizer.cleanLine(p.title).ifBlank { untitled }, fontFamily = Serif, fontWeight = FontWeight.Bold, fontSize = 20.sp,
+                Text(cleanText(p.title).ifBlank { untitled }, fontFamily = Serif, fontWeight = FontWeight.Bold, fontSize = 20.sp,
                     lineHeight = 22.sp, color = Ink, maxLines = 2, overflow = TextOverflow.Ellipsis)
             }
         }
@@ -386,7 +390,7 @@ private fun PinnedPage(state: HomeUiState, a: HomeActions) {
             }
             Spacer(Modifier.width(24.dp))
             Column(Modifier.weight(1f)) {
-                Text(TextSanitizer.cleanLine(p.title).ifBlank { untitled }, fontFamily = Serif, fontWeight = FontWeight.Bold, fontSize = 38.sp,
+                Text(cleanText(p.title).ifBlank { untitled }, fontFamily = Serif, fontWeight = FontWeight.Bold, fontSize = 38.sp,
                     letterSpacing = (-0.5).sp, color = Ink, maxLines = 2, overflow = TextOverflow.Ellipsis)
                 Caps(RelativeTime.format(p.createdAt), 14, Grey1, modifier = Modifier.padding(top = 8.dp))
                 state.excerpts[p.id]?.let {
@@ -409,7 +413,7 @@ private fun SectionNav(state: HomeUiState, selected: String?, a: HomeActions) {
         horizontalArrangement = Arrangement.Center, verticalAlignment = Alignment.CenterVertically
     ) {
         NavItem(stringResource(R.string.home_topics_all), selected == null, last = false) { a.select(null) }
-        state.topicGroups.forEach { g -> NavItem(TextSanitizer.cleanLine(g.tag), selected == g.tag, last = false) { a.select(g.tag) } }
+        state.topicGroups.forEach { g -> NavItem(cleanText(g.tag), selected == g.tag, last = false) { a.select(g.tag) } }
         NavItem("+", false, last = true) { a.toggleAdd() }
     }
     if (selected != null) {
@@ -507,7 +511,7 @@ private fun Lead(page: Page, state: HomeUiState, selected: String?, landscape: B
         Column(Modifier.weight(1f).openOrPin(a, page)) {
             Caps(if (selected == null) "${stringResource(R.string.home_latest_note)} · ${RelativeTime.format(page.createdAt)}" else "#$selected · ${RelativeTime.format(page.createdAt)}", 14, Grey1, FontWeight.Bold)
             Text(
-                TextSanitizer.cleanLine(page.title).ifBlank { untitled }, fontFamily = Serif, fontWeight = FontWeight.Bold,
+                cleanText(page.title).ifBlank { untitled }, fontFamily = Serif, fontWeight = FontWeight.Bold,
                 fontSize = if (landscape) 56.sp else 64.sp, lineHeight = if (landscape) 58.sp else 66.sp,
                 letterSpacing = (-1.5).sp, color = Ink, maxLines = 3, overflow = TextOverflow.Ellipsis,
                 modifier = Modifier.padding(top = 14.dp, bottom = 14.dp)
@@ -536,7 +540,7 @@ private fun Story(page: Page, state: HomeUiState, a: HomeActions, landscape: Boo
             Spacer(Modifier.width(20.dp))
             Column(Modifier.weight(1f)) {
                 Text(
-                    TextSanitizer.cleanLine(page.title).ifBlank { untitled }, fontFamily = Serif, fontWeight = FontWeight.Bold, fontSize = 30.sp,
+                    cleanText(page.title).ifBlank { untitled }, fontFamily = Serif, fontWeight = FontWeight.Bold, fontSize = 30.sp,
                     lineHeight = 33.sp, letterSpacing = (-0.5).sp, color = Ink, maxLines = 2, overflow = TextOverflow.Ellipsis
                 )
                 Caps(RelativeTime.format(page.createdAt), 13, Grey1, modifier = Modifier.padding(top = 6.dp, bottom = 8.dp))
@@ -556,7 +560,7 @@ private fun Story(page: Page, state: HomeUiState, a: HomeActions, landscape: Boo
             PagePreview(Modifier.fillMaxSize(), page.id, state.thumbRevision, ContentScale.FillWidth, Alignment.TopCenter, Color.White)
         }
         Text(
-            TextSanitizer.cleanLine(page.title).ifBlank { untitled }, fontFamily = Serif, fontWeight = FontWeight.Bold, fontSize = 30.sp,
+            cleanText(page.title).ifBlank { untitled }, fontFamily = Serif, fontWeight = FontWeight.Bold, fontSize = 30.sp,
             lineHeight = 33.sp, letterSpacing = (-0.5).sp, color = Ink, maxLines = 2, overflow = TextOverflow.Ellipsis,
             modifier = Modifier.padding(top = 12.dp, bottom = 6.dp)
         )
@@ -586,7 +590,7 @@ private fun Rail(state: HomeUiState, selected: String?, a: HomeActions) {
                         .padding(vertical = 12.dp, horizontal = 4.dp),
                     horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Text("#${TextSanitizer.cleanLine(g.tag)}", fontFamily = Serif, fontSize = 28.sp, color = Ink)
+                    Text("#${cleanText(g.tag)}", fontFamily = Serif, fontSize = 28.sp, color = Ink)
                     Caps("${g.pages.size}", 17, Grey1)
                 }
                 Rule(1.dp, Grey2)
@@ -646,7 +650,7 @@ private fun NoteActions(page: Page, state: HomeUiState, a: HomeActions) {
             FlowRow(
                 Modifier.padding(top = 10.dp), horizontalArrangement = Arrangement.spacedBy(8.dp),
                 verticalArrangement = Arrangement.spacedBy(6.dp)
-            ) { tags.forEach { Text("#${TextSanitizer.cleanLine(it)}", fontFamily = Serif, fontSize = 20.sp, color = Ink) } }
+            ) { tags.forEach { Text("#${cleanText(it)}", fontFamily = Serif, fontSize = 20.sp, color = Ink) } }
         }
         if (selectOpen) TagSelect(page, state, a)
         if (addOpen) TagAdd(page, a)
@@ -665,7 +669,7 @@ private fun TagSelect(page: Page, state: HomeUiState, a: HomeActions) {
         } else {
             Caps(stringResource(R.string.home_choose_tag), 12, Grey1, FontWeight.Bold, Modifier.padding(bottom = 8.dp))
             FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                all.forEach { tag -> ActionChip("#${TextSanitizer.cleanLine(tag)}", on = tag in own) { a.toggleTag(page.id, tag) } }
+                all.forEach { tag -> ActionChip("#${cleanText(tag)}", on = tag in own) { a.toggleTag(page.id, tag) } }
             }
         }
     }

@@ -195,7 +195,7 @@ fun ReadingBoardView(ui: ReadingUi, onOpen: (RBook) -> Unit, modifier: Modifier 
                     badgesOpen -> Scrolling(g, heightPx) { BadgeListScreen(ui.badges, ctx.nowMs, java.time.ZoneId.systemDefault()) { badgesOpen = false } }
                     goalOpen -> Scrolling(g, heightPx) { GoalScreen(data.goalBooks, bd.finishedYear, today.year, onSetGoal) { goalOpen = false } }
                     searching -> Scrolling(g, heightPx) { SearchScreen(query, { query = it }, data.books, ctx) { searching = false; query = "" } }
-                    sub != null -> Scrolling(g, heightPx) { SubList(sub!!, shelfKind, bd, ctx) { sub = null } }
+                    sub != null -> Scrolling(g, heightPx) { SubList(sub ?: return@Scrolling, shelfKind, bd, ctx) { sub = null } }
                     !ui.sourceAvailable && ui.loaded -> BText(
                         stringResource(R.string.reading_source_unavailable), 14.0, italic = true, serif = true, color = Ink.g4, lines = 3, w = g.width
                     )
@@ -399,7 +399,7 @@ private fun SubList(sub: Sub, shelfKind: String, bd: BoardData, c: BoardCtx, bac
     val groups: List<Pair<String?, List<RBook>>> = when (sub) {
         Sub.Library, Sub.OnDevice -> listOf(null to books.sortedBy { it.title.lowercase() })
         Sub.Authors -> books.groupBy { it.author.ifBlank { unknown } }.toList().sortedBy { it.first.lowercase() }
-        Sub.Series -> books.filter { it.series != null }.groupBy { it.series!! }.toList().sortedBy { it.first.lowercase() }
+        Sub.Series -> books.mapNotNull { b -> b.series?.let { it to b } }.groupBy({ it.first }, { it.second }).toList().sortedBy { it.first.lowercase() }
         Sub.Collections -> books.groupBy { it.path.substringBeforeLast('/', "").substringAfterLast('/') }.toList().sortedBy { it.first.lowercase() }
         Sub.Finished -> listOf(null to books.filter { it.finishedAt != null }.sortedByDescending { it.finishedAt })
         Sub.InProgress -> listOf(null to bd.data.continueReading)
