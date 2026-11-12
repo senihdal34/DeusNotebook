@@ -16,8 +16,6 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalDensity
-import androidx.navigation.NavController
-import com.ethran.notable.editor.EditorDestination
 import com.ethran.notable.editor.canvas.CanvasEventBus
 import com.ethran.notable.editor.state.EditorState
 import kotlinx.coroutines.Dispatchers
@@ -48,11 +46,11 @@ fun pageTapZones(background: String?, width: Float, height: Float, month: Int = 
 /**
  * Invisible tap layer over a month, quarter or year page: date numbers, week numbers, month titles and Q labels open
  * that page, the round + button adds a focus line. It draws nothing and covers none of the writing areas. On every other
- * page it does nothing. Pages of the other levels live in other notebooks, so they are opened with the editor route
- * (like Home does), and Back returns to the page you came from.
+ * page it does nothing. [onOpen] is the editor's planner navigation: pages of other notebooks open with the editor
+ * route, so Back returns to the page you came from.
  */
 @Composable
-fun PlannerPageTaps(editorState: EditorState, plannerService: PlannerService, navController: NavController) {
+fun PlannerPageTaps(editorState: EditorState, plannerService: PlannerService, onOpen: (suspend () -> PlannerService.Target) -> Unit) {
     val appRepository = editorState.appRepository
     val page = editorState.pageView
     val pageId = editorState.currentPageId
@@ -84,14 +82,6 @@ fun PlannerPageTaps(editorState: EditorState, plannerService: PlannerService, na
     if (level == null) return
     val bg = background ?: return
 
-    fun open(ensure: suspend () -> PlannerService.Target) {
-        scope.launch {
-            val target = withContext(Dispatchers.IO) { runCatching { ensure() }.getOrNull() } ?: return@launch
-            if (target.pageId == pageId) return@launch
-            navController.navigate(EditorDestination.createRoute(target.pageId, target.bookId))
-        }
-    }
-
     fun addLine(which: PlannerLevel) {
         scope.launch {
             withContext(Dispatchers.IO) { runCatching { repository.add(which) } }
@@ -117,7 +107,7 @@ fun PlannerPageTaps(editorState: EditorState, plannerService: PlannerService, na
                         .size(r.width.toDp(), r.height.toDp())
                         .clickable(interactionSource = remember { MutableInteractionSource() }, indication = null) {
                             val tap = zone.tap
-                            if (tap is PageTap.AddFocusLine) addLine(tap.level) else tap.target(plannerService)?.let { open(it) }
+                            if (tap is PageTap.AddFocusLine) addLine(tap.level) else tap.target(plannerService)?.let(onOpen)
                         }
                 )
             }

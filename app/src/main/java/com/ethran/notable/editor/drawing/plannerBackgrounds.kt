@@ -231,7 +231,7 @@ private fun drawWrapped(canvas: Canvas, text: String, x: Float, baseline: Float,
     if (words.size >= 2) {
         // Split where the longer of the two lines is shortest.
         lines = (1 until words.size).map { i -> words.take(i).joinToString(" ") to words.drop(i).joinToString(" ") }
-            .minByOrNull { (a, b) -> maxOf(p.measureText(a), p.measureText(b)) }!!.toList()
+            .minByOrNull { (a, b) -> maxOf(p.measureText(a), p.measureText(b)) }?.toList() ?: lines
     }
     while (p.textSize > 14f && lines.any { p.measureText(it) > maxW }) p.textSize -= 1f
     lines.forEachIndexed { i, l -> canvas.drawText(l, x, baseline + i * p.textSize * 1.3f, p) }
