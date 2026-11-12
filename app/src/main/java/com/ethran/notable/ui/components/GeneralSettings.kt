@@ -34,6 +34,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.ethran.notable.R
 import com.ethran.notable.data.datastore.AppSettings
+import com.ethran.notable.data.datastore.ToolbarSide
 import com.ethran.notable.io.VaultTagScanner
 
 
@@ -53,13 +54,18 @@ fun GeneralSettings(
         Spacer(modifier = Modifier.height(8.dp))
 
         SelectorRow(
-            label = stringResource(R.string.toolbar_position), options = listOf(
-                AppSettings.Position.Top to stringResource(R.string.toolbar_position_top),
-                AppSettings.Position.Bottom to stringResource(
-                    R.string.toolbar_position_bottom
-                )
-            ), value = settings.toolbarPosition, onValueChange = { newPosition ->
-                onSettingsChange(settings.copy(toolbarPosition = newPosition))
+            label = stringResource(R.string.settings_toolbar_side), options = listOf(
+                ToolbarSide.Left to stringResource(R.string.settings_toolbar_side_left),
+                ToolbarSide.Right to stringResource(R.string.settings_toolbar_side_right)
+            ), value = settings.toolbarSide, onValueChange = { newSide ->
+                onSettingsChange(settings.copy(toolbarSide = newSide))
+            })
+
+        SettingToggleRow(
+            label = stringResource(R.string.settings_toolbar_auto_hide),
+            value = settings.toolbarAutoHide,
+            onToggle = { isChecked ->
+                onSettingsChange(settings.copy(toolbarAutoHide = isChecked))
             })
 
         SettingToggleRow(
@@ -67,13 +73,6 @@ fun GeneralSettings(
             value = settings.startInPlanner,
             onToggle = { isChecked ->
                 onSettingsChange(settings.copy(startInPlanner = isChecked))
-            })
-
-        SettingToggleRow(
-            label = stringResource(R.string.use_onyx_neotools_may_cause_crashes),
-            value = settings.neoTools,
-            onToggle = { isChecked ->
-                onSettingsChange(settings.copy(neoTools = isChecked))
             })
 
         SettingToggleRow(

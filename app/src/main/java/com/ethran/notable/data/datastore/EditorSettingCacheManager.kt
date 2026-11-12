@@ -30,7 +30,8 @@ class EditorSettingCacheManager
         val pen: Pen,
         val eraser: Eraser? = Eraser.PEN,
         val penSettings: NamedSettings,
-        val mode: Mode
+        val mode: Mode,
+        val lineDashed: Boolean = false
     )
 
     private val scope = CoroutineScope(Dispatchers.IO)
