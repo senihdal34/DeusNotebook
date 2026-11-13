@@ -188,6 +188,8 @@ class EditorControlTower(
     }
 
     fun resetZoomAndScroll() {
+        // A fixed planner page is fitted to the screen; zoom 1 and scroll 0 would break that fit.
+        if (page.fixedViewport != null) return
         scope.launch {
             page.scroll = Offset(0f, page.scroll.y)
             page.applyZoomAndRedraw(1f)

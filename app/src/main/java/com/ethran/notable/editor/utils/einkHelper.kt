@@ -236,11 +236,16 @@ fun onSurfaceDestroy(view: View, touchHelper: TouchHelper?) {
 }
 
 
+/**
+ * @param sheet where the page is drawn when it does not fill the view (a planner sheet in landscape), in view pixels:
+ * the pen only writes on it, never in the margin beside it. Null: the whole view.
+ */
 fun setupSurface(
     view: View,
     touchHelper: TouchHelper?,
     topExcludeHeight: Int = 0,
-    bottomExcludeHeight: Int = 0
+    bottomExcludeHeight: Int = 0,
+    sheet: Rect? = null
 ) {
     if(touchHelper == null) return
     log.i("Setup editable surface")
@@ -260,6 +265,7 @@ fun setupSurface(
     }
 
     val limitRect = Rect(0, topExcludeHeight, viewWidth, viewHeight - bottomExcludeHeight)
+    if (sheet != null) limitRect.intersect(sheet)   // unchanged when they do not overlap
 
     touchHelper.setLimitRect(mutableListOf(limitRect)).setExcludeRect(excludeRects)
         .openRawDrawing()

@@ -242,7 +242,8 @@ fun EditorToolRail(
         isPlannerPage = isPlannerPage,
         inBook = state.bookId != null,
         clipboardHasContent = state.clipboard != null,
-        viewMoved = state.pageView.scroll.x != 0f || zoomLevel != 1.0f,
+        // A fixed planner page is fitted to the screen and never moved by the user, so there is nothing to reset.
+        viewMoved = state.pageView.fixedViewport == null && (state.pageView.scroll.x != 0f || zoomLevel != 1.0f),
     )
 
     // Drawing is paused while a popover or menu is open, and handed back to the editor state afterwards.

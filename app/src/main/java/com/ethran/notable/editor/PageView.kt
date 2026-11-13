@@ -3,6 +3,8 @@ package com.ethran.notable.editor
 
 import android.content.Context
 import com.ethran.notable.planner.PlannerInkMigration
+import com.ethran.notable.planner.PlannerPage
+import com.ethran.notable.planner.PlannerViewport
 import com.ethran.notable.planner.PlannerWeeks
 import android.database.sqlite.SQLiteConstraintException
 import android.graphics.Bitmap
@@ -133,6 +135,18 @@ class PageView(
             else -> true
         }
 
+    /**
+     * Where the fixed planner page sits in this page area, or null for every other page. The page is shown with
+     * `zoom = scale` and `scroll = -offset / scale` (see [applyFixedViewport]), so every path that maps the pen to the page
+     * (raw drawing, eraser, selection, redraw) goes through the zoom and scroll it already uses.
+     */
+    @Volatile
+    var fixedViewport: PlannerViewport? = null
+        private set
+
+    /** Called when [fixedViewport] changes shape, e.g. the page area is rotated; the pen area has to follow the sheet. */
+    var onViewportChanged: (() -> Unit)? = null
+
     // we need to observe zoom level, to adjust strokes size.
     val zoomLevel: MutableStateFlow<Float> =
         MutableStateFlow(PageDataManager.getPageZoom(currentPageId))
@@ -190,6 +204,7 @@ class PageView(
                     currentPageNumberVal = appRepository.getPageNumber(notebookId, currentPageId)
                 }
             }
+            applyFixedViewport()
             CanvasEventBus.refreshUiImmediately.emit(Unit)
             loadPage()
             log.d("Page loaded (Init with id: $currentPageId)")
@@ -231,6 +246,7 @@ class PageView(
             }
             PageDataManager.setPage(newPageId)
             zoomLevel.value = PageDataManager.getPageZoom(currentPageId)
+            applyFixedViewport()
             PageDataManager.getCachedBitmap(newPageId)?.let { cached ->
                 log.i("PageView: using cached bitmap")
                 windowedBitmap = cached
@@ -254,6 +270,33 @@ class PageView(
             loadPage()
             log.d("Page loaded (updatePageID($currentPageId))")
         }
+    }
+
+    /**
+     * Fits the open page to its page area when it is a fixed planner page (week, day, month, quarter, year): the zoom is the
+     * viewport's scale and the scroll puts the sheet at its place. In portrait that is zoom 1 and scroll 0, as always. Any
+     * other page is left as it is. Returns true when the viewport changed shape (so the pen area has to follow).
+     */
+    private fun applyFixedViewport(): Boolean {
+        val background = pageFromDb?.background
+        val next = if (background != null && PlannerWeeks.isFixedPage(background)) {
+            PlannerPage.viewport(context, viewWidth, viewHeight)
+        } else null
+        val changed = next != fixedViewport
+        fixedViewport = next
+        PageDataManager.setViewportScaled(currentPageId, next?.isIdentity == false)
+        if (next != null) {
+            scroll = next.scroll
+            zoomLevel.value = next.scale
+        }
+        if (changed) onViewportChanged?.invoke()
+        return changed
+    }
+
+    /** Makes the canvas draw at the page's zoom: a fresh matrix and one scale, never a scale on top of an earlier one. */
+    private fun syncCanvasScale() {
+        windowedCanvas.setBitmap(windowedBitmap)
+        windowedCanvas.scale(zoomLevel.value, zoomLevel.value)
     }
 
     private fun recreateCanvas() {
@@ -283,13 +326,15 @@ class PageView(
 
     private fun loadPage() {
         logCache.i("Init from persist layer, pageId: $currentPageId")
-        windowedCanvas.scale(zoomLevel.value, zoomLevel.value)
+        syncCanvasScale()
         loadingJob = coroutineScope.launch(Dispatchers.IO) {
             try {
                 val bookId = pageFromDb?.notebookId
                 // Planner pages written before the zoom strip are moved to the current rows before anything is read or drawn.
+                // It always uses the height of the fixed portrait page, never the current height of the page area:
+                // a week first opened in landscape must be migrated exactly as it would be in portrait.
                 pageFromDb?.let {
-                    PlannerInkMigration.onOpen(appRepository.plannerSync, context.filesDir, it.id, it.background, viewHeight.toFloat())
+                    PlannerInkMigration.onOpen(appRepository.plannerSync, context.filesDir, it.id, it.background, PlannerPage.size(context).height)
                 }
                 snackManager.showSnackDuring(text = AppStrings.get(R.string.snack_loading_strokes)) {
                     val timeToLoad = measureTimeMillis {
@@ -472,6 +517,11 @@ class PageView(
         log.d("Drawing initial background.")
         // draw just background.
         val backgroundType = pageFromDb?.getBackgroundType()
+        if (fixedViewport?.isIdentity == false) {
+            // A planner sheet in a different shape of page area: the full redraw that follows draws it at its scale.
+            windowedCanvas.drawColor(Color.WHITE)
+            return false
+        }
         if (backgroundType == BackgroundType.Native)
             drawBg(
                 context, windowedCanvas, backgroundType,
@@ -867,10 +917,13 @@ class PageView(
     }
 
     private fun updateCanvasDimensions() {
+        // A planner sheet is fitted to the new page area first, so the new canvas starts at the right zoom and scroll.
+        applyFixedViewport()
         // Recreate bitmap and canvas with new dimensions
         recreateCanvas()
-        //Reset zoom level.
-        zoomLevel.value = 1.0f
+        //Reset zoom level (a fixed planner page keeps the zoom it has just been fitted to).
+        if (fixedViewport == null) zoomLevel.value = 1.0f
+        syncCanvasScale()
         // TODO: it might be worth to do it
         //  by redrawing only part of the screen, like in scroll and zoom.
         coroutineScope.launch {
@@ -894,7 +947,8 @@ class PageView(
     private fun saveToPersistLayer() {
         coroutineScope.launch {
             withContext(Dispatchers.IO) {
-                appRepository.pageRepository.updateScroll(currentPageId, scroll.y.toInt())
+                // The sheet of a fixed page has no scroll of its own: never write its offset as one.
+                appRepository.pageRepository.updateScroll(currentPageId, if (fixedViewport != null) 0 else scroll.y.toInt())
                 pageFromDb = appRepository.pageRepository.getById(currentPageId)
             }
         }
