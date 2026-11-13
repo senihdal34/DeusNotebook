@@ -31,8 +31,11 @@ object PlannerLayout {
     /** Seven equal rows between the header and the bottom margin, at least [MIN_LINES] lines each. */
     fun week(pageHeight: Float): Week {
         val rowH = (pageHeight - ROWS_TOP - BOTTOM_MARGIN) / 7f
-        return Week(rowH, max(MIN_LINES, floor(rowH / MIN_STEP).toInt()))
+        return Week(rowH, lineCount(rowH))
     }
+
+    /** Lines in a week row of height [rowH]; shared with [PlannerInkMigration], which needs it for the layout before the zoom strip. */
+    internal fun lineCount(rowH: Float): Int = max(MIN_LINES, floor(rowH / MIN_STEP).toInt())
 
     /** A day page uses the week's line step, so its first lines coincide with the day's row on the week page. */
     fun dayStep(pageHeight: Float): Float = week(pageHeight).step

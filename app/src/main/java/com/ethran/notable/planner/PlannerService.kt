@@ -137,7 +137,7 @@ class PlannerService @Inject constructor(private val appRepository: AppRepositor
                     notebookId = book.id, background = bg, backgroundType = "native",
                     createdAt = Date.from(monday.atStartOfDay(ZoneId.systemDefault()).toInstant()),
                     title = PlannerNames.weekTitle(monday)
-                ).also { pages.create(it); ids.add(it.id); byBackground[bg] = it; changed = true }
+                ).also { appRepository.plannerSync.markLayout(it.id); pages.create(it); ids.add(it.id); byBackground[bg] = it; changed = true }
                 result[monday] = Target(book.id, page.id)
             }
             for (day in days) {
@@ -146,7 +146,7 @@ class PlannerService @Inject constructor(private val appRepository: AppRepositor
                     notebookId = book.id, background = bg, backgroundType = "native",
                     createdAt = Date.from(day.atStartOfDay(ZoneId.systemDefault()).toInstant()),
                     title = PlannerNames.dayTitle(day)
-                ).also { pages.create(it); ids.add(it.id); byBackground[bg] = it; changed = true }
+                ).also { appRepository.plannerSync.markLayout(it.id); pages.create(it); ids.add(it.id); byBackground[bg] = it; changed = true }
                 result[day] = Target(book.id, page.id)
             }
             if (changed) {

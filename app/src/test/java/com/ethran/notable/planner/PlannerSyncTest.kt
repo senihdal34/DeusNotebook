@@ -57,23 +57,7 @@ class PlannerSyncTest {
     private fun onWeek(id: String, dy: Float = 20f, x: Float = 300f) = stroke(id, row + dy, "week", x)
     private fun onDay(id: String, dy: Float = 20f, x: Float = 300f) = stroke(id, dayTop + dy, "day", x)
 
-    private class FakeStore(vararg strokes: Stroke) : PlannerSyncStore {
-        val all = LinkedHashMap<String, Stroke>().apply { strokes.forEach { put(it.id, it) } }
-        val kv = HashMap<String, String>()
-        var applied = 0
-        override suspend fun strokes(pageId: String) = all.values.filter { it.pageId == pageId }
-        override suspend fun mirrored(key: String) = kv[key]
-        override suspend fun apply(delete: List<String>, insert: List<Stroke>, update: List<Stroke>, key: String, mirrored: String) {
-            applied++
-            delete.forEach { all.remove(it) }
-            update.forEach { require(all.containsKey(it.id)) { "update of a missing stroke" }; all[it.id] = it }
-            insert.forEach { require(!all.containsKey(it.id)) { "duplicate id ${it.id}" }; all[it.id] = it }
-            kv[key] = mirrored
-        }
-        fun ids(page: String) = all.values.filter { it.pageId == page }.map { it.id }.toSet()
-        fun add(s: Stroke) { all[s.id] = s }
-        fun erase(id: String) { all.remove(id) }
-    }
+    private class FakeStore(vararg strokes: Stroke) : FakePlannerStore(*strokes)
 
     /** Leaving the week page in the app: the week page is open, so only the day page is changed. */
     private fun leaveWeek(store: FakeStore, frozen: Set<String> = setOf("week")) = runBlocking {
@@ -98,22 +82,33 @@ class PlannerSyncTest {
         assertEquals(setOf("d1", "d-far", copyOnDay("w1")), store.ids("day"))
     }
 
-    @Test fun `a pair mirrored with the old layout is left alone`() {
-        // A copy made before the zoom strip moved the rows: the record sits under the old key.
+    @Test fun `a pair with records of the old layout is migrated, its old records dropped, and then merged`() {
+        // Copies made before the zoom strip moved the rows: the record sits under the old key and names both pages.
         val store = FakeStore(onWeek("w1"), onDay("d1"), onDay(copyOnDay("w-old"), dy = -60f))
-        store.kv[PlannerSync.legacyKey("week", "day")] = "{}"
-        assertEquals(emptySet<String>(), leaveWeek(store))
-        assertEquals(emptySet<String>(), leaveDay(store))
-        assertEquals(setOf("w1"), store.ids("week"))
-        assertEquals(setOf("d1", copyOnDay("w-old")), store.ids("day"))
+        store.strict = true
+        store.kv["${PlannerSync.KEY_PREFIX}week:day"] = "{}"
+        store.kv["${PlannerSync.KEY_PREFIX}zzz1:zzz2"] = "{}"
+        leaveWeek(store, frozen = emptySet())
+        assertEquals(setOf("week", "day"), store.marked)
+        assertTrue(!store.kv.containsKey("${PlannerSync.KEY_PREFIX}week:day"))
+        assertTrue(store.kv.containsKey("${PlannerSync.KEY_PREFIX}zzz1:zzz2"))
+        assertTrue(store.kv.containsKey(PlannerSync.key("week", "day")))
+        assertTrue(store.ids("day").containsAll(setOf("d1", copyOnDay("w-old"), copyOnDay("w1"))))
+    }
+
+    @Test fun `a pair is not mirrored while the open page has no marker`() {
+        val store = FakeStore(onWeek("w1"), onDay("d1"))
+        store.strict = true
+        assertEquals(emptySet<String>(), leaveWeek(store))        // the week page is open and unmarked: skipped
+        assertEquals(setOf("d1"), store.ids("day"))
         assertEquals(0, store.applied)
+        assertTrue(store.marked.isEmpty())
     }
 
     @Test fun `records are kept under the current layout key`() {
         val store = FakeStore(onWeek("w1"))
         leaveWeek(store)
         assertTrue(store.kv.containsKey(PlannerSync.key("week", "day")))
-        assertTrue(PlannerSync.key("week", "day") != PlannerSync.legacyKey("week", "day"))
     }
 
     @Test fun `a copy is placed where the original sits in its row`() {

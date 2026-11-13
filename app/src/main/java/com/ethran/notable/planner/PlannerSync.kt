@@ -5,6 +5,7 @@ import androidx.compose.ui.geometry.Offset
 import androidx.room.withTransaction
 import com.ethran.notable.data.PageDataManager
 import com.ethran.notable.data.db.AppDatabase
+import com.ethran.notable.data.getDbDir
 import com.ethran.notable.data.db.Kv
 import com.ethran.notable.data.db.Stroke
 import com.ethran.notable.editor.utils.offsetStroke
@@ -14,6 +15,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.withContext
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
@@ -169,37 +171,47 @@ object PlannerSync {
     /** A missing or damaged record reads as "nothing mirrored yet", which only ever adds ink. */
     fun decode(s: String?): Map<String, Mark> = s?.let { runCatching { json.decodeFromString(marksSerializer, it) }.getOrNull() }.orEmpty()
 
-    /**
-     * Records are per page layout. The zoom strip moved [PlannerLayout.ROWS_TOP] down and made the week rows shorter, so
-     * a record (and the copies) made with the old layout no longer match the rows: syncing such a pair would move ink
-     * or copy it into the wrong day. Pairs mirrored with an older layout are therefore left alone ([LAYOUT] bumps).
-     */
-    const val LAYOUT = "v2"
+    /** Current layout of the sync records; the key carries it so records written under another layout are never read. */
+    const val LAYOUT = PlannerInkMigration.LAYOUT
 
     fun key(weekPageId: String, dayPageId: String) = "$KEY_PREFIX$LAYOUT:$weekPageId:$dayPageId"
-
-    /** Record key of the first layout (tab bar only, no zoom strip). */
-    fun legacyKey(weekPageId: String, dayPageId: String) = "$KEY_PREFIX$weekPageId:$dayPageId"
 
     /**
      * Syncs one week row with its day page. Returns the pages whose strokes changed. Call it under [run]'s lock: two
      * syncs of the same pair at once would each read the other's half-done state.
+     *
+     * The rule for old pages: a pair is only mirrored when BOTH pages carry the current-layout marker
+     * ([PlannerInkMigration]). A page without it (written before the zoom strip, not opened since) is migrated first, here,
+     * unless it is in [frozen] (open in the editor, which migrates before it loads); if a page still has no marker the pair
+     * is skipped, because mirroring ink at old positions would copy it into the wrong day.
      */
     suspend fun syncPair(
-        store: PlannerSyncStore, weekPageId: String, rowTop: Float, dayPageId: String, height: Float,
+        store: PlannerSyncStore, weekPageId: String, rowTop: Float, dayPageId: String, pageHeight: Float,
         leftPageId: String, frozen: Set<String>
     ): Set<String> {
+        val migrated = LinkedHashSet<String>()
+        for ((id, kind) in listOf(weekPageId to PlannerInkMigration.Kind.Week, dayPageId to PlannerInkMigration.Kind.Day)) {
+            if (store.layoutMarked(id)) continue
+            if (id in frozen) return migrated
+            val changed = try {
+                PlannerInkMigration.ensure(store, id, kind, pageHeight)
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                Log.w(TAG, "layout migration of a planner page failed: ${e.javaClass.simpleName}: ${e.message}")
+                return migrated
+            }
+            if (changed) migrated += id
+        }
+        val rowH = PlannerLayout.week(pageHeight).rowH
         val key = key(weekPageId, dayPageId)
-        val raw = store.mirrored(key)
-        // Mirrored under the old layout: its copies sit at old row positions. Leave both pages as they are.
-        if (raw == null && store.mirrored(legacyKey(weekPageId, dayPageId)) != null) return emptySet()
-        val before = decode(raw)
+        val before = decode(store.mirrored(key))
         val week = Side(weekPageId, store.strokes(weekPageId), rowTop)
         val day = Side(dayPageId, store.strokes(dayPageId), PlannerLayout.ROWS_TOP)
-        val p = plan(week, day, height, before, leftPageId, frozen)
-        if (p.noStrokeChanges && p.mirrored == before) return emptySet()
+        val p = plan(week, day, rowH, before, leftPageId, frozen)
+        if (p.noStrokeChanges && p.mirrored == before) return migrated
         store.apply(p.delete, p.insert, p.update, key, encode(p.mirrored))
-        return p.changedPages
+        return migrated + p.changedPages
     }
 
     /** Leaving the week page: its seven rows are merged with the day pages that already exist. */
@@ -211,7 +223,7 @@ object PlannerSync {
         val changed = HashSet<String>()
         for (i in 0..6) {
             val dayPage = dayPages[monday.plusDays(i.toLong())] ?: continue
-            changed += syncPair(store, weekPageId, layout.rowTop(i), dayPage, layout.rowH, weekPageId, frozen)
+            changed += syncPair(store, weekPageId, layout.rowTop(i), dayPage, pageHeight, weekPageId, frozen)
         }
         return changed
     }
@@ -221,7 +233,7 @@ object PlannerSync {
         store: PlannerSyncStore, dayPageId: String, day: LocalDate, weekPageId: String, pageHeight: Float, frozen: Set<String>
     ): Set<String> {
         val layout = PlannerLayout.week(pageHeight)
-        return syncPair(store, weekPageId, layout.rowTop(day.dayOfWeek.value - 1), dayPageId, layout.rowH, dayPageId, frozen)
+        return syncPair(store, weekPageId, layout.rowTop(day.dayOfWeek.value - 1), dayPageId, pageHeight, dayPageId, frozen)
     }
 
     // ------------------------------------------------------------------------------------------- running a sync
@@ -237,7 +249,7 @@ object PlannerSync {
             forget = { filesDir, id ->
                 File(filesDir, "pages/previews/full/$id").delete()
                 File(filesDir, "pages/previews/thumbs/$id").delete()
-                PageDataManager.removePage(id)
+                PageDataManager.dropLoaded(id)
             },
             log = { Log.w(TAG, it) }
         )
@@ -255,7 +267,7 @@ object PlannerSync {
 class PlannerSyncRunner(
     private val scope: CoroutineScope,
     private val currentPage: () -> String,
-    private val forget: (filesDir: File, pageId: String) -> Unit,
+    private val forget: suspend (filesDir: File, pageId: String) -> Unit,
     private val log: (String) -> Unit,
     /** Strokes just drawn are saved a moment after the pen lifts. */
     private val settleMs: Long = 300,
@@ -291,8 +303,7 @@ class ExitSyncGuard {
 }
 
 /** Reads and writes what a planner sync needs; a fake in tests. */
-interface PlannerSyncStore {
-    suspend fun strokes(pageId: String): List<Stroke>
+interface PlannerSyncStore : PlannerInkStore {
     suspend fun mirrored(key: String): String?
     /** Applies the stroke changes and the new record together: all of it or none. */
     suspend fun apply(delete: List<String>, insert: List<Stroke>, update: List<Stroke>, key: String, mirrored: String)
@@ -309,5 +320,35 @@ class RoomPlannerSyncStore @Inject constructor(private val db: AppDatabase) : Pl
             if (insert.isNotEmpty()) db.strokeDao().create(insert)
             db.kvDao().set(Kv(key, mirrored))
         }
+    }
+
+    override suspend fun layoutMarked(pageId: String): Boolean = db.kvDao().get(PlannerInkMigration.markerKey(pageId)) != null
+
+    override suspend fun markLayout(pageId: String) {
+        db.kvDao().set(Kv(PlannerInkMigration.markerKey(pageId), PlannerInkMigration.LAYOUT))
+    }
+
+    override suspend fun commitMigration(pageId: String, updated: List<List<Stroke>>) {
+        db.withTransaction {
+            if (db.kvDao().get(PlannerInkMigration.markerKey(pageId)) != null) return@withTransaction
+            for (chunk in updated) db.strokeDao().update(chunk)
+            db.kvDao().getWithPrefix(KEY_PREFIX_SYNC).filter { pageId in it.key }.forEach { db.kvDao().delete(it.key) }
+            db.kvDao().set(Kv(PlannerInkMigration.markerKey(pageId), PlannerInkMigration.LAYOUT))
+        }
+    }
+
+    override suspend fun backupBeforeFirstMigration() = withContext(Dispatchers.IO) {
+        val backup = File(getDbDir(), BACKUP_NAME)
+        if (backup.exists()) return@withContext
+        // Fold the write-ahead log into the main file first, so the copy holds everything.
+        db.openHelper.writableDatabase.query("PRAGMA wal_checkpoint(TRUNCATE)").use { it.moveToFirst() }
+        val tmp = File(backup.parentFile, "$BACKUP_NAME.tmp")
+        File(getDbDir(), "app_database").copyTo(tmp, overwrite = true)
+        if (!tmp.renameTo(backup)) tmp.delete()
+    }
+
+    private companion object {
+        const val KEY_PREFIX_SYNC = PlannerSync.KEY_PREFIX
+        const val BACKUP_NAME = "app_database.before-planner-layout.bak"
     }
 }
