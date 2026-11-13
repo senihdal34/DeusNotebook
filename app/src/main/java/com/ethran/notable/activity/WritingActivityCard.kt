@@ -63,6 +63,8 @@ private val Serif = FontFamily.Serif
 private val Pill = RoundedCornerShape(50)
 
 /** Day cell colours for levels 0..4, light to dark. */
+/** Every cell has a visible outline, empty ones too, so the grid stays readable on e-ink where the palest greys vanish. */
+private val CellOutline = Color(0xFF8A8A85)
 private val Levels = listOf(Color(0xFFE3E3E0), Color(0xFFC4C4C0), Color(0xFF8E8E8B), Color(0xFF4A4A48), Ink)
 
 private val MaxCell = 18.dp
@@ -170,7 +172,7 @@ private fun Stat(value: String, label: String) {
 private fun Legend() {
     Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
         Text(stringResource(R.string.activity_legend_less).uppercase(AppStrings.locale), fontFamily = Sans, fontWeight = FontWeight.SemiBold, fontSize = 11.sp, letterSpacing = 1.5.sp, color = Grey1)
-        Levels.forEach { Box(Modifier.size(16.dp).background(it)) }
+        Levels.forEachIndexed { i, c -> Box(Modifier.size(16.dp).background(c).border(1.dp, if (i >= 3) Ink else CellOutline)) }
         Text(stringResource(R.string.activity_legend_more).uppercase(AppStrings.locale), fontFamily = Sans, fontWeight = FontWeight.SemiBold, fontSize = 11.sp, letterSpacing = 1.5.sp, color = Grey1)
     }
 }
@@ -198,7 +200,13 @@ private fun Heatmap(grid: WeekGrid, labels: List<Pair<Int, String>>, modifier: M
             val level = grid.levels[i]
             if (level == WritingActivityStats.OUTSIDE) continue
             val origin = Offset((i / 7) * (cell + gap), top + (i % 7) * (cell + gap))
-            drawRoundRect(Levels[level.coerceIn(0, Levels.lastIndex)], origin, cellSize, radius)
+            val tone = level.coerceIn(0, Levels.lastIndex)
+            drawRoundRect(Levels[tone], origin, cellSize, radius)
+            // Outline inside the cell: a 1 dp line in every cell, black on the dark levels.
+            val line = 1.dp.toPx()
+            drawRoundRect(
+                if (tone >= 3) Ink else CellOutline, origin + Offset(line / 2, line / 2), Size(cell - line, cell - line), radius, style = Stroke(line)
+            )
         }
         if (grid.todayCell >= 0) {
             // Today: a black ring around the cell, drawn in the gap so it also shows on a black cell.
