@@ -11,7 +11,7 @@ import kotlin.test.assertTrue
 
 /** The `‹ PREVIOUS | THIS … | NEXT ›` pill in the header of the month, quarter and year pages. */
 class PlannerNavPillTest {
-    private val sizes = listOf(1860f to 2480f, 2480f to 1860f)   // portrait, landscape
+    private val sizes = listOf(1860f to 2480f, 2480f to 1860f, 1755f to 2480f, 2375f to 1860f)   // portrait, landscape, both beside the rail gutter
     private val today = LocalDate.of(2026, 11, 12)
 
     private fun PageRect.inside(x: Float, y: Float) = x in left..right && y in top..bottom
