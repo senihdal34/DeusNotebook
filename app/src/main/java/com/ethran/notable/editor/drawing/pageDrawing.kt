@@ -300,7 +300,7 @@ fun drawOnCanvasFromPage(
             showHint(errorMessage, page.coroutineScope)
         }
         try {
-            page.strokes.forEach { stroke ->
+            drawOrder(page.strokes).forEach { stroke ->
                 if (ignoredStrokeIds.contains(stroke.id)) return@forEach
                 val bounds = strokeBounds(stroke)
                 // if stroke is not inside page section

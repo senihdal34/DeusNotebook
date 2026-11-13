@@ -27,6 +27,7 @@ import com.ethran.notable.data.db.getBackgroundType
 import com.ethran.notable.data.model.BackgroundType.Native
 import com.ethran.notable.editor.drawing.drawBg
 import com.ethran.notable.editor.drawing.drawImage
+import com.ethran.notable.editor.drawing.drawOrder
 import com.ethran.notable.editor.drawing.drawStroke
 import com.ethran.notable.ui.components.getFolderList
 import com.ethran.notable.utils.ensureNotMainThread
@@ -397,7 +398,7 @@ class ExportEngine @Inject constructor(
         // Scale = 1f (bitmap is native logical size)
         drawBg(context, canvas, data.page.getBackgroundType(), data.page.background)
         data.images.forEach { drawImage(context, canvas, it, Offset.Zero) }
-        data.strokes.forEach { drawStroke(canvas, it, Offset.Zero) }
+        drawOrder(data.strokes).forEach { drawStroke(canvas, it, Offset.Zero) }
 
         return bitmap
     }
@@ -426,7 +427,7 @@ class ExportEngine @Inject constructor(
             scaleFactor
         )
         data.images.forEach { drawImage(context, canvas, it, -scaledScroll) }
-        data.strokes.forEach { drawStroke(canvas, it, -scaledScroll) }
+        drawOrder(data.strokes).forEach { drawStroke(canvas, it, -scaledScroll) }
     }
 
     /* -------------------- Data Fetch / Dimension Calculation -------------------- */
