@@ -4,6 +4,8 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.TransformOrigin
 import androidx.compose.ui.layout.Layout
@@ -17,9 +19,14 @@ import kotlin.math.roundToInt
  * at a screen point hits the same zone that is drawn there. With the identity viewport (portrait, and every page that is
  * not a planner page) this is a plain full-size box.
  */
+/** True inside a [PlannerSheet] that is scaled onto a sheet (landscape); false in portrait and on every other page. */
+val LocalPlannerSheetScaled = staticCompositionLocalOf { false }
+
 @Composable
 fun PlannerSheet(viewport: PlannerViewport, modifier: Modifier = Modifier, content: @Composable BoxScope.() -> Unit) {
-    Layout(content = { Box(Modifier.fillMaxSize(), content = content) }, modifier = modifier.fillMaxSize()) { measurables, constraints ->
+    Layout(content = {
+        CompositionLocalProvider(LocalPlannerSheetScaled provides !viewport.isIdentity) { Box(Modifier.fillMaxSize(), content = content) }
+    }, modifier = modifier.fillMaxSize()) { measurables, constraints ->
         val boxW = constraints.maxWidth
         val boxH = constraints.maxHeight
         if (viewport.isIdentity) {

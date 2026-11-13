@@ -14,6 +14,7 @@ import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.res.stringResource
 import com.ethran.notable.R
+import com.ethran.notable.planner.LocalPlannerSheetScaled
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -52,13 +53,16 @@ fun PlannerWeekBar(
 
 @Composable
 private fun BarButton(label: String, on: Boolean, onClick: () -> Unit) {
+    // On a sheet scaled into landscape (0.75 on the tablet) 11 sp would read as about 8 sp: the labels get 13 sp there, with
+    // tighter padding and spacing so the pill keeps about its width. Portrait is unchanged.
+    val scaled = LocalPlannerSheetScaled.current
     Box(
         Modifier.clip(Pill).background(if (on) Color.Black else Color.Transparent)
             .clickable(interactionSource = remember { MutableInteractionSource() }, indication = null, onClick = onClick)
-            .padding(horizontal = 11.dp, vertical = 8.dp),
+            .padding(horizontal = if (scaled) 7.dp else 11.dp, vertical = 8.dp),
         contentAlignment = Alignment.Center
     ) {
-        Text(label.uppercase(), fontFamily = FontFamily.SansSerif, fontSize = 11.sp, fontWeight = FontWeight.Bold, letterSpacing = 1.sp, color = if (on) Color.White else Color.Black)
+        Text(label.uppercase(), fontFamily = FontFamily.SansSerif, fontSize = if (scaled) 13.sp else 11.sp, fontWeight = FontWeight.Bold, letterSpacing = if (scaled) 0.5.sp else 1.sp, color = if (on) Color.White else Color.Black)
     }
 }
 
