@@ -21,6 +21,7 @@ import com.ethran.notable.data.db.PageRepository
 import com.ethran.notable.data.db.Stroke
 import com.ethran.notable.data.db.StrokePoint
 import com.ethran.notable.data.ensureImagesFolder
+import com.ethran.notable.editor.drawing.drawOrder
 import com.ethran.notable.editor.utils.Pen
 import com.ethran.notable.ui.showHint
 import com.ethran.notable.utils.ensureNotMainThread
@@ -138,7 +139,8 @@ class XoppFile @Inject constructor(
 
 
 
-        for (stroke in strokes) {
+        // Highlighter (marker) strokes go first so they sit under the ink, as on the page.
+        for (stroke in drawOrder(strokes)) {
             // skip the small strokes, to avoid error: Wrong count of points (2)
             if (stroke.points.size < 3)
                 continue
