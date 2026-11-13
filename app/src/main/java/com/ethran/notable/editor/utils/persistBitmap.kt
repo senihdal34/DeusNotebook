@@ -276,6 +276,21 @@ private fun decodePreview(file: File, expectedNameForLog: String): Bitmap? {
 }
 
 /**
+ * Deletes the saved full preview and thumbnail of a page, so a stale one is never shown. A missing thumbnail is drawn again
+ * from the stored page when Home asks for it.
+ */
+fun dropPersistedPreviews(context: Context, pageID: String) {
+    try {
+        ensurePreviewsFullFolder(context).listFiles()?.forEach { f ->
+            if (f.name == pageID || f.name == "$pageID.png" || (f.name.startsWith("$pageID-sy") && f.name.endsWith(".png"))) f.delete()
+        }
+        File(context.filesDir, "pages/previews/thumbs/$pageID").delete()
+    } catch (e: Exception) {
+        log.w("dropPersistedPreviews: ${e.message}")
+    }
+}
+
+/**
  * Persist a thumbnail for a page.
  */
 fun persistBitmapThumbnail(context: Context, bitmap: Bitmap, pageID: String) {

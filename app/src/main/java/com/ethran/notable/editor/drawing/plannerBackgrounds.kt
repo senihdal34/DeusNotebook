@@ -109,10 +109,8 @@ private fun drawHeader(
  * least five check-box lines. Tapping a date opens that day's page. Only the black label block marks today.
  */
 fun drawPlannerWeekBg(
-    context: android.content.Context, canvas: Canvas, scale: Float, monday: LocalDate, today: LocalDate = LocalDate.now()
+    context: android.content.Context, canvas: Canvas, w: Float, h: Float, monday: LocalDate, today: LocalDate = LocalDate.now()
 ) {
-    val w = canvas.width / scale
-    val h = canvas.height / scale
     canvas.drawColor(Color.WHITE)
     drawHeader(
         context, canvas, w, 0f, text(com.ethran.notable.R.string.planner_title),
@@ -146,10 +144,8 @@ private fun drawDayLabel(canvas: Canvas, labelW: Float, y0: Float, rowH: Float, 
  * week row), then more lines down to the bottom. The page does not scroll.
  */
 fun drawPlannerDayBg(
-    context: android.content.Context, canvas: Canvas, scale: Float, day: LocalDate, today: LocalDate = LocalDate.now()
+    context: android.content.Context, canvas: Canvas, w: Float, h: Float, day: LocalDate, today: LocalDate = LocalDate.now()
 ) {
-    val w = canvas.width / scale
-    val h = canvas.height / scale
     canvas.drawColor(Color.WHITE)
     val idx = day.dayOfWeek.value - 1
     drawHeader(
@@ -290,11 +286,11 @@ private fun drawFocus(canvas: Canvas, f: FocusBlock, label: String) {
     for (k in 0 until f.lines) canvas.drawLine(f.linesLeft, f.ruleY(k), f.right, f.ruleY(k), guide)
 }
 
-private fun hatch(canvas: Canvas, l: Float, t: Float, r: Float, b: Float) {
+private fun hatch(canvas: Canvas, l: Float, t: Float, r: Float, b: Float, pitch: Float = 16f, p: Paint = hatchP) {
     canvas.save()
     canvas.clipRect(l, t, r, b)
     var x = l - (b - t)
-    while (x < r) { canvas.drawLine(x, b, x + (b - t), t, hatchP); x += 16f }
+    while (x < r) { canvas.drawLine(x, b, x + (b - t), t, p); x += pitch }
     canvas.restore()
 }
 
@@ -305,11 +301,9 @@ private fun dateRange(start: LocalDate, end: LocalDate) = "${PlannerWeeks.shortD
  * dimmed and hatched, the left column carries the ISO week numbers, today is a black box.
  */
 fun drawPlannerMonthBg(
-    context: android.content.Context, canvas: Canvas, scale: Float, month: YearMonth, today: LocalDate = LocalDate.now(),
+    context: android.content.Context, canvas: Canvas, w: Float, h: Float, month: YearMonth, today: LocalDate = LocalDate.now(),
     writing: WritingDays = PlannerWritingDays.current, focusLines: Int = PlannerFocusLines.lines(PlannerLevel.Month)
 ) {
-    val w = canvas.width / scale
-    val h = canvas.height / scale
     canvas.drawColor(Color.WHITE)
     val first = month.atDay(1)
     val last = month.atEndOfMonth()
@@ -386,11 +380,9 @@ private fun drawMini(
 
 /** Quarter page: focus lines, then the three months, each with a small calendar and a ruled Goals area. */
 fun drawPlannerQuarterBg(
-    context: android.content.Context, canvas: Canvas, scale: Float, quarter: PlannerWeeks.YearQuarter, today: LocalDate = LocalDate.now(),
+    context: android.content.Context, canvas: Canvas, w: Float, h: Float, quarter: PlannerWeeks.YearQuarter, today: LocalDate = LocalDate.now(),
     writing: WritingDays = PlannerWritingDays.current, focusLines: Int = PlannerFocusLines.lines(PlannerLevel.Quarter)
 ) {
-    val w = canvas.width / scale
-    val h = canvas.height / scale
     canvas.drawColor(Color.WHITE)
     val percent = PlannerPagesLayout.periodPercent(quarter.start, quarter.end, today)
     drawHeader(
@@ -414,11 +406,9 @@ fun drawPlannerQuarterBg(
 
 /** Year page: twelve small calendars, Q1..Q4 labels and a ruled year focus at the bottom. */
 fun drawPlannerYearBg(
-    context: android.content.Context, canvas: Canvas, scale: Float, year: Int, today: LocalDate = LocalDate.now(),
+    context: android.content.Context, canvas: Canvas, w: Float, h: Float, year: Int, today: LocalDate = LocalDate.now(),
     writing: WritingDays = PlannerWritingDays.current, focusLines: Int = PlannerFocusLines.lines(PlannerLevel.Year)
 ) {
-    val w = canvas.width / scale
-    val h = canvas.height / scale
     canvas.drawColor(Color.WHITE)
     val start = LocalDate.of(year, 1, 1)
     val end = LocalDate.of(year, 12, 31)
@@ -459,13 +449,65 @@ fun drawPlannerYearBg(
 }
 
 /**
- * Draws a month, quarter or year page. Any other `planner-` key (a page type from a newer version of the app) is left
- * blank instead of failing. Returns false when [background] is not a planner key at all.
+ * Draws a week, day, month, quarter or year page on a page [w] x [h] px; any other `planner-` key (a page type from a newer
+ * version of the app) is left blank instead of failing. Returns false when [background] is not a planner key at all.
  */
-fun drawPlannerPagesBg(context: android.content.Context, canvas: Canvas, scale: Float, background: String): Boolean {
-    PlannerWeeks.parseMonth(background)?.let { drawPlannerMonthBg(context, canvas, scale, it); return true }
-    PlannerWeeks.parseQuarter(background)?.let { drawPlannerQuarterBg(context, canvas, scale, it); return true }
-    PlannerWeeks.parseYear(background)?.let { drawPlannerYearBg(context, canvas, scale, it); return true }
+fun drawPlannerPagesBg(context: android.content.Context, canvas: Canvas, w: Float, h: Float, background: String): Boolean {
+    PlannerWeeks.parseWeek(background)?.let { drawPlannerWeekBg(context, canvas, w, h, it); return true }
+    PlannerWeeks.parseDay(background)?.let { drawPlannerDayBg(context, canvas, w, h, it); return true }
+    PlannerWeeks.parseMonth(background)?.let { drawPlannerMonthBg(context, canvas, w, h, it); return true }
+    PlannerWeeks.parseQuarter(background)?.let { drawPlannerQuarterBg(context, canvas, w, h, it); return true }
+    PlannerWeeks.parseYear(background)?.let { drawPlannerYearBg(context, canvas, w, h, it); return true }
     if (PlannerWeeks.isPlanner(background)) { canvas.drawColor(Color.WHITE); return true }
     return false
+}
+
+// ---- The fixed sheet and its margin ----------------------------------------------------------------------------------
+
+/** Paper and hatch of the margin beside the sheet (the house hatch: thin diagonal hairlines on paper). */
+private val marginPaper = Color.rgb(0xF6, 0xF6, 0xF2)
+private val marginHatchP = paint(Color.rgb(0xCF, 0xCF, 0xC8), 1.5f)
+private val marginEdgeP = paint(Color.rgb(0x11, 0x11, 0x11), 2f)
+
+/** Distance between the margin hatch lines and the width of its hairlines and of the sheet's edges, in screen pixels. */
+private const val MARGIN_HATCH_PITCH_PX = 11f
+private const val MARGIN_HATCH_LINE_PX = 1.5f
+private const val SHEET_EDGE_PX = 2f
+
+/**
+ * Draws a planner page as the fixed sheet: the page [w] x [h] with its top left corner at (-[scroll].x, -[scroll].y) of the
+ * canvas, and, wherever the visible canvas is bigger than the sheet (landscape, split screen), the hatched margin with a
+ * hairline along the sheet's edges. [scale] is the canvas' zoom (hairlines and hatch keep their size in screen pixels).
+ * Without a margin (portrait, exports) this is just the page. Returns false when [background] is not a planner key.
+ */
+fun drawPlannerSheet(
+    context: android.content.Context, canvas: Canvas, scroll: Offset, scale: Float, w: Float, h: Float, background: String
+): Boolean {
+    if (!PlannerWeeks.isPlanner(background)) return false
+    val s = if (scale > 0f) scale else 1f
+    val left = -scroll.x
+    val top = -scroll.y
+    val right = left + w
+    val bottom = top + h
+    val visible = android.graphics.RectF(0f, 0f, canvas.width / s, canvas.height / s)
+    val hasMargin = left > 0.5f || top > 0.5f || right < visible.right - 0.5f || bottom < visible.bottom - 0.5f
+    if (hasMargin) {
+        canvas.save()
+        canvas.clipOutRect(left, top, right, bottom)
+        canvas.drawColor(marginPaper)
+        marginHatchP.strokeWidth = MARGIN_HATCH_LINE_PX / s
+        hatch(canvas, visible.left, visible.top, visible.right, visible.bottom, MARGIN_HATCH_PITCH_PX / s, marginHatchP)
+        canvas.restore()
+        // The ink hairlines lie just outside the sheet, so the sheet keeps all of its page.
+        val edge = SHEET_EDGE_PX / s
+        marginEdgeP.strokeWidth = edge
+        if (left > 0.5f) canvas.drawLine(left - edge / 2f, maxOf(top, visible.top), left - edge / 2f, minOf(bottom, visible.bottom), marginEdgeP)
+        if (right < visible.right - 0.5f) canvas.drawLine(right + edge / 2f, maxOf(top, visible.top), right + edge / 2f, minOf(bottom, visible.bottom), marginEdgeP)
+    }
+    canvas.save()
+    canvas.translate(left, top)
+    canvas.clipRect(0f, 0f, w, h)
+    val drawn = drawPlannerPagesBg(context, canvas, w, h, background)
+    canvas.restore()
+    return drawn
 }

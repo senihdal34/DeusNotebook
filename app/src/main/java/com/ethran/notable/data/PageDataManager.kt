@@ -19,6 +19,7 @@ import com.ethran.notable.data.model.BackgroundType.AutoPdf.getPage
 import com.ethran.notable.data.model.BackgroundType.CoverImage
 import com.ethran.notable.data.model.BackgroundType.ImageRepeating
 import com.ethran.notable.editor.canvas.CanvasEventBus
+import com.ethran.notable.editor.utils.dropPersistedPreviews
 import com.ethran.notable.editor.utils.persistBitmapFull
 import com.ethran.notable.editor.utils.persistBitmapThumbnail
 import com.ethran.notable.io.IN_IGNORED
@@ -386,6 +387,12 @@ object PageDataManager {
                     }
 
                     scope.launch(Dispatchers.IO) {
+                        if (isViewportScaled(pageId)) {
+                            // Not the fixed portrait page: drop the saved previews instead of replacing them with this
+                            // shape; Home draws a missing thumbnail from the stored page (ThumbnailGenerator).
+                            dropPersistedPreviews(context, pageId)
+                            return@launch
+                        }
                         persistBitmapFull(
                             context,
                             bitmap,
@@ -447,6 +454,19 @@ object PageDataManager {
     fun setPageScroll(pageId: String, scroll: Offset) {
         pageScroll[pageId] = scroll
     }
+
+    /**
+     * Pages that are shown scaled onto a fixed sheet (a planner page in landscape). What the editor holds for them is the
+     * sheet at that scale in a box of that shape, so it is never saved as the page's preview or thumbnail: those are always
+     * the fixed portrait page (see [collectAndPersistBitmapsBatch]).
+     */
+    private val viewportScaled = java.util.Collections.synchronizedSet(HashSet<String>())
+
+    fun setViewportScaled(pageId: String, scaled: Boolean) {
+        if (scaled) viewportScaled.add(pageId) else viewportScaled.remove(pageId)
+    }
+
+    fun isViewportScaled(pageId: String): Boolean = pageId in viewportScaled
 
     fun getPageZoom(pageId: String): Float = pageZoom.getOrPut(pageId) { 1f }
     fun setPageZoom(pageId: String, zoom: Float) {

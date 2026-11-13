@@ -214,7 +214,11 @@ class OnyxInputHandler(
             onSurfaceInit(drawCanvas)
 
             val (topExclude, bottomExclude) = calculateExcludeHeights()
-            setupSurface(drawCanvas, touchHelper, topExclude, bottomExclude)
+            // A planner sheet that does not fill the view (landscape): the pen writes on the sheet only, not in the margin.
+            val sheet = page.fixedViewport?.takeUnless { it.isIdentity }?.sheet?.let {
+                Rect(it.left.toInt(), it.top.toInt(), it.right.toInt(), it.bottom.toInt())
+            }
+            setupSurface(drawCanvas, touchHelper, topExclude, bottomExclude, sheet)
 
             // Must set pen/stroke AFTER setupSurface, because openRawDrawing() resets the stroke style
             updatePenAndStroke()

@@ -33,6 +33,8 @@ fun ScrollIndicator(state: EditorState) {
     ) {
         val viewportHeightPx = convertDpToPixel(this.maxHeight, LocalContext.current).toInt()
         val page = state.pageView
+        // A planner sheet scaled into a landscape page area does not scroll.
+        if (page.fixedViewport?.isIdentity == false) return@BoxWithConstraints
 
         // Total scrollable height approximation:
         // page.height is the total content height (page coordinates)

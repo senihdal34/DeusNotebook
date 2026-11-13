@@ -29,6 +29,8 @@ import com.ethran.notable.editor.drawing.drawBg
 import com.ethran.notable.editor.drawing.drawImage
 import com.ethran.notable.editor.drawing.drawOrder
 import com.ethran.notable.editor.drawing.drawStroke
+import com.ethran.notable.planner.PlannerPage
+import com.ethran.notable.planner.PlannerWeeks
 import com.ethran.notable.ui.components.getFolderList
 import com.ethran.notable.utils.ensureNotMainThread
 import dagger.hilt.android.qualifiers.ApplicationContext
@@ -43,6 +45,7 @@ import java.io.OutputStream
 import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
 import javax.inject.Inject
+import kotlin.math.roundToInt
 
 /* ---------------------------- Public API ---------------------------- */
 
@@ -357,7 +360,7 @@ class ExportEngine @Inject constructor(
         val data = fetchPageData(pageId)
         val (_, contentHeightPx) = computeContentDimensions(data)
 
-        val scaleFactor = A4_WIDTH.toFloat() / SCREEN_WIDTH.toFloat()
+        val scaleFactor = A4_WIDTH.toFloat() / pageBaseSize(data.page).first.toFloat()
         val scaledHeight = (contentHeightPx * scaleFactor).toInt()
 
         if (GlobalAppSettings.current.paginatePdf) {
@@ -442,10 +445,19 @@ class ExportEngine @Inject constructor(
         return PageData(page, strokes, images)
     }
 
+    /**
+     * The least width and height a page is exported at: the screen, or for a planner page the fixed portrait page, so that
+     * a page looks the same whichever way the screen was turned when it was last open.
+     */
+    private fun pageBaseSize(page: Page): Pair<Int, Int> =
+        if (PlannerWeeks.isFixedPage(page.background)) PlannerPage.size(context).let { it.width.roundToInt() to it.height.roundToInt() }
+        else SCREEN_WIDTH to SCREEN_HEIGHT
+
     // Returns (width, height)
     private fun computeContentDimensions(data: PageData): Pair<Int, Int> {
+        val (baseWidth, baseHeight) = pageBaseSize(data.page)
         if (data.strokes.isEmpty() && data.images.isEmpty()) {
-            return SCREEN_WIDTH to SCREEN_HEIGHT
+            return baseWidth to baseHeight
         }
         val strokeBottom = data.strokes.maxOfOrNull { it.bottom.toInt() } ?: 0
         val strokeRight = data.strokes.maxOfOrNull { it.right.toInt() } ?: 0
@@ -457,8 +469,8 @@ class ExportEngine @Inject constructor(
         ) + if (GlobalAppSettings.current.visualizePdfPagination) 0 else 50
         val rawWidth = maxOf(strokeRight, imageRight) + 50
 
-        val height = rawHeight.coerceAtLeast(SCREEN_HEIGHT)
-        val width = rawWidth.coerceAtLeast(SCREEN_WIDTH)
+        val height = rawHeight.coerceAtLeast(baseHeight)
+        val width = rawWidth.coerceAtLeast(baseWidth)
         return width to height
     }
 

@@ -128,7 +128,11 @@ class DrawCanvas(
         coroutineScope, this, page, state, history, inputHandler, refreshManager
     )
 
-    fun registerObservers() = observers.registerAll()
+    fun registerObservers() {
+        // The pen area follows the planner sheet when the page area changes shape or another kind of page opens.
+        page.onViewportChanged = { inputHandler.updateActiveSurface() }
+        observers.registerAll()
+    }
 
     fun init() {
         log.i("Initializing Canvas")
