@@ -2,6 +2,7 @@ package com.ethran.notable.editor
 
 
 import android.content.Context
+import com.ethran.notable.planner.PlannerInkMigration
 import com.ethran.notable.planner.PlannerWeeks
 import android.database.sqlite.SQLiteConstraintException
 import android.graphics.Bitmap
@@ -286,6 +287,10 @@ class PageView(
         loadingJob = coroutineScope.launch(Dispatchers.IO) {
             try {
                 val bookId = pageFromDb?.notebookId
+                // Planner pages written before the zoom strip are moved to the current rows before anything is read or drawn.
+                pageFromDb?.let {
+                    PlannerInkMigration.onOpen(appRepository.plannerSync, context.filesDir, it.id, it.background, viewHeight.toFloat())
+                }
                 snackManager.showSnackDuring(text = AppStrings.get(R.string.snack_loading_strokes)) {
                     val timeToLoad = measureTimeMillis {
                         logCache.d("Start page, id $currentPageId")

@@ -725,6 +725,26 @@ object PageDataManager {
     @Volatile
     private var currentCacheSizeMB = 0
 
+    /**
+     * Forgets the strokes, bitmap and sizes held in memory for [pageId] because its strokes were rewritten in the database
+     * (the planner's layout migration and syncs). Unlike [removePage] it also works for the page that is about to be opened,
+     * and it first waits for a load that is still reading the old strokes, so that load cannot put them back. Scroll and
+     * zoom are kept. The next [requestPageLoadJoin] reads the page again.
+     */
+    suspend fun dropLoaded(pageId: String) {
+        jobLock.withLock { dataLoadingJobs[pageId] }?.join()
+        synchronized(accessLock) {
+            strokes.remove(pageId)
+            strokesById.remove(pageId)
+            pageHigh.remove(pageId)
+            // The open page's bitmap is the one on screen; it is redrawn from the strokes after the load.
+            if (pageId != currentPage) bitmapCache.remove(pageId)
+            currentCacheSizeMB -= entrySizeMB[pageId] ?: 0
+            entrySizeMB.remove(pageId)
+        }
+        jobLock.withLock { dataLoadingJobs.remove(pageId) }
+    }
+
     fun removePage(pageId: String): Boolean {
         log.d("Removing page $pageId")
         if (pageId == currentPage) {
