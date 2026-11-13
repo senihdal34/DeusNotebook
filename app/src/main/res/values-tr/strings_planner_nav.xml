@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="planner_nav_previous">‹ Önceki</string>
+    <string name="planner_nav_next">Sonraki ›</string>
+    <string name="planner_this_month">Bu ay</string>
+    <string name="planner_this_quarter">Bu çeyrek</string>
+    <string name="planner_this_year">Bu yıl</string>
+</resources>
