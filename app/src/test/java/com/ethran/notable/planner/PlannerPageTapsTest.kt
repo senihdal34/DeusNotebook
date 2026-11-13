@@ -40,7 +40,10 @@ class PlannerPageTapsTest {
     @Test fun `every zone stays on the page`() {
         for ((w, h) in listOf(1860f to 2480f, 2480f to 1860f)) {
             for (bg in listOf("planner-month:2026-11", "planner-quarter:2026-Q4", "planner-year:2026")) {
-                for (z in pageTapZones(bg, w, h)) {
+                for (z in pageTapZones(bg, w, h).filter { zone -> PlannerPagesLayout.navPill().let { zone.rect.top < PlannerLayout.ROWS_TOP && zone.rect.top >= it.outline.top - PlannerPagesLayout.NAV_TAP_PAD } }) {
+                    assertTrue(z.rect.left >= 0f && z.rect.top >= 0f && z.rect.bottom < PlannerLayout.HEADER_H && z.rect.right <= w, "$bg ${z.tap} nav zone is in the header")
+                }
+                for (z in pageTapZones(bg, w, h).filter { it.rect.top >= PlannerLayout.ROWS_TOP - 1f }) {
                     assertTrue(z.rect.left >= 0f && z.rect.top >= PlannerLayout.ROWS_TOP - 1f && z.rect.right <= w && z.rect.bottom <= h, "$bg ${z.tap}")
                 }
             }

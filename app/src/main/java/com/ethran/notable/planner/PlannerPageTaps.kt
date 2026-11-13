@@ -15,12 +15,15 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import com.ethran.notable.editor.canvas.CanvasEventBus
 import com.ethran.notable.editor.state.EditorState
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import java.time.LocalDate
+import com.ethran.notable.activity.ActivityWritingDays
 
 /**
  * Where a [PageTap] leads: the page to open (created when missing) or null when it only changes the open page.
@@ -31,21 +34,30 @@ internal fun PageTap.target(service: PlannerService): (suspend () -> PlannerServ
     is PageTap.OpenWeek -> suspend { service.ensureWeek(monday) }
     is PageTap.OpenMonth -> suspend { service.ensureMonth(month.atDay(1)) }
     is PageTap.OpenQuarter -> suspend { service.ensureQuarter(PlannerWeeks.YearQuarter(year, quarter).start) }
+    is PageTap.OpenYear -> suspend { service.ensureYear(LocalDate.of(year, 1, 1)) }
     is PageTap.AddFocusLine -> null
 }
 
+/** True when this tap would open the page that is already open (the "this month" part of the pill on the current month). */
+internal fun PageTap.opens(background: String): Boolean = when (this) {
+    is PageTap.OpenMonth -> PlannerWeeks.parseMonth(background) == month
+    is PageTap.OpenQuarter -> PlannerWeeks.parseQuarter(background) == PlannerWeeks.YearQuarter(year, quarter)
+    is PageTap.OpenYear -> PlannerWeeks.parseYear(background) == year
+    else -> false
+}
+
 /** The tap zones of the page with this background at this page size; empty for any other page (including unknown keys). */
-fun pageTapZones(background: String?, width: Float, height: Float, month: Int = PlannerFocusLines.DEFAULT, quarter: Int = PlannerFocusLines.DEFAULT, year: Int = PlannerFocusLines.DEFAULT): List<TapZone> {
+fun pageTapZones(background: String?, width: Float, height: Float, month: Int = PlannerFocusLines.DEFAULT, quarter: Int = PlannerFocusLines.DEFAULT, year: Int = PlannerFocusLines.DEFAULT, today: LocalDate = LocalDate.now()): List<TapZone> {
     if (background == null) return emptyList()
-    PlannerWeeks.parseMonth(background)?.let { return PlannerPagesLayout.month(it, width, height, month).taps }
-    PlannerWeeks.parseQuarter(background)?.let { return PlannerPagesLayout.quarter(it, width, height, quarter).taps }
-    PlannerWeeks.parseYear(background)?.let { return PlannerPagesLayout.year(it, width, height, year).taps }
+    PlannerWeeks.parseMonth(background)?.let { return PlannerPagesLayout.month(it, width, height, month, today).taps }
+    PlannerWeeks.parseQuarter(background)?.let { return PlannerPagesLayout.quarter(it, width, height, quarter, today).taps }
+    PlannerWeeks.parseYear(background)?.let { return PlannerPagesLayout.year(it, width, height, year, today).taps }
     return emptyList()
 }
 
 /**
  * Invisible tap layer over a month, quarter or year page: date numbers, week numbers, month titles and Q labels open
- * that page, the round + button adds a focus line. It draws nothing and covers none of the writing areas. On every other
+ * that page, the round + button adds a focus line, the pill in the header goes to the previous, this or next period. It draws nothing and covers none of the writing areas. On every other
  * page it does nothing. [onOpen] is the editor's planner navigation: pages of other notebooks open with the editor
  * route, so Back returns to the page you came from.
  */
@@ -79,6 +91,13 @@ fun PlannerPageTaps(editorState: EditorState, plannerService: PlannerService, on
         if (changed) redraw()
     }
 
+    // Dots of the days written on: refresh the in-memory snapshot on page open; redraw only when it changed.
+    val context = LocalContext.current
+    LaunchedEffect(level, pageId) {
+        if (level == null) return@LaunchedEffect
+        if (ActivityWritingDays.refresh(context)) redraw()
+    }
+
     if (level == null) return
     val bg = background ?: return
 
@@ -92,11 +111,13 @@ fun PlannerPageTaps(editorState: EditorState, plannerService: PlannerService, on
 
     BoxWithConstraints(Modifier.fillMaxSize()) {
         val density = LocalDensity.current
+        val today = remember(bg) { LocalDate.now() }
         val zones = pageTapZones(
             bg, constraints.maxWidth.toFloat(), constraints.maxHeight.toFloat(),
             month = counts[PlannerLevel.Month] ?: PlannerFocusLines.DEFAULT,
             quarter = counts[PlannerLevel.Quarter] ?: PlannerFocusLines.DEFAULT,
-            year = counts[PlannerLevel.Year] ?: PlannerFocusLines.DEFAULT
+            year = counts[PlannerLevel.Year] ?: PlannerFocusLines.DEFAULT,
+            today = today
         )
         with(density) {
             for (zone in zones) {
@@ -107,6 +128,7 @@ fun PlannerPageTaps(editorState: EditorState, plannerService: PlannerService, on
                         .size(r.width.toDp(), r.height.toDp())
                         .clickable(interactionSource = remember { MutableInteractionSource() }, indication = null) {
                             val tap = zone.tap
+                            if (tap.opens(bg)) return@clickable   // already on this page
                             if (tap is PageTap.AddFocusLine) addLine(tap.level) else tap.target(plannerService)?.let(onOpen)
                         }
                 )

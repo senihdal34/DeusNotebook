@@ -237,6 +237,43 @@ private fun drawWrapped(canvas: Canvas, text: String, x: Float, baseline: Float,
     lines.forEachIndexed { i, l -> canvas.drawText(l, x, baseline + i * p.textSize * 1.3f, p) }
 }
 
+private val navP = paint(Color.BLACK, size = 20f, face = sansBold).apply { textAlign = Paint.Align.CENTER; letterSpacing = 0.06f }
+private val navInvP = paint(Color.WHITE, size = 20f, face = sansBold).apply { textAlign = Paint.Align.CENTER; letterSpacing = 0.06f }
+private val navLine = paint(Color.BLACK, 2f)
+
+/** One label centred in [r]; it shrinks until it fits, so a long word in another language stays inside its part of the pill. */
+private fun drawNavLabel(canvas: Canvas, label: String, r: com.ethran.notable.planner.PageRect, on: Boolean) {
+    val p = Paint(if (on) navInvP else navP)
+    val maxW = r.width - 24f
+    while (p.textSize > 13f && p.measureText(label) > maxW) p.textSize -= 1f
+    canvas.drawText(label, r.centerX, r.centerY + p.textSize * 0.36f, p)
+}
+
+/**
+ * The `‹ PREVIOUS | THIS MONTH | NEXT ›` pill in the header of the month, quarter and year pages. The part for the
+ * period that holds today is black when this page is that period. Its zones come from [PlannerPagesLayout.navPill].
+ */
+private fun drawNavPill(canvas: Canvas, thisLabel: String, isCurrent: Boolean) {
+    val pill = PlannerPagesLayout.navPill()
+    val o = pill.outline
+    val radius = o.height / 2f
+    val shape = android.graphics.RectF(o.left, o.top, o.right, o.bottom)
+    canvas.drawRoundRect(shape, radius, radius, whiteFill)
+    if (isCurrent) {
+        canvas.save()
+        canvas.clipPath(android.graphics.Path().apply { addRoundRect(shape, radius, radius, android.graphics.Path.Direction.CW) })
+        canvas.drawRect(pill.current.left, pill.current.top, pill.current.right, pill.current.bottom, fillInk)
+        canvas.restore()
+    } else {
+        canvas.drawLine(pill.current.left, pill.current.top, pill.current.left, pill.current.bottom, navLine)
+        canvas.drawLine(pill.current.right, pill.current.top, pill.current.right, pill.current.bottom, navLine)
+    }
+    canvas.drawRoundRect(shape, radius, radius, box)
+    drawNavLabel(canvas, text(com.ethran.notable.R.string.planner_nav_previous).uppercase(loc), pill.previous, false)
+    drawNavLabel(canvas, thisLabel.uppercase(loc), pill.current, isCurrent)
+    drawNavLabel(canvas, text(com.ethran.notable.R.string.planner_nav_next).uppercase(loc), pill.next, false)
+}
+
 private fun drawPlus(canvas: Canvas, cx: Float, cy: Float, r: Float = 22f) {
     canvas.drawCircle(cx, cy, r, whiteFill)
     canvas.drawCircle(cx, cy, r, plusP)
@@ -279,7 +316,8 @@ fun drawPlannerMonthBg(
         context, canvas, w, 0f, text(com.ethran.notable.R.string.planner_month_title), PlannerNames.monthTitle(month).uppercase(loc),
         dateRange(first, last).uppercase(loc), percent, complete = text(com.ethran.notable.R.string.planner_month_complete, percent)
     )
-    val lay = PlannerPagesLayout.month(month, w, h, focusLines)
+    drawNavPill(canvas, text(com.ethran.notable.R.string.planner_this_month), PlannerPagesLayout.isCurrent(month, today))
+    val lay = PlannerPagesLayout.month(month, w, h, focusLines, today)
     drawFocus(canvas, lay.focus, text(com.ethran.notable.R.string.planner_focus_month))
     val right = lay.gridRight
     val left = PlannerPagesLayout.SIDE
@@ -357,7 +395,8 @@ fun drawPlannerQuarterBg(
         context, canvas, w, 0f, text(com.ethran.notable.R.string.planner_quarter_title), PlannerNames.quarterTitle(quarter.year, quarter.quarter).uppercase(loc),
         dateRange(quarter.start, quarter.end).uppercase(loc), percent, complete = text(com.ethran.notable.R.string.planner_quarter_complete, percent)
     )
-    val lay = PlannerPagesLayout.quarter(quarter, w, h, focusLines)
+    drawNavPill(canvas, text(com.ethran.notable.R.string.planner_this_quarter), PlannerPagesLayout.isCurrent(quarter, today))
+    val lay = PlannerPagesLayout.quarter(quarter, w, h, focusLines, today)
     drawFocus(canvas, lay.focus, text(com.ethran.notable.R.string.planner_focus_quarter))
     val right = PlannerPagesLayout.right(w)
     canvas.drawLine(PlannerPagesLayout.SIDE, lay.areaTop, right, lay.areaTop, inkThin)
@@ -385,7 +424,8 @@ fun drawPlannerYearBg(
     drawHeader(
         context, canvas, w, 0f, text(com.ethran.notable.R.string.planner_year_title), PlannerNames.yearTitle(year), dateRange(start, end).uppercase(loc), percent
     )
-    val lay = PlannerPagesLayout.year(year, w, h, focusLines)
+    drawNavPill(canvas, text(com.ethran.notable.R.string.planner_this_year), PlannerPagesLayout.isCurrent(year, today))
+    val lay = PlannerPagesLayout.year(year, w, h, focusLines, today)
     val right = PlannerPagesLayout.right(w)
     val left = PlannerPagesLayout.SIDE
     for (r in 1 until lay.rowsCount) {

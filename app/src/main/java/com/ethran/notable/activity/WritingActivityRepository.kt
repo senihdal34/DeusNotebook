@@ -79,13 +79,15 @@ abstract class WritingActivityModule {
  * Strokes per local day, for the whole history. Counts come from the Stroke table, merged (max per day) with a
  * snapshot kept in the Kv table, so deleting notes or erasing strokes never shrinks the history. The table is only
  * counted again when its signature (newest stroke, number of strokes) changed; otherwise the memory copy answers.
+ * Every answer is also published to [ActivityWritingDays], the in-memory snapshot of the planner dots.
  * Everything runs on the IO dispatcher.
  */
 @Singleton
 class WritingActivityRepository internal constructor(
     private val source: ActivitySource,
     private val store: ActivityStore,
-    private val io: CoroutineDispatcher
+    private val io: CoroutineDispatcher,
+    private val publish: (Map<LocalDate, Int>) -> Unit = { ActivityWritingDays.snapshot.update(it) }
 ) {
     @Inject constructor(source: ActivitySource, store: ActivityStore) : this(source, store, Dispatchers.IO)
 
@@ -97,7 +99,7 @@ class WritingActivityRepository internal constructor(
     suspend fun dayCounts(): Map<LocalDate, Int> = withContext(io) {
         lock.withLock {
             val signature = source.signature()
-            cache?.let { if (signature == seen) return@withLock it }
+            cache?.let { if (signature == seen) return@withLock it.also(publish) }
             val saved = snapshot ?: decode(store.read()).also { snapshot = it }
             val merged = WritingActivityStats.mergeMax(saved, source.dayCounts(0L))
             if (merged != saved) {
@@ -105,7 +107,7 @@ class WritingActivityRepository internal constructor(
                     .onFailure { Log.w(TAG, "snapshot not saved: ${it.javaClass.simpleName}: ${it.message}") }
                 snapshot = merged
             }
-            WritingActivityStats.parseDays(merged).also { cache = it; seen = signature }
+            WritingActivityStats.parseDays(merged).also { cache = it; seen = signature; publish(it) }
         }
     }
 

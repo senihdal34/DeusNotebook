@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="planner_nav_previous">‹ Previous</string>
+    <string name="planner_nav_next">Next ›</string>
+    <string name="planner_this_month">This month</string>
+    <string name="planner_this_quarter">This quarter</string>
+    <string name="planner_this_year">This year</string>
+</resources>

@@ -54,10 +54,20 @@ sealed interface PageTap {
     data class OpenWeek(val monday: LocalDate) : PageTap
     data class OpenMonth(val month: YearMonth) : PageTap
     data class OpenQuarter(val year: Int, val quarter: Int) : PageTap
+    data class OpenYear(val year: Int) : PageTap
     data class AddFocusLine(val level: PlannerLevel) : PageTap
 }
 
 data class TapZone(val rect: PageRect, val tap: PageTap)
+
+/**
+ * The `‹ PREVIOUS | THIS MONTH | NEXT ›` pill in the header of the month, quarter and year pages. Its three parts have
+ * fixed widths (the drawing shrinks a long label to fit), so the pill sits in the same place in every language and
+ * never meets the title on its left or the date block on its right.
+ */
+data class NavPill(val previous: PageRect, val current: PageRect, val next: PageRect) {
+    val outline get() = PageRect(previous.left, previous.top, next.right, next.bottom)
+}
 
 /** "Focus" block: a label with a round + button on its right and [lines] ruled writing lines. */
 data class FocusBlock(val level: PlannerLevel, val top: Float, val left: Float, val right: Float, val lines: Int) {
@@ -86,10 +96,10 @@ data class WeekRow(val monday: LocalDate, val isoWeek: Int, val rect: PageRect, 
 /** Month page: focus block, weekday header and always six week rows. */
 data class MonthLayout(
     val month: YearMonth, val focus: FocusBlock, val weekdayRow: PageRect, val gridLeft: Float, val gridRight: Float,
-    val gridTop: Float, val gridBottom: Float, val rows: List<WeekRow>
+    val gridTop: Float, val gridBottom: Float, val rows: List<WeekRow>, val nav: List<TapZone> = emptyList()
 ) {
     val taps: List<TapZone>
-        get() = focus.taps + rows.flatMap { r ->
+        get() = nav + focus.taps + rows.flatMap { r ->
             listOf(TapZone(r.weekZone, PageTap.OpenWeek(r.monday))) + r.cells.map { TapZone(it.number, PageTap.OpenDay(it.date)) }
         }
 
@@ -111,9 +121,9 @@ data class QuarterMonth(
     val goalsRight: Float, val goalRules: List<Float>
 )
 
-data class QuarterLayout(val quarter: PlannerWeeks.YearQuarter, val portrait: Boolean, val focus: FocusBlock, val months: List<QuarterMonth>, val areaTop: Float, val areaBottom: Float) {
+data class QuarterLayout(val quarter: PlannerWeeks.YearQuarter, val portrait: Boolean, val focus: FocusBlock, val months: List<QuarterMonth>, val areaTop: Float, val areaBottom: Float, val nav: List<TapZone> = emptyList()) {
     val taps: List<TapZone>
-        get() = focus.taps + months.map { TapZone(it.calendar.titleZone, PageTap.OpenMonth(it.month)) }
+        get() = nav + focus.taps + months.map { TapZone(it.calendar.titleZone, PageTap.OpenMonth(it.month)) }
 
     fun tapAt(x: Float, y: Float): PageTap? = taps.firstOrNull { it.rect.contains(x, y) }?.tap
 }
@@ -123,10 +133,10 @@ data class YearMonthCell(val month: YearMonth, val rect: PageRect, val calendar:
 
 data class YearLayout(
     val year: Int, val portrait: Boolean, val columns: Int, val rowsCount: Int, val gridLeft: Float, val gridTop: Float, val gridBottom: Float,
-    val cells: List<YearMonthCell>, val quarterStripes: List<PageRect>, val focus: FocusBlock
+    val cells: List<YearMonthCell>, val quarterStripes: List<PageRect>, val focus: FocusBlock, val nav: List<TapZone> = emptyList()
 ) {
     val taps: List<TapZone>
-        get() = focus.taps + cells.map { TapZone(it.calendar.titleZone, PageTap.OpenMonth(it.month)) } +
+        get() = nav + focus.taps + cells.map { TapZone(it.calendar.titleZone, PageTap.OpenMonth(it.month)) } +
             cells.mapNotNull { c -> c.quarterTag?.let { TapZone(it, PageTap.OpenQuarter(year, (c.month.monthValue - 1) / 3 + 1)) } } +
             quarterStripes.mapIndexed { i, r -> TapZone(r, PageTap.OpenQuarter(year, i + 1)) }
 
@@ -157,6 +167,49 @@ object PlannerPagesLayout {
     fun right(w: Float) = w - PlannerLayout.RIGHT_MARGIN
 
     fun focusHeight(lines: Int) = FOCUS_FIRST + (lines - 1) * FOCUS_STEP + FOCUS_TAIL
+
+    // Header pill
+    const val NAV_LEFT = 830f
+    const val NAV_TOP = 52f
+    const val NAV_H = 53f
+    const val NAV_PREVIOUS_W = 160f
+    const val NAV_THIS_W = 220f
+    const val NAV_NEXT_W = 140f
+    /** The tap zones are taller than the drawn pill, a finger is bigger than 53 pixels. */
+    const val NAV_TAP_PAD = 14f
+
+    fun navPill(): NavPill {
+        val a = NAV_LEFT
+        val b = a + NAV_PREVIOUS_W
+        val c = b + NAV_THIS_W
+        val d = c + NAV_NEXT_W
+        return NavPill(PageRect(a, NAV_TOP, b, NAV_TOP + NAV_H), PageRect(b, NAV_TOP, c, NAV_TOP + NAV_H), PageRect(c, NAV_TOP, d, NAV_TOP + NAV_H))
+    }
+
+    private fun navZones(previous: PageTap, current: PageTap, next: PageTap): List<TapZone> {
+        val pill = navPill()
+        fun zone(r: PageRect, tap: PageTap) = TapZone(PageRect(r.left, r.top - NAV_TAP_PAD, r.right, r.bottom + NAV_TAP_PAD), tap)
+        return listOf(zone(pill.previous, previous), zone(pill.current, current), zone(pill.next, next))
+    }
+
+    /** Previous month, the month [today] is in, next month. */
+    fun monthNav(month: YearMonth, today: LocalDate): List<TapZone> =
+        navZones(PageTap.OpenMonth(month.minusMonths(1)), PageTap.OpenMonth(YearMonth.from(today)), PageTap.OpenMonth(month.plusMonths(1)))
+
+    /** Previous quarter, the quarter [today] is in, next quarter. */
+    fun quarterNav(quarter: PlannerWeeks.YearQuarter, today: LocalDate): List<TapZone> {
+        fun open(q: PlannerWeeks.YearQuarter) = PageTap.OpenQuarter(q.year, q.quarter)
+        return navZones(open(quarter.plusQuarters(-1)), open(PlannerWeeks.YearQuarter.of(today)), open(quarter.plusQuarters(1)))
+    }
+
+    /** Previous year, the year [today] is in, next year. */
+    fun yearNav(year: Int, today: LocalDate): List<TapZone> =
+        navZones(PageTap.OpenYear(year - 1), PageTap.OpenYear(today.year), PageTap.OpenYear(year + 1))
+
+    /** True when the page of this period is the one that holds [today]: the "this …" part of the pill is then drawn black. */
+    fun isCurrent(month: YearMonth, today: LocalDate) = month == YearMonth.from(today)
+    fun isCurrent(quarter: PlannerWeeks.YearQuarter, today: LocalDate) = quarter == PlannerWeeks.YearQuarter.of(today)
+    fun isCurrent(year: Int, today: LocalDate) = year == today.year
 
     // ---- calendar arithmetic ------------------------------------------------------------------------------------------
 
@@ -195,7 +248,7 @@ object PlannerPagesLayout {
 
     // ---- month page ---------------------------------------------------------------------------------------------------
 
-    fun month(month: YearMonth, w: Float, h: Float, focusLines: Int = PlannerFocusLines.DEFAULT): MonthLayout {
+    fun month(month: YearMonth, w: Float, h: Float, focusLines: Int = PlannerFocusLines.DEFAULT, today: LocalDate = LocalDate.now()): MonthLayout {
         val focus = focus(PlannerLevel.Month, PlannerLayout.ROWS_TOP, w, focusLines)
         val right = right(w)
         val gridLeft = SIDE + WEEKNO_W
@@ -215,7 +268,7 @@ object PlannerPagesLayout {
             }
             WeekRow(days.first(), PlannerWeeks.weekNumber(days.first()), PageRect(SIDE, top, right, top + rowH), PageRect(SIDE, top + 6f, gridLeft - 4f, top + 64f), cells)
         }
-        return MonthLayout(month, focus, weekdayRow, gridLeft, right, gridTop, gridBottom, rows)
+        return MonthLayout(month, focus, weekdayRow, gridLeft, right, gridTop, gridBottom, rows, monthNav(month, today))
     }
 
     // ---- mini calendars -----------------------------------------------------------------------------------------------
@@ -250,7 +303,7 @@ object PlannerPagesLayout {
     const val Q_PITCH = 60f
     const val Q_GOALS_STEP = 60f
 
-    fun quarter(quarter: PlannerWeeks.YearQuarter, w: Float, h: Float, focusLines: Int = PlannerFocusLines.DEFAULT): QuarterLayout {
+    fun quarter(quarter: PlannerWeeks.YearQuarter, w: Float, h: Float, focusLines: Int = PlannerFocusLines.DEFAULT, today: LocalDate = LocalDate.now()): QuarterLayout {
         val portrait = isPortrait(w, h)
         val focus = focus(PlannerLevel.Quarter, PlannerLayout.ROWS_TOP, w, focusLines)
         val right = right(w)
@@ -281,7 +334,7 @@ object PlannerPagesLayout {
                 QuarterMonth(ym, block, cal, labelY, innerLeft, innerLeft + innerW, (0 until count).map { first + it * Q_GOALS_STEP })
             }
         }
-        return QuarterLayout(quarter, portrait, focus, months, areaTop, areaBottom)
+        return QuarterLayout(quarter, portrait, focus, months, areaTop, areaBottom, quarterNav(quarter, today))
     }
 
     // ---- year page ----------------------------------------------------------------------------------------------------
@@ -291,7 +344,7 @@ object PlannerPagesLayout {
     const val Y_WEEKDAY_H = 44f
     const val Y_PITCH = 46f
 
-    fun year(year: Int, w: Float, h: Float, focusLines: Int = PlannerFocusLines.DEFAULT): YearLayout {
+    fun year(year: Int, w: Float, h: Float, focusLines: Int = PlannerFocusLines.DEFAULT, today: LocalDate = LocalDate.now()): YearLayout {
         val portrait = isPortrait(w, h)
         val right = right(w)
         val n = PlannerFocusLines.clamp(focusLines)
@@ -316,6 +369,6 @@ object PlannerPagesLayout {
             YearMonthCell(ym, rect, cal, tag)
         }
         val stripes = if (portrait) (0 until 4).map { PageRect(SIDE, gridTop + it * cellH, gridLeft, gridTop + (it + 1) * cellH) } else emptyList()
-        return YearLayout(year, portrait, cols, rowCount, gridLeft, gridTop, gridBottom, cells, stripes, focus)
+        return YearLayout(year, portrait, cols, rowCount, gridLeft, gridTop, gridBottom, cells, stripes, focus, yearNav(year, today))
     }
 }
