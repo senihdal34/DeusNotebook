@@ -49,21 +49,25 @@ internal interface ActivityRepositoryEntryPoint {
 object ActivityWritingDays {
     val snapshot = WritingDaysSnapshot()
 
-    /** Makes the planner pages draw their dots from [snapshot]. Safe to call again. */
-    fun install() {
-        if (PlannerWritingDays.current !== snapshot) PlannerWritingDays.current = snapshot
+    /** Makes the planner pages draw their dots from [snapshot]. Safe to call again; true when it switched them over. */
+    fun install(): Boolean {
+        if (PlannerWritingDays.current === snapshot) return false
+        PlannerWritingDays.current = snapshot
+        return true
     }
 
     /**
      * Counts again when the strokes changed (the repository answers from memory otherwise) and returns true when the
      * dots changed, so the open page has to be redrawn. Runs on the IO dispatcher; a failure leaves the old dots.
+     * The first call also counts as a change: the page may have been drawn from the empty default before, while the
+     * snapshot was already filled by another reader (the activity card on Home).
      */
     suspend fun refresh(context: Context): Boolean = withContext(Dispatchers.IO) {
-        install()
+        val installed = install()
         val before = snapshot.version.value
         runCatching {
             EntryPointAccessors.fromApplication(context.applicationContext, ActivityRepositoryEntryPoint::class.java).repository().dayCounts()
         }
-        snapshot.version.value != before
+        installed || snapshot.version.value != before
     }
 }

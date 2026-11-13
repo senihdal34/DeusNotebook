@@ -26,8 +26,25 @@ class PlannerNavPillTest {
         assertEquals(p.previous.right, p.current.left)
         assertEquals(p.current.right, p.next.left)
         assertTrue(p.outline.top >= 0f && p.outline.bottom < PlannerLayout.HEADER_H)
-        assertTrue(p.outline.left > 800f, "starts after the longest title")
-        assertTrue(p.outline.right < 1370f, "ends before the date block")
+        assertTrue(p.outline.left >= 740f, "starts after the longest title (\"Quarterly Planner\" ends near x 720)")
+        for ((w, _) in sizes) {
+            assertTrue(PlannerPagesLayout.navFits(w))
+            assertTrue(p.outline.right <= PlannerPagesLayout.right(w) - PlannerPagesLayout.DATE_BLOCK_W, "ends before the date block")
+        }
+    }
+
+    @Test fun `no zone starts in the system's top-edge band`() {
+        for ((w, h) in sizes) for (bg in listOf("planner-month:2026-11", "planner-quarter:2026-Q4", "planner-year:2026")) {
+            for (z in pageTapZones(bg, w, h)) assertTrue(z.rect.top >= PlannerPagesLayout.SYSTEM_TOP_EDGE, "$bg ${z.tap}")
+        }
+    }
+
+    @Test fun `a screen too narrow for the pill has neither pill nor zones`() {
+        val w = 1404f   // a 7.8" e-ink screen in portrait
+        assertFalse(PlannerPagesLayout.navFits(w))
+        for (bg in listOf("planner-month:2026-11", "planner-quarter:2026-Q4", "planner-year:2026")) {
+            assertTrue(pageTapZones(bg, w, 1872f).none { it.rect.bottom < PlannerLayout.HEADER_H }, bg)
+        }
     }
 
     @Test fun `the zones are taller than the pill but never leave the header`() {

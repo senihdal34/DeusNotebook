@@ -64,4 +64,15 @@ class WritingDaysSnapshotTest {
         repo.dayCounts()   // answered from memory, still published
         assertEquals(listOf(mapOf(d("2026-11-12") to 7), mapOf(d("2026-11-12") to 7)), published)
     }
+
+    @Test fun `the first install reports a switch so the page drawn without dots is redrawn`() {
+        val before = com.ethran.notable.planner.PlannerWritingDays.current
+        try {
+            com.ethran.notable.planner.PlannerWritingDays.current = com.ethran.notable.planner.NoWritingDays
+            assertTrue(ActivityWritingDays.install())
+            assertFalse(ActivityWritingDays.install(), "already installed")
+        } finally {
+            com.ethran.notable.planner.PlannerWritingDays.current = before
+        }
+    }
 }

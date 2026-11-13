@@ -169,14 +169,22 @@ object PlannerPagesLayout {
     fun focusHeight(lines: Int) = FOCUS_FIRST + (lines - 1) * FOCUS_STEP + FOCUS_TAIL
 
     // Header pill
-    const val NAV_LEFT = 830f
-    const val NAV_TOP = 52f
-    const val NAV_H = 53f
+    const val NAV_LEFT = 745f
+    const val NAV_TOP = 70f
+    const val NAV_H = 50f
     const val NAV_PREVIOUS_W = 160f
-    const val NAV_THIS_W = 220f
+    const val NAV_THIS_W = 210f
     const val NAV_NEXT_W = 140f
-    /** The tap zones are taller than the drawn pill, a finger is bigger than 53 pixels. */
+    /** The tap zones are taller than the drawn pill, a finger is bigger than 50 pixels. */
     const val NAV_TAP_PAD = 14f
+    /**
+     * Touches this close to the top edge belong to the system (its swipe-down panel): 36 dp on the 300 dpi screen, the
+     * same keep-out as the back pill of the day page. No tap zone starts above it.
+     */
+    const val SYSTEM_TOP_EDGE = 68f
+    /** Room kept free for the date block on the right of the header (its widest line, Spanish "TRIMESTRE COMPLETADO AL 100%", is ~470 px). */
+    const val DATE_BLOCK_W = 480f
+    private const val NAV_GAP = 16f
 
     fun navPill(): NavPill {
         val a = NAV_LEFT
@@ -186,25 +194,30 @@ object PlannerPagesLayout {
         return NavPill(PageRect(a, NAV_TOP, b, NAV_TOP + NAV_H), PageRect(b, NAV_TOP, c, NAV_TOP + NAV_H), PageRect(c, NAV_TOP, d, NAV_TOP + NAV_H))
     }
 
-    private fun navZones(previous: PageTap, current: PageTap, next: PageTap): List<TapZone> {
+    /** True when the pill fits between the title and the date block of a page [w] wide. On a narrower screen there is no pill. */
+    fun navFits(w: Float): Boolean = navPill().outline.right + NAV_GAP <= right(w) - DATE_BLOCK_W
+
+    private fun navZones(w: Float, previous: PageTap, current: PageTap, next: PageTap): List<TapZone> {
+        if (!navFits(w)) return emptyList()
         val pill = navPill()
-        fun zone(r: PageRect, tap: PageTap) = TapZone(PageRect(r.left, r.top - NAV_TAP_PAD, r.right, r.bottom + NAV_TAP_PAD), tap)
+        fun zone(r: PageRect, tap: PageTap) =
+            TapZone(PageRect(r.left, max(r.top - NAV_TAP_PAD, SYSTEM_TOP_EDGE), r.right, r.bottom + NAV_TAP_PAD), tap)
         return listOf(zone(pill.previous, previous), zone(pill.current, current), zone(pill.next, next))
     }
 
     /** Previous month, the month [today] is in, next month. */
-    fun monthNav(month: YearMonth, today: LocalDate): List<TapZone> =
-        navZones(PageTap.OpenMonth(month.minusMonths(1)), PageTap.OpenMonth(YearMonth.from(today)), PageTap.OpenMonth(month.plusMonths(1)))
+    fun monthNav(month: YearMonth, today: LocalDate, w: Float): List<TapZone> =
+        navZones(w, PageTap.OpenMonth(month.minusMonths(1)), PageTap.OpenMonth(YearMonth.from(today)), PageTap.OpenMonth(month.plusMonths(1)))
 
     /** Previous quarter, the quarter [today] is in, next quarter. */
-    fun quarterNav(quarter: PlannerWeeks.YearQuarter, today: LocalDate): List<TapZone> {
+    fun quarterNav(quarter: PlannerWeeks.YearQuarter, today: LocalDate, w: Float): List<TapZone> {
         fun open(q: PlannerWeeks.YearQuarter) = PageTap.OpenQuarter(q.year, q.quarter)
-        return navZones(open(quarter.plusQuarters(-1)), open(PlannerWeeks.YearQuarter.of(today)), open(quarter.plusQuarters(1)))
+        return navZones(w, open(quarter.plusQuarters(-1)), open(PlannerWeeks.YearQuarter.of(today)), open(quarter.plusQuarters(1)))
     }
 
     /** Previous year, the year [today] is in, next year. */
-    fun yearNav(year: Int, today: LocalDate): List<TapZone> =
-        navZones(PageTap.OpenYear(year - 1), PageTap.OpenYear(today.year), PageTap.OpenYear(year + 1))
+    fun yearNav(year: Int, today: LocalDate, w: Float): List<TapZone> =
+        navZones(w, PageTap.OpenYear(year - 1), PageTap.OpenYear(today.year), PageTap.OpenYear(year + 1))
 
     /** True when the page of this period is the one that holds [today]: the "this …" part of the pill is then drawn black. */
     fun isCurrent(month: YearMonth, today: LocalDate) = month == YearMonth.from(today)
@@ -268,7 +281,7 @@ object PlannerPagesLayout {
             }
             WeekRow(days.first(), PlannerWeeks.weekNumber(days.first()), PageRect(SIDE, top, right, top + rowH), PageRect(SIDE, top + 6f, gridLeft - 4f, top + 64f), cells)
         }
-        return MonthLayout(month, focus, weekdayRow, gridLeft, right, gridTop, gridBottom, rows, monthNav(month, today))
+        return MonthLayout(month, focus, weekdayRow, gridLeft, right, gridTop, gridBottom, rows, monthNav(month, today, w))
     }
 
     // ---- mini calendars -----------------------------------------------------------------------------------------------
@@ -334,7 +347,7 @@ object PlannerPagesLayout {
                 QuarterMonth(ym, block, cal, labelY, innerLeft, innerLeft + innerW, (0 until count).map { first + it * Q_GOALS_STEP })
             }
         }
-        return QuarterLayout(quarter, portrait, focus, months, areaTop, areaBottom, quarterNav(quarter, today))
+        return QuarterLayout(quarter, portrait, focus, months, areaTop, areaBottom, quarterNav(quarter, today, w))
     }
 
     // ---- year page ----------------------------------------------------------------------------------------------------
@@ -369,6 +382,6 @@ object PlannerPagesLayout {
             YearMonthCell(ym, rect, cal, tag)
         }
         val stripes = if (portrait) (0 until 4).map { PageRect(SIDE, gridTop + it * cellH, gridLeft, gridTop + (it + 1) * cellH) } else emptyList()
-        return YearLayout(year, portrait, cols, rowCount, gridLeft, gridTop, gridBottom, cells, stripes, focus, yearNav(year, today))
+        return YearLayout(year, portrait, cols, rowCount, gridLeft, gridTop, gridBottom, cells, stripes, focus, yearNav(year, today, w))
     }
 }
