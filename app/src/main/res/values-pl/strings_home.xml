@@ -144,7 +144,6 @@
     <string name="hint_strokes_draw_failed">Błąd podczas rysowania pociągnięć</string>
     <string name="update_preview_available">Dostępna jest nowsza wersja zapoznawcza!\nUżywasz wydanej wersji %1$s, a najnowsza jest z %2$s.</string>
     <string name="update_stable_available">Dostępna jest nowsza wersja stabilna!\nUżywasz %1$s, a najnowsza to %2$s.</string>
-    <string name="inbox_back">← Wstecz</string>
     <string name="inbox_capture">Zapis</string>
     <string name="inbox_save_exit">Zapisz i wyjdź</string>
     <string name="inbox_tag_hint">szukaj lub dodaj etykiety...</string>

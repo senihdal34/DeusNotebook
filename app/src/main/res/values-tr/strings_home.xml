@@ -144,7 +144,6 @@
     <string name="hint_strokes_draw_failed">Çizgiler çizilirken hata oluştu</string>
     <string name="update_preview_available">Daha yeni bir önizleme sürümü var!\nYayımlanmış %1$s sürümünü kullanıyorsun, en yenisi %2$s.</string>
     <string name="update_stable_available">Daha yeni bir kararlı sürüm var!\n%1$s sürümünü kullanıyorsun, en yenisi %2$s.</string>
-    <string name="inbox_back">← Geri</string>
     <string name="inbox_capture">Hızlı not</string>
     <string name="inbox_save_exit">Kaydet ve çık</string>
     <string name="inbox_tag_hint">etiket ara ya da ekle...</string>

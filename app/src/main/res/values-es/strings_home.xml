@@ -144,7 +144,6 @@
     <string name="hint_strokes_draw_failed">Error al dibujar los trazos</string>
     <string name="update_preview_available">¡Hay una versión de vista previa más reciente!\nUsas la versión publicada %1$s y la más nueva es de %2$s.</string>
     <string name="update_stable_available">¡Hay una versión estable más reciente!\nUsas la %1$s y la última es la %2$s.</string>
-    <string name="inbox_back">← Atrás</string>
     <string name="inbox_capture">Captura</string>
     <string name="inbox_save_exit">Guardar y salir</string>
     <string name="inbox_tag_hint">buscar o añadir etiquetas...</string>

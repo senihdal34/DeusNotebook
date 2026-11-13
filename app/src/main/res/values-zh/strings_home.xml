@@ -144,7 +144,6 @@
     <string name="hint_strokes_draw_failed">绘制笔迹时出错</string>
     <string name="update_preview_available">有更新的预览版！\n你使用的是正式版 %1$s，最新版本为 %2$s。</string>
     <string name="update_stable_available">有更新的稳定版！\n你使用的是 %1$s，最新版本为 %2$s。</string>
-    <string name="inbox_back">← 返回</string>
     <string name="inbox_capture">速记</string>
     <string name="inbox_save_exit">保存并退出</string>
     <string name="inbox_tag_hint">搜索或添加标签...</string>

@@ -25,9 +25,6 @@ import androidx.compose.material.Text
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Close
-import androidx.compose.material.icons.filled.Edit
-import androidx.compose.material.icons.filled.KeyboardArrowDown
-import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -45,6 +42,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.res.stringResource
 import com.ethran.notable.R
+import com.ethran.notable.editor.rail.RailGlyph
+import com.ethran.notable.editor.ui.rail.RailIcons
 import com.ethran.notable.i18n.AppStrings
 
 val INBOX_TOOLBAR_COLLAPSED_HEIGHT: Dp = 55.dp
@@ -55,13 +54,11 @@ fun InboxToolbar(
     selectedTags: List<String>,
     suggestedTags: List<String>,
     isExpanded: Boolean,
-    isToolbarOpen: Boolean,
     onToggleExpanded: () -> Unit,
-    onToggleToolbar: () -> Unit,
     onTagAdd: (String) -> Unit,
     onTagRemove: (String) -> Unit,
     onSave: () -> Unit,
-    onDiscard: () -> Unit
+    modifier: Modifier = Modifier,
 ) {
     var tagInput by remember { mutableStateOf("") }
 
@@ -85,11 +82,12 @@ fun InboxToolbar(
     }
 
     Column(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxWidth()
             .background(Color.White)
     ) {
-        // Action bar: Back + toggle/tag count + Save & Exit
+        // Action bar: Capture / tag count on the left, Save & Exit on the right. Leaving without saving is the
+        // tool rail's back arrow; the pen toolbar is the rail itself (fold it with its handle).
         Row(
             modifier = Modifier
                 .fillMaxWidth()
@@ -97,19 +95,6 @@ fun InboxToolbar(
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Box(
-                modifier = Modifier
-                    .border(1.5.dp, Color.DarkGray, RoundedCornerShape(8.dp))
-                    .clickable { onDiscard() }
-                    .padding(horizontal = 20.dp, vertical = 8.dp)
-            ) {
-                Text(
-                    stringResource(R.string.inbox_back),
-                    fontSize = 18.sp,
-                    color = Color.DarkGray
-                )
-            }
-
             // Title + tag toggle
             Row(
                 modifier = Modifier
@@ -128,33 +113,9 @@ fun InboxToolbar(
                     color = Color.DarkGray
                 )
                 Icon(
-                    if (isExpanded) Icons.Default.KeyboardArrowUp
-                    else Icons.Default.KeyboardArrowDown,
+                    RailIcons.of(if (isExpanded) RailGlyph.ChevronUp else RailGlyph.ChevronDown),
                     contentDescription = if (isExpanded) "Collapse tags" else "Expand tags",
                     tint = Color.DarkGray,
-                    modifier = Modifier.size(22.dp)
-                )
-            }
-
-            // Pen toolbar toggle
-            Box(
-                modifier = Modifier
-                    .border(
-                        1.5.dp,
-                        if (isToolbarOpen) Color.Black else Color.DarkGray,
-                        RoundedCornerShape(8.dp)
-                    )
-                    .background(
-                        if (isToolbarOpen) Color.Black else Color.Transparent,
-                        RoundedCornerShape(8.dp)
-                    )
-                    .clickable { onToggleToolbar() }
-                    .padding(horizontal = 14.dp, vertical = 8.dp)
-            ) {
-                Icon(
-                    Icons.Default.Edit,
-                    contentDescription = if (isToolbarOpen) "Hide pen toolbar" else "Show pen toolbar",
-                    tint = if (isToolbarOpen) Color.White else Color.DarkGray,
                     modifier = Modifier.size(22.dp)
                 )
             }

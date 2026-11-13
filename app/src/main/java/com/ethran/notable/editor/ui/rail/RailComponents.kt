@@ -19,6 +19,7 @@ import androidx.compose.material.Icon
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.compositionLocalOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -31,12 +32,10 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.input.pointer.positionChanged
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.role
@@ -44,11 +43,17 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.IntOffset
+import androidx.compose.ui.unit.IntRect
+import androidx.compose.ui.unit.IntSize
+import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Popup
+import androidx.compose.ui.window.PopupPositionProvider
 import androidx.compose.ui.window.PopupProperties
 import com.ethran.notable.data.datastore.ToolbarSide
+import com.ethran.notable.editor.rail.RailGlyph
+import com.ethran.notable.editor.rail.PopoverPlacement
 import com.ethran.notable.editor.rail.RailMetrics
 import com.ethran.notable.ui.components.House
 import com.ethran.notable.ui.components.HouseCaps
@@ -57,18 +62,10 @@ import com.ethran.notable.ui.convertDpToPixel
 import kotlinx.coroutines.delay
 import kotlin.math.roundToInt
 
-/** The icon of a rail button: a drawable or a vector. */
-internal sealed interface RailIcon {
-    data class Res(val id: Int) : RailIcon
-    data class Vec(val vector: ImageVector) : RailIcon
-}
-
+/** Draws one of the rail's line icons. Decorative: the button around it carries the content description. */
 @Composable
-internal fun RailIconImage(icon: RailIcon, tint: Color, size: Dp = 26.dp) {
-    when (icon) {
-        is RailIcon.Res -> Icon(painterResource(icon.id), contentDescription = null, tint = tint, modifier = Modifier.size(size))
-        is RailIcon.Vec -> Icon(icon.vector, contentDescription = null, tint = tint, modifier = Modifier.size(size))
-    }
+internal fun RailGlyphImage(glyph: RailGlyph, tint: Color, size: Dp = 30.dp) {
+    Icon(RailIcons.of(glyph), contentDescription = null, tint = tint, modifier = Modifier.size(size))
 }
 
 /**
@@ -135,7 +132,16 @@ private fun RailTooltip(label: String, circle: Dp, side: ToolbarSide, onDismiss:
     }
 }
 
-/** Frame of a popover: paper, black outline, no shadow. It opens beside the rail, top-aligned with its button (or bottom-aligned). */
+/**
+ * Lowest edge (in window pixels) of a bar that covers the top of the page area, such as the inbox bar. Popovers never
+ * start above it, so they do not overlap the bar. 0 when there is no such bar.
+ */
+internal val LocalRailTopInset = compositionLocalOf { 0 }
+
+/**
+ * Frame of a popover: paper, black outline, no shadow. It opens beside the rail, top-aligned with its button (or
+ * bottom-aligned), pushed down below [LocalRailTopInset] and up above the bottom of the window when needed.
+ */
 @Composable
 internal fun RailPopover(
     side: ToolbarSide,
@@ -147,14 +153,22 @@ internal fun RailPopover(
     val context = LocalContext.current
     val gap = convertDpToPixel((RailMetrics.GUTTER_DP - 4 + 6).dp, context).roundToInt()
     val left = side == ToolbarSide.Left
+    val topInset = LocalRailTopInset.current
+    val position = remember(left, bottomAligned, gap, topInset) {
+        object : PopupPositionProvider {
+            override fun calculatePosition(
+                anchorBounds: IntRect, windowSize: IntSize, layoutDirection: LayoutDirection, popupContentSize: IntSize,
+            ): IntOffset {
+                val x = if (left) anchorBounds.left + gap else anchorBounds.right - gap - popupContentSize.width
+                val y = PopoverPlacement.y(
+                    anchorBounds.top, anchorBounds.bottom, popupContentSize.height, windowSize.height, topInset, bottomAligned
+                )
+                return IntOffset(x.coerceIn(0, (windowSize.width - popupContentSize.width).coerceAtLeast(0)), y)
+            }
+        }
+    }
     Popup(
-        alignment = when {
-            bottomAligned && left -> Alignment.BottomStart
-            bottomAligned -> Alignment.BottomEnd
-            left -> Alignment.TopStart
-            else -> Alignment.TopEnd
-        },
-        offset = IntOffset(if (left) gap else -gap, 0),
+        popupPositionProvider = position,
         onDismissRequest = onDismiss,
         properties = PopupProperties(focusable = true),
     ) {

@@ -2,6 +2,7 @@ package com.ethran.notable.editor.rail
 
 import com.ethran.notable.data.datastore.EditorSettingCacheManager
 import com.ethran.notable.editor.state.Mode
+import com.ethran.notable.editor.ui.HorizontalIndicator
 import com.ethran.notable.editor.utils.Pen
 import com.ethran.notable.editor.utils.PenSetting
 import kotlinx.serialization.json.Json
@@ -249,5 +250,99 @@ class RailMetricsTest {
         assertTrue(last.hasPrev); assertFalse(last.hasNext)
         assertFalse(PagePosition(-1, 3).known)
         assertFalse(PagePosition(0, 1).hasNext)
+    }
+}
+
+class RailGlyphTest {
+    @Test fun everyButtonButTheCounterHasASymbol() {
+        for (item in RailItem.values()) {
+            val glyph = RailGlyphs.forItem(item)
+            if (item == RailItem.PageCounter) assertEquals(null, glyph) else assertNotNull(item.name, glyph)
+        }
+    }
+
+    @Test fun toolsHaveDistinctSymbols() {
+        val tools = listOf(RailItem.Pen, RailItem.Eraser, RailItem.Highlighter, RailItem.Lasso, RailItem.Line, RailItem.Undo, RailItem.Redo, RailItem.Back)
+        val glyphs = tools.map { RailGlyphs.forItem(it) }
+        assertEquals(glyphs.size, glyphs.toSet().size)
+    }
+
+    @Test fun symbolFollowsTheState() {
+        assertEquals(RailGlyph.PenBallpoint, RailGlyphs.forItem(RailItem.Pen, GlyphState(inkPen = Pen.BALLPEN)))
+        assertEquals(RailGlyph.PenFountain, RailGlyphs.forItem(RailItem.Pen, GlyphState(inkPen = Pen.FOUNTAIN)))
+        assertEquals(RailGlyph.Eraser, RailGlyphs.forItem(RailItem.Eraser, GlyphState(eraser = com.ethran.notable.editor.utils.Eraser.PEN)))
+        assertEquals(RailGlyph.EraserArea, RailGlyphs.forItem(RailItem.Eraser, GlyphState(eraser = com.ethran.notable.editor.utils.Eraser.SELECT)))
+        assertEquals(RailGlyph.Line, RailGlyphs.forItem(RailItem.Line, GlyphState(lineDashed = false)))
+        assertEquals(RailGlyph.LineDashed, RailGlyphs.forItem(RailItem.Line, GlyphState(lineDashed = true)))
+        assertEquals(RailGlyph.Star, RailGlyphs.forItem(RailItem.Favorite, GlyphState(pinned = false)))
+        assertEquals(RailGlyph.StarFilled, RailGlyphs.forItem(RailItem.Favorite, GlyphState(pinned = true)))
+    }
+
+    @Test fun everySymbolHasAnIconOfTheRightSize() {
+        for (glyph in RailGlyph.values()) {
+            val v = com.ethran.notable.editor.ui.rail.RailIcons.of(glyph)
+            assertEquals(glyph.name, 24f, v.viewportWidth, 0f)
+            assertEquals(glyph.name, 24f, v.viewportHeight, 0f)
+            assertTrue(glyph.name, v.root.size > 0)
+        }
+    }
+
+    @Test fun everyPathOfAnIconKeepsItsOwnShape() {
+        // Back is a shaft and an arrow head: two paths that must not end up with the same nodes.
+        val paths = com.ethran.notable.editor.ui.rail.RailIcons.of(RailGlyph.Back).root
+            .filterIsInstance<androidx.compose.ui.graphics.vector.VectorPath>()
+        assertEquals(2, paths.size)
+        assertTrue(paths[0].pathData != paths[1].pathData)
+        for (glyph in RailGlyph.values()) {
+            val all = com.ethran.notable.editor.ui.rail.RailIcons.of(glyph).root
+                .filterIsInstance<androidx.compose.ui.graphics.vector.VectorPath>().map { it.pathData }
+            assertEquals(glyph.name, all.size, all.toSet().size)
+        }
+    }
+
+    @Test fun inboxPageKeepsTheSameButtons() {
+        // The inbox bar no longer has a Back or a pen toggle: the rail's Back and the rail itself stay.
+        val inbox = RailLayout.all(RailContext(isInboxPage = true, inBook = false))
+        assertTrue(RailItem.Back in inbox)
+        assertTrue(RailItem.Pen in inbox)
+    }
+}
+
+class PopoverPlacementTest {
+    private fun y(anchorTop: Int, anchorBottom: Int = anchorTop + 100, h: Int = 400, window: Int = 2480, inset: Int = 0, bottom: Boolean = false) =
+        PopoverPlacement.y(anchorTop, anchorBottom, h, window, inset, bottom)
+
+    @Test fun startsLevelWithItsButton() = assertEquals(300, y(300))
+
+    @Test fun neverStartsAboveTheBarOnTop() {
+        assertEquals(300, y(300, inset = 190))
+        assertEquals(190, y(120, inset = 190))
+    }
+
+    @Test fun bottomAlignedEndsLevelWithItsButtonButStaysBelowTheBar() {
+        assertEquals(2000 - 400, y(1900, anchorBottom = 2000, bottom = true))
+        assertEquals(190, y(100, anchorBottom = 300, inset = 190, bottom = true))
+    }
+
+    @Test fun staysInsideTheWindow() {
+        assertEquals(2480 - 400, y(2300))
+    }
+
+    @Test fun aPopoverTallerThanTheSpaceStartsAtTheBar() = assertEquals(190, y(500, h = 3000, inset = 190))
+}
+
+class HorizontalIndicatorTest {
+    @Test fun noBarWhenThePageIsNotScrolledSideways() {
+        assertEquals(null, HorizontalIndicator.fractions(1748, 0f))
+        assertEquals(null, HorizontalIndicator.fractions(1748, -3f))
+    }
+
+    @Test fun noBarForAnEmptyViewport() = assertEquals(null, HorizontalIndicator.fractions(0, 100f))
+
+    @Test fun barSitsAtTheRightEdgeWhenScrolled() {
+        val (start, size) = HorizontalIndicator.fractions(1000, 500f)!!
+        assertEquals(1f / 3f, start, 1e-5f)
+        assertEquals(2f / 3f, size, 1e-5f)
+        assertEquals(1f, start + size, 1e-5f)
     }
 }

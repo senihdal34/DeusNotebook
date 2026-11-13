@@ -23,8 +23,6 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.Text
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Star
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -63,8 +61,11 @@ import com.ethran.notable.data.db.getPageIndex
 import com.ethran.notable.data.db.getParentFolder
 import com.ethran.notable.editor.EditorControlTower
 import com.ethran.notable.editor.canvas.CanvasEventBus
+import com.ethran.notable.editor.rail.GlyphState
 import com.ethran.notable.editor.rail.PagePosition
 import com.ethran.notable.editor.rail.RailContext
+import com.ethran.notable.editor.rail.RailGlyph
+import com.ethran.notable.editor.rail.RailGlyphs
 import com.ethran.notable.editor.rail.RailItem
 import com.ethran.notable.editor.rail.RailLayout
 import com.ethran.notable.editor.rail.RailMetrics
@@ -83,13 +84,6 @@ import com.ethran.notable.ui.views.LibraryDestination
 import com.ethran.notable.ui.views.PagesDestination
 import com.onyx.android.sdk.api.device.epd.EpdController
 import com.onyx.android.sdk.api.device.epd.UpdateMode
-import compose.icons.FeatherIcons
-import compose.icons.feathericons.ArrowLeft
-import compose.icons.feathericons.ChevronLeft
-import compose.icons.feathericons.ChevronRight
-import compose.icons.feathericons.MoreHorizontal
-import compose.icons.feathericons.Plus
-import compose.icons.feathericons.Star
 import io.shipbook.shipbooksdk.ShipBook
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
@@ -109,7 +103,7 @@ internal enum class RailPopoverKind { Pen, Eraser, Highlighter, Line }
  * into a handle changes only what is drawn in the gutter, never the width of the page area, so pages do not move
  * or rescale and the writing surface is not reconfigured while the pen is busy.
  *
- * @param onBack leave the editor. For inbox pages the caller passes "save and exit".
+ * @param onBack leave the editor without anything extra (on inbox pages the top bar's Save & Exit button exports).
  */
 @Composable
 fun EditorToolRail(
@@ -293,15 +287,17 @@ fun EditorToolRail(
         @Composable
         fun Item(item: RailItem) {
             val c = circle.dp
+            fun glyph(it: RailItem): RailGlyph =
+                RailGlyphs.forItem(it, GlyphState(inkPen = inkPen, eraser = state.eraser, lineDashed = state.lineDashed, pinned = pinned))
+                    ?: RailGlyph.Page
             when (item) {
                 RailItem.Back -> RailButton(
-                    label = if (isInboxPage) stringResource(R.string.inbox_save_exit) else stringResource(R.string.rail_back),
+                    label = stringResource(R.string.rail_back),
                     circle = c, side = side, onClick = { popover = null; onBack() }
-                ) { RailIconImage(RailIcon.Vec(FeatherIcons.ArrowLeft), it) }
+                ) { RailGlyphImage(glyph(item), it) }
 
                 RailItem.Pen -> {
                     val selected = state.mode == Mode.Draw && state.pen != Pen.MARKER
-                    val shown = if (state.pen == Pen.MARKER) inkPen else state.pen
                     Box {
                         RailButton(
                             label = stringResource(R.string.rail_pen), circle = c, side = side, selected = selected,
@@ -309,7 +305,7 @@ fun EditorToolRail(
                                 if (selected) popover = if (popover == RailPopoverKind.Pen) null else RailPopoverKind.Pen
                                 else choose(Mode.Draw, inkPen)
                             }
-                        ) { RailIconImage(RailIcon.Res(if (shown == Pen.FOUNTAIN) R.drawable.fountain else R.drawable.ballpen), it) }
+                        ) { RailGlyphImage(glyph(item), it) }
                         if (popover == RailPopoverKind.Pen) {
                             RailPopover(side, onDismiss = { popover = null }) {
                                 PenPopover(
@@ -331,11 +327,7 @@ fun EditorToolRail(
                                 if (selected) popover = if (popover == RailPopoverKind.Eraser) null else RailPopoverKind.Eraser
                                 else choose(Mode.Erase)
                             }
-                        ) {
-                            RailIconImage(
-                                RailIcon.Res(if (state.eraser == com.ethran.notable.editor.utils.Eraser.PEN) R.drawable.eraser else R.drawable.eraser_select), it
-                            )
-                        }
+                        ) { RailGlyphImage(glyph(item), it) }
                         if (popover == RailPopoverKind.Eraser) {
                             RailPopover(side, onDismiss = { popover = null }) {
                                 EraserPopover(
@@ -364,7 +356,7 @@ fun EditorToolRail(
                                 if (selected) popover = if (popover == RailPopoverKind.Highlighter) null else RailPopoverKind.Highlighter
                                 else choose(Mode.Draw, Pen.MARKER)
                             }
-                        ) { RailIconImage(RailIcon.Res(R.drawable.marker), it) }
+                        ) { RailGlyphImage(glyph(item), it) }
                         if (popover == RailPopoverKind.Highlighter) {
                             RailPopover(side, onDismiss = { popover = null }) {
                                 PenPopover(
@@ -380,7 +372,7 @@ fun EditorToolRail(
                 RailItem.Lasso -> RailButton(
                     label = stringResource(R.string.rail_lasso), circle = c, side = side, selected = state.mode == Mode.Select,
                     onClick = { choose(Mode.Select) }
-                ) { RailIconImage(RailIcon.Res(R.drawable.lasso), it) }
+                ) { RailGlyphImage(glyph(item), it) }
 
                 RailItem.Line -> {
                     val selected = state.mode == Mode.Line
@@ -391,7 +383,7 @@ fun EditorToolRail(
                                 if (selected) popover = if (popover == RailPopoverKind.Line) null else RailPopoverKind.Line
                                 else choose(Mode.Line)
                             }
-                        ) { RailIconImage(RailIcon.Res(if (state.lineDashed) R.drawable.line_dashed else R.drawable.line), it) }
+                        ) { RailGlyphImage(glyph(item), it) }
                         if (popover == RailPopoverKind.Line) {
                             RailPopover(side, onDismiss = { popover = null }) {
                                 LinePopover(
@@ -407,12 +399,12 @@ fun EditorToolRail(
                 RailItem.Undo -> RailButton(
                     label = stringResource(R.string.rail_undo), circle = c, side = side,
                     onClick = { popover = null; controlTower.undo() }
-                ) { RailIconImage(RailIcon.Res(R.drawable.undo), it) }
+                ) { RailGlyphImage(glyph(item), it) }
 
                 RailItem.Redo -> RailButton(
                     label = stringResource(R.string.rail_redo), circle = c, side = side,
                     onClick = { popover = null; controlTower.redo() }
-                ) { RailIconImage(RailIcon.Res(R.drawable.redo), it) }
+                ) { RailGlyphImage(glyph(item), it) }
 
                 RailItem.PageCounter -> {
                     val label = if (position != null && position.known)
@@ -438,12 +430,12 @@ fun EditorToolRail(
                 RailItem.PrevPage -> RailButton(
                     label = stringResource(R.string.rail_prev_page), circle = c, side = side, enabled = position?.hasPrev == true,
                     onClick = { popover = null; controlTower.goToPreviousPage() }
-                ) { RailIconImage(RailIcon.Vec(FeatherIcons.ChevronLeft), it) }
+                ) { RailGlyphImage(glyph(item), it) }
 
                 RailItem.NextPage -> RailButton(
                     label = stringResource(R.string.rail_next_page), circle = c, side = side, enabled = position?.hasNext == true,
                     onClick = { popover = null; controlTower.goToNextPage() }
-                ) { RailIconImage(RailIcon.Vec(FeatherIcons.ChevronRight), it) }
+                ) { RailGlyphImage(glyph(item), it) }
 
                 RailItem.NewPage -> RailButton(
                     label = stringResource(R.string.rail_new_page), circle = c, side = side,
@@ -460,7 +452,7 @@ fun EditorToolRail(
                             }
                         }
                     }
-                ) { RailIconImage(RailIcon.Vec(FeatherIcons.Plus), it) }
+                ) { RailGlyphImage(glyph(item), it) }
 
                 RailItem.Favorite -> RailButton(
                     label = stringResource(if (pinned) R.string.rail_favorite_remove else R.string.rail_favorite_add),
@@ -472,13 +464,13 @@ fun EditorToolRail(
                         pinned = next
                         scope.launch(Dispatchers.IO) { appRepository.pageRepository.setPinned(id, next) }
                     }
-                ) { RailIconImage(RailIcon.Vec(if (pinned) Icons.Filled.Star else FeatherIcons.Star), it) }
+                ) { RailGlyphImage(glyph(item), it) }
 
                 RailItem.More -> Box {
                     RailButton(
                         label = stringResource(R.string.rail_more), circle = c, side = side, selected = state.menuStates.isMenuOpen,
                         onClick = { popover = null; state.menuStates.isMenuOpen = !state.menuStates.isMenuOpen }
-                    ) { RailIconImage(RailIcon.Vec(FeatherIcons.MoreHorizontal), it) }
+                    ) { RailGlyphImage(glyph(item), it) }
                     if (state.menuStates.isMenuOpen) {
                         RailMoreMenu(
                             ctx = ctx, side = side, state = state, controlTower = controlTower, exportEngine = exportEngine,

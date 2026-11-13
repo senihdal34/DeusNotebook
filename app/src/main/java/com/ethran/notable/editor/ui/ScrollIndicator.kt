@@ -58,8 +58,9 @@ fun ScrollIndicator(state: EditorState) {
 }
 
 /**
- * Horizontal scroll indicator (bottom).
- * Uses page.scroll.x (IntOffset) for the horizontal position.
+ * Horizontal scroll indicator (bottom). Drawn only while the page is scrolled sideways ([HorizontalIndicator]).
+ * It is measured against its own width, the page area beside the tool rail: measuring against the window width
+ * (which includes the rail's gutter) drew a thick black bar along the bottom of every page.
  */
 @Composable
 fun HorizontalScrollIndicator(state: EditorState) {
@@ -70,28 +71,17 @@ fun HorizontalScrollIndicator(state: EditorState) {
                 .height(5.dp)
                 .fillMaxWidth()
         ) {
-            val viewportWidthPx = convertDpToPixel(this.maxWidth, LocalContext.current).toInt()
-            val page = state.pageView
-
-            // Total scrollable width approximation:
-            // page.width is the total content width (page coordinates)
-            // page.scroll.x + viewportWidthPx ensures indicator still shows while near right edge
-            val virtualWidth = max(page.viewWidth, page.scroll.x.toInt() + viewportWidthPx)
-            if (virtualWidth <= viewportWidthPx) return@BoxWithConstraints
-
-            val indicatorSizeDp = (viewportWidthPx / virtualWidth.toFloat()) * this.maxWidth.value
-            val indicatorPositionDp = (page.scroll.x / virtualWidth.toFloat()) * this.maxWidth.value
-
             if (!state.isToolbarOpen) return@BoxWithConstraints
+            val viewportWidthPx = convertDpToPixel(this.maxWidth, LocalContext.current).toInt()
+            val (start, size) = HorizontalIndicator.fractions(viewportWidthPx, state.pageView.scroll.x)
+                ?: return@BoxWithConstraints
 
             Box(
                 modifier = Modifier
                     .fillMaxHeight()
-                    .offset(
-                        x = indicatorPositionDp.dp
-                    )
+                    .offset(x = (start * this.maxWidth.value).dp)
                     .background(Color.Black)
-                    .width(indicatorSizeDp.dp)
+                    .width((size * this.maxWidth.value).dp)
             )
         }
     }
