@@ -244,7 +244,7 @@ private val navLine = paint(Color.BLACK, 2f)
 /** One label centred in [r]; it shrinks until it fits, so a long word in another language stays inside its part of the pill. */
 private fun drawNavLabel(canvas: Canvas, label: String, r: com.ethran.notable.planner.PageRect, on: Boolean) {
     val p = Paint(if (on) navInvP else navP)
-    val maxW = r.width - 24f
+    val maxW = r.width - 16f
     while (p.textSize > 13f && p.measureText(label) > maxW) p.textSize -= 1f
     canvas.drawText(label, r.centerX, r.centerY + p.textSize * 0.36f, p)
 }

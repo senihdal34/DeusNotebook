@@ -169,12 +169,12 @@ object PlannerPagesLayout {
     fun focusHeight(lines: Int) = FOCUS_FIRST + (lines - 1) * FOCUS_STEP + FOCUS_TAIL
 
     // Header pill
-    const val NAV_LEFT = 745f
+    const val NAV_LEFT = 740f
     const val NAV_TOP = 70f
     const val NAV_H = 50f
-    const val NAV_PREVIOUS_W = 160f
-    const val NAV_THIS_W = 210f
-    const val NAV_NEXT_W = 140f
+    const val NAV_PREVIOUS_W = 135f
+    const val NAV_THIS_W = 175f
+    const val NAV_NEXT_W = 110f
     /** The tap zones are taller than the drawn pill, a finger is bigger than 50 pixels. */
     const val NAV_TAP_PAD = 14f
     /**
@@ -183,7 +183,7 @@ object PlannerPagesLayout {
      */
     const val SYSTEM_TOP_EDGE = 68f
     /** Room kept free for the date block on the right of the header (its widest line, Spanish "TRIMESTRE COMPLETADO AL 100%", is ~470 px). */
-    const val DATE_BLOCK_W = 480f
+    const val DATE_BLOCK_W = 470f
     private const val NAV_GAP = 16f
 
     fun navPill(): NavPill {
@@ -194,7 +194,10 @@ object PlannerPagesLayout {
         return NavPill(PageRect(a, NAV_TOP, b, NAV_TOP + NAV_H), PageRect(b, NAV_TOP, c, NAV_TOP + NAV_H), PageRect(c, NAV_TOP, d, NAV_TOP + NAV_H))
     }
 
-    /** True when the pill fits between the title and the date block of a page [w] wide. On a narrower screen there is no pill. */
+    /**
+     * True when the pill fits between the title and the date block of a page [w] wide. The page is the screen minus the
+     * tool rail's gutter (1755 px on a 1860 px screen). On a narrower screen there is no pill.
+     */
     fun navFits(w: Float): Boolean = navPill().outline.right + NAV_GAP <= right(w) - DATE_BLOCK_W
 
     private fun navZones(w: Float, previous: PageTap, current: PageTap, next: PageTap): List<TapZone> {
