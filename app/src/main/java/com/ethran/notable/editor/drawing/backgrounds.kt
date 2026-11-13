@@ -465,7 +465,8 @@ fun drawBg(
             }
         }
     }
-    drawMargin(canvas, scroll, scale)
+    // The portrait-width guide is for notes written in landscape; planner pages are laid out for the whole screen.
+    if (shouldDrawPortraitMargin(background)) drawMargin(canvas, scroll, scale)
 
     if (GlobalAppSettings.current.visualizePdfPagination) {
         drawPaginationLine(canvas, scroll, scale)
@@ -474,6 +475,9 @@ fun drawBg(
         canvas.restore()
     }
 }
+
+/** Planner pages (week, day, month, quarter, year) fill the screen in either orientation, so they get no portrait guide. */
+internal fun shouldDrawPortraitMargin(background: String): Boolean = !com.ethran.notable.planner.PlannerWeeks.isPlanner(background)
 
 // TODO: make sure it respects horizontal scroll
 fun drawMargin(canvas: Canvas, scroll: Offset, scale: Float) {
