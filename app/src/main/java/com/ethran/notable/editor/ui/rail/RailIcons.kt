@@ -5,7 +5,7 @@ import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.StrokeJoin
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.graphics.vector.PathParser
+import androidx.compose.ui.graphics.vector.addPathNodes
 import androidx.compose.ui.unit.dp
 import com.ethran.notable.editor.rail.RailGlyph
 import kotlin.math.PI
@@ -22,19 +22,22 @@ internal object RailIcons {
     private const val STROKE = 2.2f
     private val ink = SolidColor(Color.Black)
 
-    /** Builds a 24 dp icon: [strokes] are drawn as lines, [fills] as solid shapes (path data in SVG syntax). */
+    /**
+     * Builds a 24 dp icon: [strokes] are drawn as lines, [fills] as solid shapes (path data in SVG syntax).
+     * Every path gets its own node list ([addPathNodes]): a shared PathParser hands out its internal list, so each new
+     * parse would overwrite the paths added before it and only the last path of an icon would be drawn.
+     */
     private fun icon(name: String, strokes: List<String>, fills: List<String> = emptyList(), filledStar: String? = null): ImageVector {
         val b = ImageVector.Builder(name, 24.dp, 24.dp, 24f, 24f)
-        val parser = PathParser()
         filledStar?.let {
-            b.addPath(parser.parsePathString(it).toNodes(), fill = ink, stroke = ink, strokeLineWidth = STROKE,
+            b.addPath(addPathNodes(it), fill = ink, stroke = ink, strokeLineWidth = STROKE,
                 strokeLineCap = StrokeCap.Round, strokeLineJoin = StrokeJoin.Round)
         }
         strokes.forEach {
-            b.addPath(parser.parsePathString(it).toNodes(), stroke = ink, strokeLineWidth = STROKE,
+            b.addPath(addPathNodes(it), stroke = ink, strokeLineWidth = STROKE,
                 strokeLineCap = StrokeCap.Round, strokeLineJoin = StrokeJoin.Round)
         }
-        fills.forEach { b.addPath(parser.parsePathString(it).toNodes(), fill = ink) }
+        fills.forEach { b.addPath(addPathNodes(it), fill = ink) }
         return b.build()
     }
 

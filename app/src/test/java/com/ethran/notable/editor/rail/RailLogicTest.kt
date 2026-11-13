@@ -287,6 +287,19 @@ class RailGlyphTest {
         }
     }
 
+    @Test fun everyPathOfAnIconKeepsItsOwnShape() {
+        // Back is a shaft and an arrow head: two paths that must not end up with the same nodes.
+        val paths = com.ethran.notable.editor.ui.rail.RailIcons.of(RailGlyph.Back).root
+            .filterIsInstance<androidx.compose.ui.graphics.vector.VectorPath>()
+        assertEquals(2, paths.size)
+        assertTrue(paths[0].pathData != paths[1].pathData)
+        for (glyph in RailGlyph.values()) {
+            val all = com.ethran.notable.editor.ui.rail.RailIcons.of(glyph).root
+                .filterIsInstance<androidx.compose.ui.graphics.vector.VectorPath>().map { it.pathData }
+            assertEquals(glyph.name, all.size, all.toSet().size)
+        }
+    }
+
     @Test fun inboxPageKeepsTheSameButtons() {
         // The inbox bar no longer has a Back or a pen toggle: the rail's Back and the rail itself stay.
         val inbox = RailLayout.all(RailContext(isInboxPage = true, inBook = false))
