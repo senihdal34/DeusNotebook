@@ -144,7 +144,6 @@
     <string name="hint_strokes_draw_failed">Error drawing strokes</string>
     <string name="update_preview_available">A newer preview version is available!\nYou are using released %1$s, and newest is from %2$s.</string>
     <string name="update_stable_available">A newer stable version is available!\nYou are using %1$s, while the latest is %2$s.</string>
-    <string name="inbox_back">← Back</string>
     <string name="inbox_capture">Capture</string>
     <string name="inbox_save_exit">Save &amp; Exit</string>
     <string name="inbox_tag_hint">search or add tags...</string>

@@ -36,6 +36,7 @@ import com.ethran.notable.editor.EditorControlTower
 import com.ethran.notable.editor.canvas.CanvasEventBus
 import com.ethran.notable.editor.rail.MoreItem
 import com.ethran.notable.editor.rail.RailContext
+import com.ethran.notable.editor.rail.RailGlyph
 import com.ethran.notable.editor.rail.RailLayout
 import com.ethran.notable.editor.state.AnnotationMode
 import com.ethran.notable.editor.state.EditorState
@@ -116,8 +117,14 @@ internal fun PenPopover(
         PopoverCaption(stringResource(if (isMarker) R.string.rail_pop_highlighter else R.string.rail_pop_pen))
         if (!isMarker) {
             Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                Chip(stringResource(R.string.rail_pen_ballpoint), selected = pen == Pen.BALLPEN) { onPen(Pen.BALLPEN) }
-                Chip(stringResource(R.string.rail_pen_fountain), selected = pen == Pen.FOUNTAIN) { onPen(Pen.FOUNTAIN) }
+                Chip(
+                    stringResource(R.string.rail_pen_ballpoint), selected = pen == Pen.BALLPEN,
+                    leading = { RailGlyphImage(RailGlyph.PenBallpoint, it, 26.dp) }
+                ) { onPen(Pen.BALLPEN) }
+                Chip(
+                    stringResource(R.string.rail_pen_fountain), selected = pen == Pen.FOUNTAIN,
+                    leading = { RailGlyphImage(RailGlyph.PenFountain, it, 26.dp) }
+                ) { onPen(Pen.FOUNTAIN) }
             }
             Spacer(Modifier.height(16.dp))
         }
@@ -161,11 +168,11 @@ internal fun EraserPopover(
         Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
             Chip(
                 stringResource(R.string.rail_eraser_stroke), selected = eraser == Eraser.PEN,
-                leading = { RailIconImage(RailIcon.Res(R.drawable.eraser), it, 24.dp) }
+                leading = { RailGlyphImage(RailGlyph.Eraser, it, 26.dp) }
             ) { onEraser(Eraser.PEN) }
             Chip(
                 stringResource(R.string.rail_eraser_area), selected = eraser == Eraser.SELECT,
-                leading = { RailIconImage(RailIcon.Res(R.drawable.eraser_select), it, 24.dp) }
+                leading = { RailGlyphImage(RailGlyph.EraserArea, it, 26.dp) }
             ) { onEraser(Eraser.SELECT) }
         }
         Spacer(Modifier.height(16.dp))
@@ -191,8 +198,14 @@ internal fun LinePopover(dashed: Boolean, setting: PenSetting?, onDashed: (Boole
     Column(Modifier.width(340.dp)) {
         PopoverCaption(stringResource(R.string.rail_pop_line))
         Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-            Chip(stringResource(R.string.rail_line_solid), selected = !dashed) { onDashed(false) }
-            Chip(stringResource(R.string.rail_line_dashed), selected = dashed) { onDashed(true) }
+            Chip(
+                stringResource(R.string.rail_line_solid), selected = !dashed,
+                leading = { RailGlyphImage(RailGlyph.Line, it, 26.dp) }
+            ) { onDashed(false) }
+            Chip(
+                stringResource(R.string.rail_line_dashed), selected = dashed,
+                leading = { RailGlyphImage(RailGlyph.LineDashed, it, 26.dp) }
+            ) { onDashed(true) }
         }
         LinePreview(setting?.strokeSize ?: 5f, setting?.color ?: android.graphics.Color.BLACK, dashed, Modifier.padding(top = 12.dp))
     }

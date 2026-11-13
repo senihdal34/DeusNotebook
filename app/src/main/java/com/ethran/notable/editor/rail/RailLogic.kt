@@ -1,5 +1,6 @@
 package com.ethran.notable.editor.rail
 
+import com.ethran.notable.editor.utils.Eraser
 import com.ethran.notable.editor.utils.NamedSettings
 import com.ethran.notable.editor.utils.Pen
 import com.ethran.notable.editor.utils.PenSetting
@@ -186,4 +187,52 @@ data class PagePosition(val index: Int, val total: Int) {
     val hasNext get() = index in 0 until total - 1
     val number get() = index + 1
     val known get() = index >= 0 && total > 0
+}
+
+/** The drawn symbols of the rail. Every tool has its own silhouette; the vectors live in `ui/rail/RailIcons.kt`. */
+enum class RailGlyph {
+    Back, PenBallpoint, PenFountain, Eraser, EraserArea, Highlighter, Lasso, Line, LineDashed,
+    Undo, Redo, Plus, Star, StarFilled, More, ChevronLeft, ChevronRight, ChevronUp, ChevronDown, Page
+}
+
+/** What decides the symbol of a button. */
+data class GlyphState(
+    /** The ink pen the Pen button stands for (the highlighter never shows here: it has its own button). */
+    val inkPen: Pen = Pen.BALLPEN,
+    val eraser: Eraser = Eraser.PEN,
+    val lineDashed: Boolean = false,
+    val pinned: Boolean = false,
+)
+
+object RailGlyphs {
+    /** The symbol of a button, or null for the page counter, which shows its numbers as text. */
+    fun forItem(item: RailItem, state: GlyphState = GlyphState()): RailGlyph? = when (item) {
+        RailItem.Back -> RailGlyph.Back
+        RailItem.Pen -> if (state.inkPen == Pen.FOUNTAIN) RailGlyph.PenFountain else RailGlyph.PenBallpoint
+        RailItem.Eraser -> if (state.eraser == Eraser.SELECT) RailGlyph.EraserArea else RailGlyph.Eraser
+        RailItem.Highlighter -> RailGlyph.Highlighter
+        RailItem.Lasso -> RailGlyph.Lasso
+        RailItem.Line -> if (state.lineDashed) RailGlyph.LineDashed else RailGlyph.Line
+        RailItem.Undo -> RailGlyph.Undo
+        RailItem.Redo -> RailGlyph.Redo
+        RailItem.PageCounter -> null
+        RailItem.PrevPage -> RailGlyph.ChevronLeft
+        RailItem.NextPage -> RailGlyph.ChevronRight
+        RailItem.NewPage -> RailGlyph.Plus
+        RailItem.Favorite -> if (state.pinned) RailGlyph.StarFilled else RailGlyph.Star
+        RailItem.More -> RailGlyph.More
+    }
+}
+
+/**
+ * Vertical placement of a popover beside the rail, in pixels of the window. The popover starts level with its button
+ * (or ends level with it when [bottomAligned]) but never above [topInset] (the bottom edge of a bar above the page area,
+ * such as the inbox bar) and never past the bottom of the window.
+ */
+object PopoverPlacement {
+    fun y(anchorTop: Int, anchorBottom: Int, popupHeight: Int, windowHeight: Int, topInset: Int, bottomAligned: Boolean): Int {
+        val wanted = if (bottomAligned) anchorBottom - popupHeight else anchorTop
+        val lowest = (windowHeight - popupHeight).coerceAtLeast(topInset)
+        return wanted.coerceIn(topInset, lowest)
+    }
 }

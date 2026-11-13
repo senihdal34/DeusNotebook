@@ -10,15 +10,21 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.width
 import androidx.compose.ui.unit.dp
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.layout.boundsInWindow
+import androidx.compose.ui.layout.onGloballyPositioned
+import com.ethran.notable.editor.ui.rail.LocalRailTopInset
+import kotlin.math.roundToInt
 import androidx.compose.ui.platform.LocalContext
 import androidx.navigation.NavController
 import com.ethran.notable.data.AppRepository
@@ -178,6 +184,8 @@ fun EditorView(
         // Month, quarter and year pages: each level lives in a notebook of its own.
         var plannerLevel by remember(pageId) { mutableStateOf<com.ethran.notable.planner.PlannerLevel?>(null) }
         val selectedTags = remember { mutableStateListOf<String>() }
+        // Bottom edge of the inbox bar in the window: the tool rail's popovers stay below it.
+        var inboxBarBottomPx by remember { mutableIntStateOf(0) }
         // Read tags reactively — updates when VaultTagScanner.refreshCache() runs
         val suggestedTags = VaultTagScanner.cachedTags
 
@@ -304,20 +312,21 @@ fun EditorView(
             RailRow(
                 side = GlobalAppSettings.current.toolbarSide,
                 rail = {
-                    EditorToolRail(
-                        exportEngine, navController, appRepository, editorState, editorControlTower,
-                        isPlannerPage = plannerMonday != null || plannerDay != null || plannerLevel != null,
-                        isInboxPage = isInboxPage,
-                        onBack = {
-                            // Inbox pages: same as the inbox bar's "Save & Exit". Other pages: leave the editor.
-                            if (isInboxPage) {
-                                SyncState.launchSync(appRepository, pageId, selectedTags.toList(), context, exportEngine)
+                    // Popovers open below the inbox bar, not over it.
+                    CompositionLocalProvider(LocalRailTopInset provides if (isInboxPage) inboxBarBottomPx else 0) {
+                        EditorToolRail(
+                            exportEngine, navController, appRepository, editorState, editorControlTower,
+                            isPlannerPage = plannerMonday != null || plannerDay != null || plannerLevel != null,
+                            isInboxPage = isInboxPage,
+                            // The one way out. On inbox pages it does not export (that is the bar's Save & Exit),
+                            // exactly what the bar's old Back button did.
+                            onBack = {
+                                if (!navController.popBackStack()) {
+                                    navController.navigate(com.ethran.notable.ui.views.HomeDestination.route)
+                                }
                             }
-                            if (!navController.popBackStack()) {
-                                navController.navigate(com.ethran.notable.ui.views.HomeDestination.route)
-                            }
-                        }
-                    )
+                        )
+                    }
                 }
             ) {
                 // Canvas area takes remaining space
@@ -346,12 +355,8 @@ fun EditorView(
                             selectedTags = selectedTags,
                             suggestedTags = suggestedTags,
                             isExpanded = editorState.isInboxTagsExpanded,
-                            isToolbarOpen = editorState.isToolbarOpen,
                             onToggleExpanded = {
                                 editorState.isInboxTagsExpanded = !editorState.isInboxTagsExpanded
-                            },
-                            onToggleToolbar = {
-                                editorState.isToolbarOpen = !editorState.isToolbarOpen
                             },
                             onTagAdd = { tag ->
                                 if (tag !in selectedTags) selectedTags.add(tag)
@@ -363,7 +368,7 @@ fun EditorView(
                                 )
                                 navController.popBackStack()
                             },
-                            onDiscard = { navController.popBackStack() }
+                            modifier = Modifier.onGloballyPositioned { inboxBarBottomPx = it.boundsInWindow().bottom.roundToInt() }
                         )
                     }
                     if (plannerMonday != null || plannerDay != null || plannerLevel != null) {
