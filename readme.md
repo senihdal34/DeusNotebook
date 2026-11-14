@@ -13,9 +13,12 @@ No animation, no shadows, no gradients. Everything is drawn for high contrast an
 
 ## What you can do with it
 
-**Plan your week on paper that still thinks.**
+**Plan your year, quarter, month, week and day on paper that still thinks.**
 The start page is a handwritten weekly planner: seven days as rows, five lines each, checkboxes you tick with the pen.
-Tap a date to open that day's long to-do page. What you write on a day's first lines stays in sync with the week page.
+A zoom strip (Year, Quarter, Month, Week, Day) takes you up and down the levels while it keeps your date in focus. Tap a
+date to open that day's long to-do page; what you write on a day's first lines stays in sync with the week page. Month,
+quarter and year pages have a focus area you can grow with a plus button, and small dots mark the days you wrote on. In
+landscape the planner shows the same page as in portrait, centred, so your ink always lines up with the rows.
 
 **Capture a thought and send it to your vault.**
 Write a page, tag it, press save. Handwriting recognition turns the strokes into text and the note lands in your
@@ -28,7 +31,8 @@ and Turkish letters (İ ı ş ğ ç ö ü) survive the whole trip, including fil
 
 **Keep your notes in order.**
 A newspaper-style Home shows your latest note large, the rest in a grid, topics as tabs, and favorites in their own tab.
-Press and hold a note to pin it. Boox note names become topics automatically.
+Press and hold a note to pin it. Boox note names become topics automatically. Below the notes a writing activity card
+shows the days you wrote in the last 3, 6 or 12 months, with your streak.
 
 <p align="center">
   <img src="docs/screenshots/07-editor.png" width="45%" alt="A handwritten note in the editor">
@@ -45,8 +49,9 @@ reading buddy. Tap a book and it opens in the Boox reader at the page you left.
 </p>
 
 **A good pen and a quiet screen.**
-Low-latency pen input through the Onyx Pen SDK, palm guard against a resting hand, undo and redo, selection, a ruler
-tool and a pen button that switches tools.
+Low-latency pen input through the Onyx Pen SDK and palm guard against a resting hand. A simple tool rail sits at the left
+(or right) edge: pen, eraser, highlighter, lasso, line, undo and redo, with a pop-up for pen type, colour and size. It
+folds away while you write. The highlighter always sits under your handwriting.
 
 ## Everyday uses
 
