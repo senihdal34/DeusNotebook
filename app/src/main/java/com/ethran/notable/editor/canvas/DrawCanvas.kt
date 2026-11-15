@@ -146,13 +146,20 @@ class DrawCanvas(
                 log.i("surface created $holder")
                 // set up the drawing surface (also sets pen/stroke style after setup completes)
                 inputHandler.updateActiveSurface()
+                // No drawing here: surfaceChanged always follows and shows the bitmap once (one e-ink refresh, not two).
             }
 
             override fun surfaceChanged(
                 holder: SurfaceHolder, format: Int, width: Int, height: Int
             ) {
                 // Only act if actual dimensions changed
-                if (page.viewWidth == width && page.viewHeight == height) return
+                if (page.viewWidth == width && page.viewHeight == height) {
+                    // Same size, nothing to rebuild, but whatever was drawn before the surface was ready is not on it:
+                    // a short page (a new, empty note) is often fully drawn before its surface exists, and drawing to a
+                    // missing surface is skipped silently. Never while the pen is down (the stroke owns the screen then).
+                    if (!CanvasEventBus.drawingInProgress.isLocked) drawCanvasToView(null)
+                    return
+                }
 
                 log.v("Surface dimension changed!")
 

@@ -6,6 +6,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.asFlow
 import androidx.lifecycle.viewModelScope
 import com.ethran.notable.data.AppRepository
+import com.ethran.notable.data.NewPageDefaults
 import com.ethran.notable.data.PageDataManager
 import com.ethran.notable.data.datastore.GlobalAppSettings
 import com.ethran.notable.data.db.Folder
@@ -158,7 +159,7 @@ class LibraryViewModel @Inject constructor(
             bookRepository.create(
                 Notebook(
                     parentFolderId = _folderId.value,
-                    defaultBackground = settings.defaultNativeTemplate,
+                    defaultBackground = NewPageDefaults.templateForNewNotebook(settings.defaultNativeTemplate),
                     defaultBackgroundType = BackgroundType.Native.key
                 )
             )
