@@ -134,7 +134,7 @@ class AppRepository @Inject constructor(
     suspend fun createNewQuickPage(parentFolderId: String? = null) : String? {
         val page = Page(
             notebookId = null,
-            background = "inbox",
+            background = NewPageDefaults.QUICK_NOTE_BACKGROUND,
             backgroundType = BackgroundType.Native.key,
             parentFolderId = parentFolderId
         )

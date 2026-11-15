@@ -26,7 +26,8 @@ data class AppSettings(
     // General
     val version: Int,
     val monitorBgFiles: Boolean = false,
-    val defaultNativeTemplate: String = "blank",
+    /** Template of new notebooks and of their pages: ruled lines unless another one is set. */
+    val defaultNativeTemplate: String = "lined",
     val quickNavPages: List<String> = listOf(),
     val neoTools: Boolean = false,
     val scribbleToEraseEnabled: Boolean = false,

@@ -2,6 +2,7 @@ package com.ethran.notable.data.db
 
 import androidx.lifecycle.LiveData
 import androidx.room.ColumnInfo
+import com.ethran.notable.data.NewPageDefaults
 import androidx.room.Dao
 import androidx.room.Entity
 import androidx.room.ForeignKey
@@ -85,7 +86,9 @@ class BookRepository @Inject constructor(
         notebookDao.create(notebook)
         val page = Page(
             notebookId = notebook.id,
-            background = notebook.defaultBackground,
+            background = NewPageDefaults.backgroundForNotebookPage(
+                notebook.defaultBackground, notebook.defaultBackgroundType
+            ),
             backgroundType = notebook.defaultBackgroundType
         )
         pageDao.create(page)
@@ -182,7 +185,7 @@ fun Notebook.getBackgroundType(): BackgroundType {
 fun Notebook.newPage(): Page {
     return Page(
         notebookId = id,
-        background = defaultBackground,
+        background = NewPageDefaults.backgroundForNotebookPage(defaultBackground, defaultBackgroundType),
         backgroundType = defaultBackgroundType
     )
 }

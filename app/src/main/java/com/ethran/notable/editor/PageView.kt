@@ -160,6 +160,9 @@ class PageView(
 
     var pageFromDb: Page? = null
 
+    /** True while the bitmap only has the white stand-in drawn before the page row was read (see [FirstPaint]). */
+    private var initialBackgroundIsPlaceholder = false
+
     private var dbStrokes = appRepository.strokeRepository
     private var dbImages = appRepository.imageRepository
 
@@ -205,6 +208,7 @@ class PageView(
                 }
             }
             applyFixedViewport()
+            paintBackgroundOnceKnown()
             CanvasEventBus.refreshUiImmediately.emit(Unit)
             loadPage()
             log.d("Page loaded (Init with id: $currentPageId)")
@@ -509,27 +513,42 @@ class PageView(
             if (bitmapFromDisc.height == windowedCanvas.height && bitmapFromDisc.width == windowedCanvas.width) {
                 windowedCanvas.drawBitmap(bitmapFromDisc, 0f, 0f, Paint())
                 log.d("loaded initial bitmap")
+                initialBackgroundIsPlaceholder = false
                 return true
             } else
                 log.i("Image preview does not fit canvas area - redrawing")
         }
 
         log.d("Drawing initial background.")
-        // draw just background.
+        drawInitialBackground()
+        return false
+    }
+
+    /** Draws just the background into the bitmap, as far as it is known. Strokes are drawn by the full redraw. */
+    private fun drawInitialBackground() {
         val backgroundType = pageFromDb?.getBackgroundType()
-        if (fixedViewport?.isIdentity == false) {
-            // A planner sheet in a different shape of page area: the full redraw that follows draws it at its scale.
-            windowedCanvas.drawColor(Color.WHITE)
-            return false
-        }
-        if (backgroundType == BackgroundType.Native)
+        val scaledSheet = fixedViewport?.isIdentity == false
+        val kind = FirstPaint.initialBackground(
+            pageKnown = pageFromDb != null,
+            isNativeBackground = backgroundType == BackgroundType.Native,
+            plannerSheetNeedsScaling = scaledSheet
+        )
+        initialBackgroundIsPlaceholder = FirstPaint.needsRepaintWhenPageKnown(kind)
+        if (kind == InitialBackground.NATIVE && backgroundType != null)
             drawBg(
                 context, windowedCanvas, backgroundType,
                 pageFromDb?.background ?: "blank", scroll, 1f, this
             )
         else
+            // A planner sheet in a different shape of page area: the full redraw that follows draws it at its scale.
             windowedCanvas.drawColor(Color.WHITE)
-        return false
+    }
+
+    /** The page row has been read: if the bitmap only got the stand-in, paint the real background into it now. */
+    private fun paintBackgroundOnceKnown() {
+        if (!initialBackgroundIsPlaceholder) return
+        log.d("Page row known: painting the background the first bitmap was waiting for")
+        drawInitialBackground()
     }
 
 

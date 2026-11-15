@@ -146,13 +146,20 @@ class DrawCanvas(
                 log.i("surface created $holder")
                 // set up the drawing surface (also sets pen/stroke style after setup completes)
                 inputHandler.updateActiveSurface()
+                // A short page (a new, empty note) is often fully drawn before its surface exists, and drawing to a missing
+                // surface is skipped silently. Without this the surface stays blank until the next redraw.
+                drawCanvasToView(null)
             }
 
             override fun surfaceChanged(
                 holder: SurfaceHolder, format: Int, width: Int, height: Int
             ) {
                 // Only act if actual dimensions changed
-                if (page.viewWidth == width && page.viewHeight == height) return
+                if (page.viewWidth == width && page.viewHeight == height) {
+                    // Same size, nothing to rebuild, but whatever was drawn before the surface was ready is not on it.
+                    drawCanvasToView(null)
+                    return
+                }
 
                 log.v("Surface dimension changed!")
 
