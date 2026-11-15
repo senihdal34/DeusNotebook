@@ -69,11 +69,123 @@ object InboxSyncEngine {
             return
         }
 
+        val finalContent = recogniseText(context, allStrokes, annotations, ensureGlossaryFile = true)
+
+        // --- Attachment writes ---
+        val inboxPath = GlobalAppSettings.current.obsidianInboxPath
+        val createdDate = SimpleDateFormat("yyyy-MM-dd", Locale.US).format(page.createdAt)
+
+        // Use inboxPath directly (no per-note subfolder)
+        val noteDir = if (inboxPath.startsWith("/")) {
+            File(inboxPath)
+        } else {
+            File(Environment.getExternalStorageDirectory(), inboxPath)
+        }
+
+        // Generate a unique base name from the recognized text + timestamp
+        val timestamp = SimpleDateFormat("yyyy-MM-dd-HH-mm-ss", Locale.US).format(page.createdAt)
+        val titleLine = titleLineOf(finalContent)
+        val baseName = if (!titleLine.isNullOrBlank()) {
+            "$titleLine-$timestamp"
+        } else {
+            timestamp
+        }
+
+        // Re-syncing a page whose recognized title changed would leave the old files behind
+        // (same note twice, one of them stale). Remove earlier exports of this page first.
+        removePreviousExports(noteDir, timestamp, baseName)
+
+        // Sub-directories for attachments
+        val jpgDir = File(noteDir, "jpg_archive").also { it.mkdirs() }
+        val sb1Dir = File(noteDir, "sb1_archive").also { it.mkdirs() }
+
+        // Phase 2: Render JPG into jpg_archive/ with unique name
+        try {
+            val jpgFile = File(jpgDir, "${baseName}-page-1.jpg")
+            writePageJpg(exportEngine, pageId, jpgFile)
+        } catch (e: Exception) {
+            log.e("Failed to render page JPG: ${e.message}", e)
+        }
+
+        // Phase 1: Write SB1 container into sb1_archive/ with unique name
+        try {
+            val sb1File = File(sb1Dir, "${baseName}-page-1.sb1")
+            Sb1ContainerWriter.writeSb1Container(
+                file = sb1File,
+                page = page,
+                strokes = allStrokes,
+                images = images,
+                viewportWidth = SCREEN_WIDTH,
+                viewportHeight = SCREEN_HEIGHT
+            )
+        } catch (e: Exception) {
+            log.e("Failed to write SB1 container: ${e.message}", e)
+        }
+
+        // Generate and write markdown LAST (its presence signals sync completion to Obsidian file watchers)
+        // Pages always 1 for single-page inbox sync; multi-page would need iteration
+        val markdown = generateMarkdown(createdDate, tags, finalContent, pages = 1, baseName = baseName)
+        writeMarkdownFile(markdown, noteDir, baseName)
+
+        // Save recognized title back to the Page entity for Home screen display, and the text for its excerpt.
+        saveRecognition(appRepository, page, finalContent)
+
+        log.i("Inbox sync complete for page $pageId")
+    }
+
+    /**
+     * Title and excerpt only, no export: recognises the page and sets [com.ethran.notable.data.db.Page.title] (a date-based
+     * provisional title first, so the Home list never shows "Untitled" for a page with ink, then the recognised first line)
+     * and keeps the recognised text for the Home excerpt. Nothing is written to the vault. A recognition failure keeps the
+     * provisional title. Does nothing for a page without strokes.
+     */
+    suspend fun recognisePage(appRepository: AppRepository, pageId: String, context: Context) {
+        val withStrokes = appRepository.pageRepository.getWithStrokeById(pageId)
+        val page = withStrokes.page
+        if (withStrokes.strokes.isEmpty()) return
+        // Shown while recognition runs and kept if it fails.
+        val provisional = NoteLeave.titleToSave(page.title, null, page.createdAt)
+        if (provisional != null) setTitle(appRepository, pageId, provisional)
+        val annotations = appRepository.annotationRepository.getByPageId(pageId)
+        val text = recogniseText(context, withStrokes.strokes, annotations, ensureGlossaryFile = false)
+        saveRecognition(appRepository, page.copy(title = provisional ?: page.title), text)
+    }
+
+    private suspend fun saveRecognition(appRepository: AppRepository, page: com.ethran.notable.data.db.Page, text: String) {
+        if (text.isNotBlank()) RecognisedTextStore.save(page.id, text)
+        NoteLeave.titleToSave(page.title, titleLineOf(text), page.createdAt)?.let { setTitle(appRepository, page.id, it) }
+    }
+
+    private suspend fun setTitle(appRepository: AppRepository, pageId: String, title: String) {
+        try {
+            appRepository.pageRepository.updateTitle(pageId, title)
+        } catch (e: Exception) {
+            log.e("Failed to save title for page $pageId: ${e.message}")
+        }
+    }
+
+    /** First recognised line as a title: cleaned, at most 50 characters, safe as a file name. Null when nothing was read. */
+    internal fun titleLineOf(text: String): String? =
+        text.lines().firstOrNull()?.let { TextSanitizer.cleanLine(it) }?.take(50)?.let { sanitizeFileName(it) }
+            ?.takeIf { it.isNotBlank() }
+
+    /**
+     * Handwriting recognition of a whole page: all strokes together (natural text flow), with annotation boxes
+     * wrapped as [[wiki links]] and #tags. Needs no export: [recognisePage] uses it for the title alone, the full
+     * sync for the note text. [ensureGlossaryFile] creates the starter glossary.txt in the vault (export path only).
+     * Returns "" when the recogniser is unavailable or reads nothing.
+     */
+    private suspend fun recogniseText(
+        context: Context,
+        allStrokes: List<Stroke>,
+        annotations: List<Annotation>,
+        ensureGlossaryFile: Boolean
+    ): String {
         // User vocabulary (glossary.txt + titles/tags of earlier exports) corrects names and English terms.
         run {
             val inbox = GlobalAppSettings.current.obsidianInboxPath
             val dir = if (inbox.startsWith("/")) File(inbox) else File(Environment.getExternalStorageDirectory(), inbox)
-            HwrGlossaryLoader.ensureDefaultFile(dir)
+            if (ensureGlossaryFile) HwrGlossaryLoader.ensureDefaultFile(dir)
             OnyxHWREngine.glossary = HwrGlossaryLoader.load(dir)
             log.i("Glossary: ${OnyxHWREngine.glossary?.size} words")
         }
@@ -167,75 +279,7 @@ object InboxSyncEngine {
             }
         }
 
-        val finalContent = fullText
-
-        // --- Attachment writes ---
-        val inboxPath = GlobalAppSettings.current.obsidianInboxPath
-        val createdDate = SimpleDateFormat("yyyy-MM-dd", Locale.US).format(page.createdAt)
-
-        // Use inboxPath directly (no per-note subfolder)
-        val noteDir = if (inboxPath.startsWith("/")) {
-            File(inboxPath)
-        } else {
-            File(Environment.getExternalStorageDirectory(), inboxPath)
-        }
-
-        // Generate a unique base name from the recognized text + timestamp
-        val timestamp = SimpleDateFormat("yyyy-MM-dd-HH-mm-ss", Locale.US).format(page.createdAt)
-        val titleLine = finalContent.lines().firstOrNull()?.let { TextSanitizer.cleanLine(it) }?.take(50)
-            ?.let { sanitizeFileName(it) }
-        val baseName = if (!titleLine.isNullOrBlank()) {
-            "$titleLine-$timestamp"
-        } else {
-            timestamp
-        }
-
-        // Re-syncing a page whose recognized title changed would leave the old files behind
-        // (same note twice, one of them stale). Remove earlier exports of this page first.
-        removePreviousExports(noteDir, timestamp, baseName)
-
-        // Sub-directories for attachments
-        val jpgDir = File(noteDir, "jpg_archive").also { it.mkdirs() }
-        val sb1Dir = File(noteDir, "sb1_archive").also { it.mkdirs() }
-
-        // Phase 2: Render JPG into jpg_archive/ with unique name
-        try {
-            val jpgFile = File(jpgDir, "${baseName}-page-1.jpg")
-            writePageJpg(exportEngine, pageId, jpgFile)
-        } catch (e: Exception) {
-            log.e("Failed to render page JPG: ${e.message}", e)
-        }
-
-        // Phase 1: Write SB1 container into sb1_archive/ with unique name
-        try {
-            val sb1File = File(sb1Dir, "${baseName}-page-1.sb1")
-            Sb1ContainerWriter.writeSb1Container(
-                file = sb1File,
-                page = page,
-                strokes = allStrokes,
-                images = images,
-                viewportWidth = SCREEN_WIDTH,
-                viewportHeight = SCREEN_HEIGHT
-            )
-        } catch (e: Exception) {
-            log.e("Failed to write SB1 container: ${e.message}", e)
-        }
-
-        // Generate and write markdown LAST (its presence signals sync completion to Obsidian file watchers)
-        // Pages always 1 for single-page inbox sync; multi-page would need iteration
-        val markdown = generateMarkdown(createdDate, tags, finalContent, pages = 1, baseName = baseName)
-        writeMarkdownFile(markdown, noteDir, baseName)
-
-        // Save recognized title back to the Page entity for Home screen display
-        if (!titleLine.isNullOrBlank()) {
-            try {
-                appRepository.pageRepository.updateTitle(pageId, titleLine)
-            } catch (e: Exception) {
-                log.e("Failed to save title for page $pageId: ${e.message}")
-            }
-        }
-
-        log.i("Inbox sync complete for page $pageId")
+        return fullText
     }
 
     /**

@@ -63,6 +63,7 @@ import com.ethran.notable.editor.EditorControlTower
 import com.ethran.notable.editor.canvas.CanvasEventBus
 import com.ethran.notable.editor.rail.GlyphState
 import com.ethran.notable.editor.rail.PagePosition
+import com.ethran.notable.editor.rail.PlannerTools
 import com.ethran.notable.editor.rail.RailContext
 import com.ethran.notable.editor.rail.RailGlyph
 import com.ethran.notable.editor.rail.RailGlyphs
@@ -173,6 +174,9 @@ fun EditorToolRail(
     LaunchedEffect(isPlannerPage) {
         if (isPlannerPage) {
             visibility.fold(); folded = true
+            // Only the pen is offered there: a selection, line or marker left over from a note page would block writing.
+            state.mode = PlannerTools.mode(state.mode)
+            state.pen = PlannerTools.pen(state.pen)
         }
     }
     // Other routes to show or hide the toolbar (two-finger swipe, the inbox bar's pen button).

@@ -58,6 +58,8 @@ import com.ethran.notable.editor.ui.ScrollIndicator
 import com.ethran.notable.editor.ui.SelectedBitmap
 import com.ethran.notable.gestures.EditorGestureReceiver
 import com.ethran.notable.io.ExportEngine
+import com.ethran.notable.io.LeaveRoute
+import com.ethran.notable.io.NoteLeave
 import com.ethran.notable.io.SyncState
 import com.ethran.notable.io.VaultTagScanner
 import com.ethran.notable.io.exportToLinkedFile
@@ -274,8 +276,26 @@ fun EditorView(
         fun goToDay(day: LocalDate) = goTo { plannerService.ensureDay(day) }
         fun goToWeek(monday: LocalDate) = goTo { plannerService.ensureWeek(monday) }
 
+        // Leaving a note page recognises it (title, excerpt) by every route: rail back, system back and gesture, a menu
+        // entry that navigates away (all of them end here when the editor is disposed). Only Save & Exit exports to the
+        // vault. Planner and notebook pages are ignored. Runs on SyncState's own scope, once per visit.
+        val leaveHandled = remember { java.util.concurrent.atomic.AtomicBoolean(false) }
+        fun leaveNote(route: LeaveRoute) {
+            if (!leaveHandled.compareAndSet(false, true)) return
+            if (route == LeaveRoute.SaveAndExit) {
+                SyncState.launchSync(appRepository, pageId, selectedTags.toList(), context, exportEngine)
+                return
+            }
+            val isPlanner = plannerMonday != null || plannerDay != null || plannerLevel != null
+            SyncState.launchOnLeave(
+                appRepository, pageId, selectedTags.toList(), context, exportEngine,
+                isNotePage = NoteLeave.isNotePage(bookId, isPlanner, isInboxPage)
+            )
+        }
+
         DisposableEffect(Unit) {
             onDispose {
+                leaveNote(LeaveRoute.Other)
                 // finish selection operation
                 editorState.selectionState.applySelectionDisplace(page)
                 if (bookId != null)
@@ -322,9 +342,10 @@ fun EditorView(
                             exportEngine, navController, appRepository, editorState, editorControlTower,
                             isPlannerPage = plannerMonday != null || plannerDay != null || plannerLevel != null,
                             isInboxPage = isInboxPage,
-                            // The one way out. On inbox pages it does not export (that is the bar's Save & Exit),
-                            // exactly what the bar's old Back button did.
+                            // The one way out. On a note page it recognises the handwriting (title and excerpt for
+                            // Home) but does not export to the vault: that is the bar's Save & Exit.
                             onBack = {
+                                leaveNote(LeaveRoute.RailBack)
                                 if (!navController.popBackStack()) {
                                     navController.navigate(com.ethran.notable.ui.views.HomeDestination.route)
                                 }
@@ -367,9 +388,7 @@ fun EditorView(
                             },
                             onTagRemove = { tag -> selectedTags.remove(tag) },
                             onSave = {
-                                SyncState.launchSync(
-                                    appRepository, pageId, selectedTags.toList(), context, exportEngine
-                                )
+                                leaveNote(LeaveRoute.SaveAndExit)
                                 navController.popBackStack()
                             },
                             modifier = Modifier.onGloballyPositioned { inboxBarBottomPx = it.boundsInWindow().bottom.roundToInt() }
