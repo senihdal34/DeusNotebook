@@ -42,16 +42,26 @@ object NoteLeave {
      * Save & Exit exports when there is ink or a tag (the rule it always had). Every other route only recognises, and
      * only when the page has ink: an empty page is simply left, as before.
      */
-    fun actionOnLeave(isNotePage: Boolean, strokeCount: Int, hasTags: Boolean, route: LeaveRoute): LeaveAction = when {
+    fun actionOnLeave(
+        isNotePage: Boolean, strokeCount: Int, hasTags: Boolean, route: LeaveRoute, currentTitle: String? = null
+    ): LeaveAction = when {
         !isNotePage -> LeaveAction.None
         route == LeaveRoute.SaveAndExit -> if (strokeCount > 0 || hasTags) LeaveAction.Export else LeaveAction.None
-        strokeCount > 0 -> LeaveAction.Recognise
+        // Only a note that has no real title yet is recognised on a plain leave: a note that was merely opened to read
+        // keeps its title (recognising again could replace a good title with a slightly different reading).
+        strokeCount > 0 -> if (needsTitle(currentTitle)) LeaveAction.Recognise else LeaveAction.None
         else -> LeaveAction.None
     }
 
+    private val provisionalPattern = Regex("""\d{4}-\d{2}-\d{2} \d{2}:\d{2}""")
+
+    /** True for a blank title and for the date-based stand-in; null (unknown) counts as needing one. */
+    fun needsTitle(title: String?): Boolean = title.isNullOrBlank() || provisionalPattern.matches(title.trim())
+
     /** `shouldSyncOnLeave`: does leaving run any recognition at all. */
-    fun shouldSyncOnLeave(isNotePage: Boolean, strokeCount: Int, hasTags: Boolean, route: LeaveRoute): Boolean =
-        actionOnLeave(isNotePage, strokeCount, hasTags, route) != LeaveAction.None
+    fun shouldSyncOnLeave(
+        isNotePage: Boolean, strokeCount: Int, hasTags: Boolean, route: LeaveRoute, currentTitle: String? = null
+    ): Boolean = actionOnLeave(isNotePage, strokeCount, hasTags, route, currentTitle) != LeaveAction.None
 
     /** Language-neutral stand-in title (local date and time of creation), used until, or if, recognition gives one. */
     fun provisionalTitle(createdAt: Date): String = SimpleDateFormat("yyyy-MM-dd HH:mm", Locale.US).format(createdAt)
