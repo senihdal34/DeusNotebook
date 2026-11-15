@@ -27,4 +27,26 @@ class ExportedExcerptsTest {
 
     @Test fun `unrecognized placeholder is ignored`() =
         assertEquals("", ExportedExcerpts.excerptFrom(md("_Handwriting could not be recognized. See the page image below._")))
+
+    // ---- a note left by Back (recognised text) and later saved with Save & Exit (exported Markdown) ----
+
+    private fun withPage(block: (java.io.File, com.ethran.notable.data.db.Page, String) -> Unit) {
+        val dir = kotlin.io.path.createTempDirectory("vault").toFile()
+        try {
+            val page = com.ethran.notable.data.db.Page(notebookId = null, background = "inbox", createdAt = java.util.Date(1_700_000_000_000))
+            val stamp = java.text.SimpleDateFormat("yyyy-MM-dd-HH-mm-ss", java.util.Locale.US).format(page.createdAt)
+            block(dir, page, stamp)
+        } finally { dir.deleteRecursively() }
+    }
+
+    @Test fun `after Back only the recognised text gives the excerpt, without its title line`() = withPage { dir, page, _ ->
+        val map = ExportedExcerpts.load(dir, listOf(page)) { "Toplantı\nbütçe ve takvim" }
+        assertEquals("bütçe ve takvim", map[page.id])
+    }
+
+    @Test fun `after Save and Exit the exported Markdown wins over the recognised text, shown once`() = withPage { dir, page, stamp ->
+        java.io.File(dir, "Toplantı-$stamp.md").writeText(md("Toplantı\nkesin metin"))
+        val map = ExportedExcerpts.load(dir, listOf(page)) { "Toplantı\neski tanıma" }
+        assertEquals(mapOf(page.id to "kesin metin"), map)
+    }
 }

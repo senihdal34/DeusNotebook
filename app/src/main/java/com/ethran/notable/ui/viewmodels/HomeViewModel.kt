@@ -7,6 +7,7 @@ import com.ethran.notable.data.db.Page
 import com.ethran.notable.data.db.PageRepository
 import com.ethran.notable.data.db.PageTagRepository
 import com.ethran.notable.io.ExportedExcerpts
+import com.ethran.notable.io.SyncState
 import com.ethran.notable.io.TextSanitizer
 import com.ethran.notable.data.db.TagPriority
 import com.ethran.notable.data.db.TagPriorityDao
@@ -138,7 +139,11 @@ class HomeViewModel @Inject constructor(
         allJob?.cancel()
         allJob = viewModelScope.launch {
             try {
-                val next = withContext(Dispatchers.IO) { pagerForAllNotes(current.query).more(current.window) }
+                val (next, extra) = withContext(Dispatchers.IO) {
+                    val w = pagerForAllNotes(current.query).more(current.window)
+                    w to excerptsFor(w.items)
+                }
+                if (extra.isNotEmpty()) _uiState.update { it.copy(excerpts = it.excerpts + extra) }
                 _allNotes.update { it.copy(window = next, busy = false) }
             } catch (e: kotlinx.coroutines.CancellationException) {
                 throw e
@@ -178,10 +183,12 @@ class HomeViewModel @Inject constructor(
             try {
                 if (debounceMs > 0) delay(debounceMs)
                 val current = _allNotes.value
-                val next = withContext(Dispatchers.IO) {
+                val (next, extra) = withContext(Dispatchers.IO) {
                     val pager = pagerForAllNotes(current.query)
-                    if (keepWindow && current.window.ready) pager.reload(current.window) else pager.first()
+                    val w = if (keepWindow && current.window.ready) pager.reload(current.window) else pager.first()
+                    w to excerptsFor(w.items)
                 }
+                if (extra.isNotEmpty()) _uiState.update { it.copy(excerpts = it.excerpts + extra) }
                 _allNotes.update { it.copy(window = next, busy = false) }
             } catch (e: kotlinx.coroutines.CancellationException) {
                 throw e
@@ -189,6 +196,19 @@ class HomeViewModel @Inject constructor(
                 _allNotes.update { it.copy(busy = false) }
             }
         }
+    }
+
+    /**
+     * Excerpts of All notes cards that the Home load did not cover (it reads only the pinned, recent and topic notes).
+     * Same source as Home: the exported Markdown when there is one, else the text kept by a recognition on Back.
+     */
+    private fun excerptsFor(pages: List<Page>): Map<String, String> {
+        val known = _uiState.value.excerpts
+        val missing = pages.filter { it.id !in known }
+        if (missing.isEmpty()) return emptyMap()
+        return try {
+            ExportedExcerpts.load(ExportedExcerpts.inboxDir(GlobalAppSettings.current.obsidianInboxPath), missing)
+        } catch (e: Exception) { emptyMap() }
     }
 
     private val thumbRequested = HashSet<String>()
@@ -210,6 +230,10 @@ class HomeViewModel @Inject constructor(
 
     init {
         loadData()
+        // A note left by Back (or Save & Exit) is recognised in the background: once its title and excerpt are stored,
+        // reload Home (and the All notes list in place) so they show without leaving and re-entering Home. Collected
+        // here, not in a composable, so it also runs while the editor is on top of Home.
+        viewModelScope.launch { SyncState.finished.collect { loadData() } }
     }
 
     fun setInputTag(value: String) {

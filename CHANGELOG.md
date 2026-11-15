@@ -4,6 +4,7 @@
 
 - Planner pages show only Back, Pen (with its pop-up), Undo and Redo on the tool rail.
 - Leaving a note with ink by any route (rail Back, system back, gesture) now recognises the handwriting, so Home shows its title and excerpt instead of "Untitled". If recognition fails the title is the creation date and time. Only Save & Exit writes to the vault.
+- Home and the All notes list update by themselves when that recognition finishes, and All notes cards show the same excerpt as Home.
 
 ## 0.3.0 (2026-11-14)
 
