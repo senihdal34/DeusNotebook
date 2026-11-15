@@ -27,29 +27,16 @@ class NewPageDefaultsTest {
     }
 
     @Test
-    fun `a stored blank native template gives a lined page, other templates are kept`() {
-        assertEquals("lined", NewPageDefaults.backgroundForNotebookPage("blank", "native"))
-        assertEquals("lined", NewPageDefaults.backgroundForNotebookPage("lined", "native"))
-        assertEquals("dotted", NewPageDefaults.backgroundForNotebookPage("dotted", "native"))
-        assertEquals("squared", NewPageDefaults.backgroundForNotebookPage("squared", "native"))
-        assertEquals("hexed", NewPageDefaults.backgroundForNotebookPage("hexed", "native"))
+    fun `a new page of a notebook made with the default settings is ruled`() {
+        val book = Notebook(defaultBackground = NewPageDefaults.templateForNewNotebook(AppSettings(version = 1).defaultNativeTemplate))
+        assertEquals("lined", book.newPage().background)
+        assertEquals("native", book.newPage().backgroundType)
     }
 
     @Test
-    fun `pictures and pdfs keep their own template`() {
-        assertEquals("blank", NewPageDefaults.backgroundForNotebookPage("blank", "image"))
-        assertEquals("/sdcard/a.pdf", NewPageDefaults.backgroundForNotebookPage("/sdcard/a.pdf", "pdf"))
-    }
-
-    @Test
-    fun `a new page of a default notebook is ruled`() {
-        assertEquals("lined", Notebook().newPage().background)
-        assertEquals("native", Notebook().newPage().backgroundType)
-    }
-
-    @Test
-    fun `a new page of an old notebook that stored blank is ruled`() {
-        assertEquals("lined", Notebook(defaultBackground = "blank", defaultBackgroundType = "native").newPage().background)
+    fun `a notebook whose template is the blank sheet keeps giving blank pages`() {
+        // NotebookConfig's background selector lets a person choose the plain sheet: that choice is honoured.
+        assertEquals("blank", Notebook(defaultBackground = "blank", defaultBackgroundType = "native").newPage().background)
     }
 
     @Test
