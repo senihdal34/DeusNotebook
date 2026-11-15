@@ -747,21 +747,26 @@ private fun NotesMessage(text: String) =
 @Composable
 private fun NotesSearch(query: String, a: HomeActions) {
     val keyboard = LocalSoftwareKeyboardController.current
+    // The field keeps its own text: feeding it back from the ViewModel's flow lags a frame behind fast typing and
+    // drops or reorders letters. The ViewModel only gets each new value to filter the list.
+    var text by remember { mutableStateOf(query) }
+    LaunchedEffect(query) { if (query.isEmpty()) text = "" }
+    val change = { q: String -> text = q; a.setSearch(q) }
     Row(Modifier.fillMaxWidth().padding(bottom = 14.dp), verticalAlignment = Alignment.CenterVertically) {
         BasicTextField(
-            value = query, onValueChange = a.setSearch, singleLine = true,
+            value = text, onValueChange = change, singleLine = true,
             textStyle = TextStyle(fontFamily = Serif, fontSize = 22.sp, color = Ink), cursorBrush = SolidColor(Ink),
             keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
             keyboardActions = KeyboardActions(onSearch = { keyboard?.hide() }),
             modifier = Modifier.weight(1f).height(40.dp).clip(Pill).border(1.5.dp, Ink, Pill).padding(16.dp, 9.dp),
             decorationBox = { inner ->
-                if (query.isEmpty()) Text(stringResource(R.string.home_all_notes_search_hint), fontFamily = Serif, fontStyle = FontStyle.Italic, fontSize = 22.sp, color = Grey1)
+                if (text.isEmpty()) Text(stringResource(R.string.home_all_notes_search_hint), fontFamily = Serif, fontStyle = FontStyle.Italic, fontSize = 22.sp, color = Grey1)
                 inner()
             }
         )
-        if (query.isNotEmpty()) {
+        if (text.isNotEmpty()) {
             Spacer(Modifier.width(10.dp))
-            ActionChip(stringResource(R.string.home_all_notes_clear)) { a.setSearch("") }
+            ActionChip(stringResource(R.string.home_all_notes_clear)) { change("") }
         }
     }
 }
