@@ -189,7 +189,8 @@ fun HomeView(
         select = { tag -> viewModel.selectTopic(tag); hintScope.launch { listState.scrollToItem(0) } },
         moreNotes = { viewModel.openAllNotes(); hintScope.launch { listState.scrollToItem(0) } },
         closeAllNotes = viewModel::closeAllNotes,
-        setSearch = { q -> viewModel.setNotesSearch(q); hintScope.launch { listState.scrollToItem(0) } },
+        // No scroll per key: the search box sits at the top of the list, and a scroll on every letter costs a frame.
+        setSearch = viewModel::setNotesSearch,
         showMore = viewModel::showMoreNotes,
         ensureThumbs = viewModel::ensureThumbnails,
         toggleAdd = { adding = !adding },
@@ -749,12 +750,18 @@ private fun NotesSearch(query: String, a: HomeActions) {
     val keyboard = LocalSoftwareKeyboardController.current
     // The field keeps its own text: feeding it back from the ViewModel's flow lags a frame behind fast typing and
     // drops or reorders letters. The ViewModel only gets each new value to filter the list.
-    var text by remember { mutableStateOf(query) }
-    LaunchedEffect(query) { if (query.isEmpty()) text = "" }
-    val change = { q: String -> text = q; a.setSearch(q) }
+    // A TextFieldValue (not a String) keeps the keyboard's composition and cursor across a slow frame on e-ink.
+    var field by remember { mutableStateOf(androidx.compose.ui.text.input.TextFieldValue(query)) }
+    LaunchedEffect(query) { if (query.isEmpty() && field.text.isNotEmpty()) field = androidx.compose.ui.text.input.TextFieldValue("") }
+    val text = field.text
+    val change = { v: androidx.compose.ui.text.input.TextFieldValue ->
+        val changed = v.text != field.text
+        field = v
+        if (changed) a.setSearch(v.text)
+    }
     Row(Modifier.fillMaxWidth().padding(bottom = 14.dp), verticalAlignment = Alignment.CenterVertically) {
         BasicTextField(
-            value = text, onValueChange = change, singleLine = true,
+            value = field, onValueChange = change, singleLine = true,
             textStyle = TextStyle(fontFamily = Serif, fontSize = 22.sp, color = Ink), cursorBrush = SolidColor(Ink),
             keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
             keyboardActions = KeyboardActions(onSearch = { keyboard?.hide() }),
@@ -766,7 +773,7 @@ private fun NotesSearch(query: String, a: HomeActions) {
         )
         if (text.isNotEmpty()) {
             Spacer(Modifier.width(10.dp))
-            ActionChip(stringResource(R.string.home_all_notes_clear)) { change("") }
+            ActionChip(stringResource(R.string.home_all_notes_clear)) { change(androidx.compose.ui.text.input.TextFieldValue("")) }
         }
     }
 }
