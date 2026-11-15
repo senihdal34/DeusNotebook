@@ -88,6 +88,16 @@ import com.ethran.notable.activity.WritingActivityCard
 import com.ethran.notable.i18n.AppStrings
 import com.ethran.notable.ui.showHint
 import com.ethran.notable.ui.viewmodels.HomeSection
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
+import com.ethran.notable.ui.home.chunkRows
+import com.ethran.notable.ui.home.allNotesColumns
+import com.ethran.notable.ui.home.hiddenNotes
+import com.ethran.notable.ui.home.homeCardSlots
+import com.ethran.notable.ui.home.showMoreNotesPill
+import com.ethran.notable.ui.viewmodels.AllNotesUiState
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.combinedClickable
 import com.ethran.notable.navigation.NavigationDestination
@@ -97,6 +107,7 @@ import com.ethran.notable.ui.components.PagePreview
 import com.ethran.notable.ui.viewmodels.HomeUiState
 import com.ethran.notable.ui.viewmodels.HomeViewModel
 import java.io.File
+import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -130,6 +141,10 @@ fun HomeView(
     val state by viewModel.uiState.collectAsState()
     val selected by viewModel.selectedTopic.collectAsState()
     val section by viewModel.section.collectAsState()
+    val allNotes by viewModel.allNotes.collectAsState()
+    val allMode = section == HomeSection.Notes && allNotes.open
+    // Hoisted and saveable: coming back from a note lands on the same row of the All notes list.
+    val listState = rememberLazyListState()
     val hintScope = rememberCoroutineScope()
     val appContext = LocalContext.current.applicationContext
     val readingVm: com.ethran.notable.reading.ReadingViewModel = androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel()
@@ -171,7 +186,13 @@ fun HomeView(
         open = onOpenPage,
         settings = onSettings,
         newNote = onCreateNewPage,
-        select = viewModel::selectTopic,
+        select = { tag -> viewModel.selectTopic(tag); hintScope.launch { listState.scrollToItem(0) } },
+        moreNotes = { viewModel.openAllNotes(); hintScope.launch { listState.scrollToItem(0) } },
+        closeAllNotes = viewModel::closeAllNotes,
+        // No scroll per key: the search box sits at the top of the list, and a scroll on every letter costs a frame.
+        setSearch = viewModel::setNotesSearch,
+        showMore = viewModel::showMoreNotes,
+        ensureThumbs = viewModel::ensureThumbnails,
         toggleAdd = { adding = !adding },
         setInput = viewModel::setInputTag,
         addTopic = { viewModel.addTag(input); adding = false },
@@ -201,6 +222,8 @@ fun HomeView(
         }
     )
 
+    androidx.activity.compose.BackHandler(enabled = allMode) { viewModel.closeAllNotes() }
+
     BoxWithConstraints(Modifier.fillMaxSize().background(Paper)) {
         val landscape = maxWidth > maxHeight
         val scroll = rememberScrollState()
@@ -209,11 +232,20 @@ fun HomeView(
         val readingBoard = section == HomeSection.Reading
         Column(
             if (readingBoard) Modifier.fillMaxSize().padding(top = 14.dp)
+            else if (allMode) Modifier.fillMaxSize().padding(horizontal = 56.dp, vertical = 14.dp)
             else Modifier.fillMaxSize().verticalScroll(scroll).padding(horizontal = 56.dp, vertical = 14.dp)
         ) {
             if (readingBoard) Column(Modifier.padding(horizontal = 56.dp)) { Masthead(state, selected, section, landscape, actions, adding, input) }
-            else Masthead(state, selected, section, landscape, actions, adding, input)
-            if (readingBoard) {
+            else Masthead(state, selected, section, landscape, actions, adding, input, compact = allMode)
+            if (allMode) {
+                Row(Modifier.fillMaxWidth().weight(1f)) {
+                    AllNotesList(
+                        allNotes, state, selected, landscape, actions, listState,
+                        Modifier.weight(1f).padding(end = if (landscape) 36.dp else 0.dp)
+                    )
+                    if (landscape) Rail(state, selected, actions, scrollable = true)
+                }
+            } else if (readingBoard) {
                 val reading by readingVm.ui.collectAsState()
                 com.ethran.notable.reading.board.ReadingBoardView(
                     reading, onOpen = { book -> com.ethran.notable.reading.ReadingLauncher.open(appContext, book.path) },
@@ -227,12 +259,14 @@ fun HomeView(
                 Row(Modifier.fillMaxWidth().height(IntrinsicSize.Min)) {
                     Column(Modifier.weight(1f).padding(end = 36.dp)) {
                         Stories(shown, state, selected, landscape = true, actions = actions)
+                        MoreNotes(state, shown, selected, true, actions, Modifier.align(Alignment.CenterHorizontally))
                         WritingActivityCard(Modifier.fillMaxWidth().padding(top = 8.dp, bottom = 24.dp))
                     }
                     Rail(state, selected, actions)
                 }
             } else {
                 Stories(shown, state, selected, landscape = false, actions = actions)
+                MoreNotes(state, shown, selected, false, actions, Modifier.align(Alignment.CenterHorizontally))
                 NewNoteButton(actions, Modifier.align(Alignment.CenterHorizontally).padding(top = 26.dp, bottom = 20.dp))
                 WritingActivityCard(Modifier.fillMaxWidth().padding(top = 8.dp, bottom = 24.dp))
             }
@@ -245,6 +279,11 @@ private class HomeActions(
     val settings: () -> Unit,
     val newNote: () -> Unit,
     val select: (String?) -> Unit,
+    val moreNotes: () -> Unit,
+    val closeAllNotes: () -> Unit,
+    val setSearch: (String) -> Unit,
+    val showMore: () -> Unit,
+    val ensureThumbs: (List<String>) -> Unit,
     val toggleAdd: () -> Unit,
     val setInput: (String) -> Unit,
     val addTopic: () -> Unit,
@@ -293,11 +332,11 @@ private fun Rule(thickness: Dp = 1.5.dp, color: Color = Ink) =
 @Composable
 private fun Masthead(
     state: HomeUiState, selected: String?, section: HomeSection, landscape: Boolean,
-    a: HomeActions, adding: Boolean, input: String
+    a: HomeActions, adding: Boolean, input: String, compact: Boolean = false
 ) {
     val datePattern = stringResource(R.string.home_date_pattern)
     val date = remember(datePattern) { SimpleDateFormat(datePattern, AppStrings.locale).format(Date()) }
-    val total = (state.recentPages + state.pinnedPages).distinctBy { it.id }.size
+    val total = if (state.totalNotes > 0) state.totalNotes else (state.recentPages + state.pinnedPages).distinctBy { it.id }.size
     // Same header as the Weekly Planner page: logo and small title on the left, a small summary block on the right.
     Row(Modifier.fillMaxWidth().padding(bottom = 10.dp), verticalAlignment = Alignment.CenterVertically) {
         androidx.compose.foundation.Image(
@@ -323,7 +362,7 @@ private fun Masthead(
     Rule(5.dp)
     MainNav(section, a)
     if (section == HomeSection.Notes) {
-        PinnedStrip(state, a)
+        if (!compact) PinnedStrip(state, a)
         SectionNav(state, selected, a)
         if (adding) TopicInput(input, a)
     }
@@ -578,10 +617,10 @@ private fun Story(page: Page, state: HomeUiState, a: HomeActions, landscape: Boo
 // ---------- pinned notes, topic index, new note ----------
 
 @Composable
-private fun Rail(state: HomeUiState, selected: String?, a: HomeActions) {
+private fun Rail(state: HomeUiState, selected: String?, a: HomeActions, scrollable: Boolean = false) {
     Row(Modifier.width(350.dp).fillMaxHeight()) {
         Box(Modifier.width(1.5.dp).fillMaxHeight().background(Ink))
-        Column(Modifier.padding(start = 28.dp)) {
+        Column(Modifier.then(if (scrollable) Modifier.verticalScroll(rememberScrollState()) else Modifier).padding(start = 28.dp)) {
             Caps(stringResource(R.string.home_topics), 14, Grey1, FontWeight.Bold, Modifier.padding(top = 16.dp, bottom = 8.dp))
             Rule()
             if (state.topicGroups.isEmpty()) {
@@ -609,6 +648,133 @@ private fun Rail(state: HomeUiState, selected: String?, a: HomeActions) {
 private fun NewNoteButton(a: HomeActions, modifier: Modifier = Modifier) {
     Box(modifier.border(BorderStroke(2.5.dp, Ink)).tap(a.newNote).padding(horizontal = 36.dp, vertical = 16.dp)) {
         Caps(stringResource(R.string.home_new_note), 18, Ink, FontWeight.Bold)
+    }
+}
+
+// ---------- more notes: pill on Home, All notes list ----------
+
+/** Hairline pill under the notes grid; only there when some notes are not on the grid. */
+@Composable
+private fun MoreNotes(state: HomeUiState, shown: List<Page>, selected: String?, landscape: Boolean, a: HomeActions, modifier: Modifier) {
+    val total = if (selected == null) state.totalNotes else shown.size
+    val cards = minOf(homeCardSlots(landscape), shown.size)
+    if (!showMoreNotesPill(total, cards)) return
+    Box(modifier.padding(top = 22.dp)) { PillButton(stringResource(R.string.home_more_notes, hiddenNotes(total, cards)), a.moreNotes) }
+}
+
+@Composable
+private fun PillButton(label: String, onClick: () -> Unit) {
+    Box(
+        Modifier.height(44.dp).clip(Pill).border(1.5.dp, Ink, Pill).tap(onClick).padding(horizontal = 30.dp),
+        contentAlignment = Alignment.Center
+    ) { Caps(label, 15, Ink, FontWeight.Bold) }
+}
+
+/**
+ * Every note, newest first, as a paged grid of the Home cards. A lazy list: only the rows on screen are composed,
+ * and only they ask for missing thumbnails.
+ */
+@Composable
+private fun AllNotesList(
+    all: AllNotesUiState, state: HomeUiState, selected: String?, landscape: Boolean, a: HomeActions,
+    listState: androidx.compose.foundation.lazy.LazyListState, modifier: Modifier
+) {
+    val columns = allNotesColumns(landscape)
+    val rows = remember(all.window.items, columns) { chunkRows(all.window.items, columns) }
+    val searching = all.query.isNotBlank()
+    LazyColumn(state = listState, modifier = modifier.fillMaxSize()) {
+        item(key = "header") {
+            Row(Modifier.fillMaxWidth().padding(top = 16.dp, bottom = 12.dp), verticalAlignment = Alignment.CenterVertically) {
+                Caps(
+                    if (searching) stringResource(R.string.home_all_notes_found, all.window.total)
+                    else stringResource(R.string.home_all_notes_title, all.window.total),
+                    16, Ink, FontWeight.Bold, Modifier.weight(1f)
+                )
+                PillButton(stringResource(R.string.home_all_notes_back), a.closeAllNotes)
+            }
+        }
+        item(key = "search") { NotesSearch(all.query, a) }
+        item(key = "rule") { Rule() }
+        if (!all.window.ready) {
+            item(key = "loading") { NotesMessage(stringResource(R.string.home_all_notes_loading)) }
+        } else if (rows.isEmpty()) {
+            item(key = "empty") {
+                NotesMessage(
+                    when {
+                        searching -> stringResource(R.string.home_all_notes_no_match, all.query.trim())
+                        selected != null -> stringResource(R.string.home_no_notes_in_topic, selected)
+                        else -> stringResource(R.string.home_no_notes)
+                    }
+                )
+            }
+        }
+        itemsIndexed(rows, key = { _, row -> row.first().id }) { _, row ->
+            val ids = remember(row) { row.map { it.id } }
+            LaunchedEffect(ids) { a.ensureThumbs(ids) }
+            Row(Modifier.fillMaxWidth().height(IntrinsicSize.Min)) {
+                for (i in 0 until columns) {
+                    if (i > 0) {
+                        Spacer(Modifier.width(22.dp))
+                        Box(Modifier.width(1.5.dp).fillMaxHeight().background(Grey2))
+                        Spacer(Modifier.width(22.dp))
+                    }
+                    val page = row.getOrNull(i)
+                    Column(Modifier.weight(1f).padding(top = 20.dp, bottom = 22.dp)) {
+                        if (page != null) Story(page, state, a, landscape)
+                    }
+                }
+            }
+            Rule(1.dp, Grey2)
+        }
+        if (all.window.hasMore) {
+            item(key = "more") {
+                Box(Modifier.fillMaxWidth().padding(vertical = 26.dp), contentAlignment = Alignment.Center) {
+                    PillButton(
+                        if (all.busy) stringResource(R.string.home_all_notes_loading)
+                        else stringResource(R.string.home_all_notes_show_more, all.window.remaining), a.showMore
+                    )
+                }
+            }
+        }
+        item(key = "end") { Spacer(Modifier.height(40.dp)) }
+    }
+}
+
+@Composable
+private fun NotesMessage(text: String) =
+    Text(text, fontFamily = Serif, fontStyle = FontStyle.Italic, fontSize = 26.sp, color = Grey1, modifier = Modifier.padding(vertical = 40.dp))
+
+/** Compact search box: filters the list by title or tag text as the person types. */
+@Composable
+private fun NotesSearch(query: String, a: HomeActions) {
+    val keyboard = LocalSoftwareKeyboardController.current
+    // The field keeps its own text: feeding it back from the ViewModel's flow lags a frame behind fast typing and
+    // drops or reorders letters. The ViewModel only gets each new value to filter the list.
+    // A TextFieldValue (not a String) keeps the keyboard's composition and cursor across a slow frame on e-ink.
+    var field by remember { mutableStateOf(androidx.compose.ui.text.input.TextFieldValue(query)) }
+    LaunchedEffect(query) { if (query.isEmpty() && field.text.isNotEmpty()) field = androidx.compose.ui.text.input.TextFieldValue("") }
+    val text = field.text
+    val change = { v: androidx.compose.ui.text.input.TextFieldValue ->
+        val changed = v.text != field.text
+        field = v
+        if (changed) a.setSearch(v.text)
+    }
+    Row(Modifier.fillMaxWidth().padding(bottom = 14.dp), verticalAlignment = Alignment.CenterVertically) {
+        BasicTextField(
+            value = field, onValueChange = change, singleLine = true,
+            textStyle = TextStyle(fontFamily = Serif, fontSize = 22.sp, color = Ink), cursorBrush = SolidColor(Ink),
+            keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
+            keyboardActions = KeyboardActions(onSearch = { keyboard?.hide() }),
+            modifier = Modifier.weight(1f).height(40.dp).clip(Pill).border(1.5.dp, Ink, Pill).padding(16.dp, 9.dp),
+            decorationBox = { inner ->
+                if (text.isEmpty()) Text(stringResource(R.string.home_all_notes_search_hint), fontFamily = Serif, fontStyle = FontStyle.Italic, fontSize = 22.sp, color = Grey1)
+                inner()
+            }
+        )
+        if (text.isNotEmpty()) {
+            Spacer(Modifier.width(10.dp))
+            ActionChip(stringResource(R.string.home_all_notes_clear)) { change(androidx.compose.ui.text.input.TextFieldValue("")) }
+        }
     }
 }
 

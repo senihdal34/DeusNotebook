@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="home_more_notes">Więcej notatek · %1$d</string>
+    <string name="home_all_notes_title">Wszystkie notatki · %1$d</string>
+    <string name="home_all_notes_found">Znaleziono: %1$d</string>
+    <string name="home_all_notes_back">Wstecz</string>
+    <string name="home_all_notes_search_hint">Szukaj w tytule lub etykiecie…</string>
+    <string name="home_all_notes_clear">Wyczyść</string>
+    <string name="home_all_notes_show_more">Pokaż więcej · %1$d</string>
+    <string name="home_all_notes_no_match">Brak notatek pasujących do „%1$s”.</string>
+    <string name="home_all_notes_loading">Wczytywanie…</string>
+</resources>

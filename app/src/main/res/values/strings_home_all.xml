@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="home_more_notes">More notes · %1$d</string>
+    <string name="home_all_notes_title">All notes · %1$d</string>
+    <string name="home_all_notes_found">%1$d found</string>
+    <string name="home_all_notes_back">Back</string>
+    <string name="home_all_notes_search_hint">Search title or tag…</string>
+    <string name="home_all_notes_clear">Clear</string>
+    <string name="home_all_notes_show_more">Show more · %1$d</string>
+    <string name="home_all_notes_no_match">No notes match “%1$s”.</string>
+    <string name="home_all_notes_loading">Loading…</string>
+</resources>

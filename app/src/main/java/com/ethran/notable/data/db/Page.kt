@@ -91,6 +91,18 @@ interface PageDao {
     @Query("SELECT * FROM page WHERE pinned = 0 AND background NOT LIKE 'planner-%' ORDER BY createdAt DESC LIMIT :limit")
     suspend fun getRecentPagesList(limit: Int = 10): List<Page>
 
+    // --- "All notes" list on Home: every normal note (favourites included, planner pages never), newest first ---
+    // The id breaks ties so LIMIT/OFFSET pages never overlap or skip when notes share a creation time.
+    @Query("SELECT * FROM page WHERE background NOT LIKE 'planner-%' ORDER BY createdAt DESC, id DESC LIMIT :limit OFFSET :offset")
+    suspend fun getNotesPage(limit: Int, offset: Int): List<Page>
+
+    @Query("SELECT COUNT(*) FROM page WHERE background NOT LIKE 'planner-%'")
+    suspend fun countNotes(): Int
+
+    /** Every normal note, newest first: the pool the text search filters in memory. */
+    @Query("SELECT * FROM page WHERE background NOT LIKE 'planner-%' ORDER BY createdAt DESC, id DESC")
+    suspend fun getAllNotesList(): List<Page>
+
     @Query("UPDATE page SET title = :title WHERE id = :pageId")
     suspend fun updateTitle(pageId: String, title: String)
 
@@ -159,6 +171,13 @@ class PageRepository @Inject constructor(
     suspend fun getPinnedPagesList(): List<Page> = db.getPinnedPagesList()
 
     suspend fun getRecentPagesList(limit: Int = 10): List<Page> = db.getRecentPagesList(limit)
+
+    /** One window of the "All notes" list: [limit] notes after the first [offset], newest first. */
+    suspend fun getNotesPage(limit: Int, offset: Int): List<Page> = db.getNotesPage(limit, offset)
+
+    suspend fun countNotes(): Int = db.countNotes()
+
+    suspend fun getAllNotesList(): List<Page> = db.getAllNotesList()
 
     suspend fun updateTitle(pageId: String, title: String) {
         db.updateTitle(pageId, title)
