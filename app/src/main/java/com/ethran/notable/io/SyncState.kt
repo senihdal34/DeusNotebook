@@ -115,7 +115,8 @@ object SyncState {
         context: Context,
         exportEngine: ExportEngine
     ): Boolean {
-        if (appRepository.pageRepository.getById(pageId) == null) {
+        val page = appRepository.pageRepository.getById(pageId)
+        if (page == null) {
             log.i("Page $pageId is gone (deleted), nothing to do")
             return false
         }
@@ -123,7 +124,7 @@ object SyncState {
         val hasTags = tags.isNotEmpty() || appRepository.pageTags.get(pageId).isNotEmpty()
         val route = if (export) LeaveRoute.SaveAndExit else LeaveRoute.Other
         /** True when recognition or export ran, so the title or excerpt may have changed. */
-        return when (NoteLeave.actionOnLeave(isNotePage = true, strokeCount = strokeCount, hasTags = hasTags, route = route)) {
+        return when (NoteLeave.actionOnLeave(isNotePage = true, strokeCount = strokeCount, hasTags = hasTags, route = route, currentTitle = page.title)) {
             LeaveAction.None -> { log.i("Nothing to do for page $pageId (no ink)"); false }
             LeaveAction.Recognise -> {
                 InboxSyncEngine.recognisePage(appRepository, pageId, context)

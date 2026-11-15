@@ -167,4 +167,15 @@ class RecognisedTextStoreTest {
             dir.deleteRecursively()
         }
     }
+
+    @Test fun aPlainLeaveRecognisesOnlyNotesWithoutARealTitle() {
+        fun act(title: String?) = NoteLeave.actionOnLeave(true, 5, false, LeaveRoute.RailBack, title)
+        assertEquals(LeaveAction.Recognise, act(""))
+        assertEquals(LeaveAction.Recognise, act("   "))
+        assertEquals(LeaveAction.Recognise, act(null))
+        assertEquals(LeaveAction.Recognise, act("2026-11-15 09:05"))
+        assertEquals(LeaveAction.None, act("Weekend plan"))
+        // Save & Exit still exports whatever the title is
+        assertEquals(LeaveAction.Export, NoteLeave.actionOnLeave(true, 5, false, LeaveRoute.SaveAndExit, "Weekend plan"))
+    }
 }
