@@ -14,9 +14,14 @@ import com.ethran.notable.data.datastore.GlobalAppSettings
 import com.ethran.notable.io.ThumbnailGenerator
 import com.ethran.notable.io.VaultTagScanner
 import com.ethran.notable.planner.PlannerService
+import com.ethran.notable.ui.home.AllNotesPager
+import com.ethran.notable.ui.home.AllNotesWindow
+import com.ethran.notable.ui.home.filterNotes
+import com.ethran.notable.ui.home.memoryPager
 import java.io.File
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -45,7 +50,18 @@ data class HomeUiState(
     /** Page id -> tags attached from Home (stored apart from the #tag boxes drawn in a note). */
     val pageTags: Map<String, List<String>> = emptyMap(),
     /** Page id -> first lines of its exported note (only pages that have been exported). */
-    val excerpts: Map<String, String> = emptyMap()
+    val excerpts: Map<String, String> = emptyMap(),
+    /** Every normal note (favourites included, planner pages not): the count behind "More notes". */
+    val totalNotes: Int = 0
+)
+
+/** The "All notes" list on Home: closed, or open with the notes loaded so far and the search text. */
+data class AllNotesUiState(
+    val open: Boolean = false,
+    val query: String = "",
+    val window: AllNotesWindow = AllNotesWindow(),
+    /** A "Show more" load is running. */
+    val busy: Boolean = false
 )
 
 @HiltViewModel
@@ -65,7 +81,10 @@ class HomeViewModel @Inject constructor(
         HomeSectionMemory.last ?: HomeSection.Notes
     )
     val section: StateFlow<HomeSection> = _section.asStateFlow()
-    fun selectSection(s: HomeSection) { HomeSectionMemory.last = s; _section.value = s }
+    fun selectSection(s: HomeSection) {
+        HomeSectionMemory.last = s; _section.value = s
+        if (s != HomeSection.Notes) closeAllNotes()
+    }
 
     /** Creates the planner pages for this and the coming weeks if needed, then hands back the current week. */
     fun openPlanner(onReady: (bookId: String, pageId: String) -> Unit) {
@@ -83,7 +102,107 @@ class HomeViewModel @Inject constructor(
     private val _selectedTopic = MutableStateFlow<String?>(null)
     val selectedTopic: StateFlow<String?> = _selectedTopic.asStateFlow()
 
-    fun selectTopic(tag: String?) { _selectedTopic.value = tag }
+    fun selectTopic(tag: String?) {
+        _selectedTopic.value = tag
+        reloadAllNotes(keepWindow = false)
+    }
+
+    // ---------- All notes list ----------
+
+    private val _allNotes = MutableStateFlow(AllNotesUiState())
+    val allNotes: StateFlow<AllNotesUiState> = _allNotes.asStateFlow()
+    private var allJob: kotlinx.coroutines.Job? = null
+
+    /** Every normal note, read once when a search starts and filtered in memory; dropped whenever Home reloads. */
+    @Volatile private var searchPool: List<Page>? = null
+
+    fun openAllNotes() {
+        _allNotes.value = AllNotesUiState(open = true)
+        reloadAllNotes(keepWindow = false)
+    }
+
+    fun closeAllNotes() {
+        allJob?.cancel()
+        _allNotes.value = AllNotesUiState()
+    }
+
+    fun setNotesSearch(query: String) {
+        _allNotes.update { it.copy(query = query) }
+        reloadAllNotes(keepWindow = false, debounceMs = 250)
+    }
+
+    fun showMoreNotes() {
+        val current = _allNotes.value
+        if (!current.open || !current.window.hasMore || current.busy) return
+        _allNotes.update { it.copy(busy = true) }
+        allJob?.cancel()
+        allJob = viewModelScope.launch {
+            try {
+                val next = withContext(Dispatchers.IO) { pagerForAllNotes(current.query).more(current.window) }
+                _allNotes.update { it.copy(window = next, busy = false) }
+            } catch (e: kotlinx.coroutines.CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                _allNotes.update { it.copy(busy = false) }
+            }
+        }
+    }
+
+    /** Where the list reads from: the paged database query, or a list in memory for a topic and for a search. */
+    private suspend fun pagerForAllNotes(query: String): AllNotesPager {
+        val state = _uiState.value
+        val topic = _selectedTopic.value
+        val tagsByPage = HashMap<String, MutableList<String>>()
+        state.pageTags.forEach { (id, tags) -> tagsByPage.getOrPut(id) { ArrayList() }.addAll(tags) }
+        state.topicGroups.forEach { g -> g.pages.forEach { tagsByPage.getOrPut(it.id) { ArrayList() }.add(g.tag) } }
+        val titleOf = { p: Page -> TextSanitizer.cleanLine(p.title) }
+        val tagsOf = { p: Page -> tagsByPage[p.id].orEmpty() }
+        if (topic != null) {
+            val pages = state.topicGroups.firstOrNull { it.tag == topic }?.pages.orEmpty()
+            return memoryPager(filterNotes(pages, query, titleOf, tagsOf))
+        }
+        if (query.isBlank()) {
+            return AllNotesPager(
+                count = { pageRepository.countNotes() },
+                fetch = { limit, offset -> pageRepository.getNotesPage(limit, offset) }
+            )
+        }
+        val pool = searchPool ?: pageRepository.getAllNotesList().also { searchPool = it }
+        return memoryPager(filterNotes(pool, query, titleOf, tagsOf))
+    }
+
+    private fun reloadAllNotes(keepWindow: Boolean, debounceMs: Long = 0) {
+        allJob?.cancel()
+        if (!_allNotes.value.open) return
+        allJob = viewModelScope.launch {
+            try {
+                if (debounceMs > 0) delay(debounceMs)
+                val current = _allNotes.value
+                val next = withContext(Dispatchers.IO) {
+                    val pager = pagerForAllNotes(current.query)
+                    if (keepWindow && current.window.ready) pager.reload(current.window) else pager.first()
+                }
+                _allNotes.update { it.copy(window = next, busy = false) }
+            } catch (e: kotlinx.coroutines.CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                _allNotes.update { it.copy(busy = false) }
+            }
+        }
+    }
+
+    private val thumbRequested = HashSet<String>()
+
+    /** Thumbnails of the cards that are on screen: made once, off the main thread, never for cards that were not shown. */
+    fun ensureThumbnails(pageIds: List<String>) {
+        val todo = synchronized(thumbRequested) { pageIds.filter { thumbRequested.add(it) } }
+        if (todo.isEmpty()) return
+        viewModelScope.launch(Dispatchers.IO) {
+            for (id in todo) {
+                if (thumbnailGenerator.ensure(id)) _uiState.update { it.copy(thumbRevision = it.thumbRevision + 1) }
+            }
+        }
+    }
 
     private val _inputTag = MutableStateFlow("")
     val inputTag: StateFlow<String> = _inputTag.asStateFlow()
@@ -113,6 +232,7 @@ class HomeViewModel @Inject constructor(
                     // Single-shot reads
                     val pinned = try { pageRepository.getPinnedPagesList() } catch (e: Exception) { emptyList() }
                     val recent = try { pageRepository.getRecentPagesList(10) } catch (e: Exception) { emptyList() }
+                    val totalNotes = try { pageRepository.countNotes() } catch (e: Exception) { 0 }
 
                     // Combine annotation tags + manually added tags (TagPriority)
                     val annotTags = try { annotationRepository.getDistinctTags() } catch (e: Exception) { emptyList() }
@@ -139,9 +259,11 @@ class HomeViewModel @Inject constructor(
                     _uiState.update {
                         it.copy(
                             pinnedPages = pinned, recentPages = recent, topicGroups = groups,
-                            isLoading = false, pageTags = pageTags, excerpts = excerpts
+                            isLoading = false, pageTags = pageTags, excerpts = excerpts, totalNotes = totalNotes
                         )
                     }
+                    searchPool = null
+                    reloadAllNotes(keepWindow = true)
                     generateMissingThumbnails(allPages.map { it.id })
                 }
             } catch (e: kotlinx.coroutines.CancellationException) {

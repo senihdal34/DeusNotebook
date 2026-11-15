@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="home_more_notes">Daha fazla not · %1$d</string>
+    <string name="home_all_notes_title">Tüm notlar · %1$d</string>
+    <string name="home_all_notes_found">%1$d sonuç</string>
+    <string name="home_all_notes_back">Geri</string>
+    <string name="home_all_notes_search_hint">Başlık veya etiket ara…</string>
+    <string name="home_all_notes_clear">Temizle</string>
+    <string name="home_all_notes_show_more">Daha fazla göster · %1$d</string>
+    <string name="home_all_notes_no_match">“%1$s” ile eşleşen not yok.</string>
+    <string name="home_all_notes_loading">Yükleniyor…</string>
+</resources>

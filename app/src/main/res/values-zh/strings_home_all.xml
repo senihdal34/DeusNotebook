@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="home_more_notes">更多笔记 · %1$d</string>
+    <string name="home_all_notes_title">全部笔记 · %1$d</string>
+    <string name="home_all_notes_found">找到 %1$d 条</string>
+    <string name="home_all_notes_back">返回</string>
+    <string name="home_all_notes_search_hint">搜索标题或标签…</string>
+    <string name="home_all_notes_clear">清除</string>
+    <string name="home_all_notes_show_more">显示更多 · %1$d</string>
+    <string name="home_all_notes_no_match">没有与“%1$s”匹配的笔记。</string>
+    <string name="home_all_notes_loading">加载中…</string>
+</resources>
