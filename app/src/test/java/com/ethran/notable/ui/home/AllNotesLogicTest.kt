@@ -130,7 +130,6 @@ class AllNotesLogicTest {
         assertEquals("toplanti notlari", foldForSearch("  TOPLANTI   Notları "))
         assertEquals("istanbul", foldForSearch("İstanbul"))
         assertEquals("cagri", foldForSearch("Çağrı"))
-        assertEquals("zolc", foldForSearch("Żółć").replace("l", "l").let { "zolc" })
     }
 
     @Test fun everyWordMustMatchTitleOrTag() {
