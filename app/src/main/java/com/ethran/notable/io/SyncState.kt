@@ -108,6 +108,10 @@ object SyncState {
         context: Context,
         exportEngine: ExportEngine
     ) {
+        if (appRepository.pageRepository.getById(pageId) == null) {
+            log.i("Page $pageId is gone (deleted), nothing to do")
+            return
+        }
         val strokeCount = appRepository.pageRepository.getWithStrokeById(pageId).strokes.size
         val hasTags = tags.isNotEmpty() || appRepository.pageTags.get(pageId).isNotEmpty()
         val route = if (export) LeaveRoute.SaveAndExit else LeaveRoute.Other

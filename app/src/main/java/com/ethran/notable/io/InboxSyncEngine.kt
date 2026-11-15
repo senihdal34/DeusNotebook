@@ -148,6 +148,8 @@ object InboxSyncEngine {
         if (provisional != null) setTitle(appRepository, pageId, provisional)
         val annotations = appRepository.annotationRepository.getByPageId(pageId)
         val text = recogniseText(context, withStrokes.strokes, annotations, ensureGlossaryFile = false)
+        // The note may have been deleted while the recogniser ran: keep nothing for it.
+        if (appRepository.pageRepository.getById(pageId) == null) return
         saveRecognition(appRepository, page.copy(title = provisional ?: page.title), text)
     }
 

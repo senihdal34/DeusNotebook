@@ -133,6 +133,22 @@ class RecognisedTextStoreTest {
         }
     }
 
+    @Test fun deletingAPageForgetsItsText() {
+        val dir = kotlin.io.path.createTempDirectory("rec").toFile()
+        try {
+            RecognisedTextStore.dir = dir
+            RecognisedTextStore.save("page-1", "Başlık")
+            RecognisedTextStore.save("page-2", "Diğer")
+            RecognisedTextStore.delete("page-1")
+            assertNull(RecognisedTextStore.read("page-1"))
+            assertEquals("Diğer", RecognisedTextStore.read("page-2"))
+            RecognisedTextStore.delete("never-saved")
+        } finally {
+            RecognisedTextStore.dir = null
+            dir.deleteRecursively()
+        }
+    }
+
     @Test fun withoutAFolderNothingHappens() {
         RecognisedTextStore.dir = null
         RecognisedTextStore.save("p", "x")

@@ -25,4 +25,9 @@ object RecognisedTextStore {
 
     fun read(pageId: String): String? =
         try { file(pageId)?.takeIf { it.isFile }?.readText()?.takeIf { it.isNotBlank() } } catch (_: Exception) { null }
+
+    /** Forgets the text of a deleted page. */
+    fun delete(pageId: String) {
+        try { file(pageId)?.delete() } catch (_: Exception) { }
+    }
 }

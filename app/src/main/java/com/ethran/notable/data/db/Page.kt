@@ -173,7 +173,9 @@ class PageRepository @Inject constructor(
     }
 
     suspend fun delete(pageId: String) {
-        return db.delete(pageId)
+        db.delete(pageId)
+        // The recognised text of a note lives in private storage, apart from the database: it goes with the page.
+        com.ethran.notable.io.RecognisedTextStore.delete(pageId)
     }
 
 
