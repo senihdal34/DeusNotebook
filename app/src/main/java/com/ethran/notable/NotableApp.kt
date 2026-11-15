@@ -12,6 +12,7 @@ class NotableApp : Application() {
         super.onCreate()
         com.ethran.notable.i18n.AppStrings.init(this)
         RxManager.Builder.initAppContext(this)
+        com.ethran.notable.io.RecognisedTextStore.dir = java.io.File(filesDir, "recognised")
         checkHiddenApiBypass()
     }
 

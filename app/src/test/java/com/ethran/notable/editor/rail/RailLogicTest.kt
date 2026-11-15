@@ -94,8 +94,12 @@ class RailLayoutTest {
     @Test fun backAndToolsAreAlwaysThere() {
         for (ctx in listOf(RailContext(), RailContext(isInboxPage = true, inBook = false), RailContext(isPlannerPage = true))) {
             val all = items(ctx)
-            for (i in listOf(RailItem.Back, RailItem.Pen, RailItem.Eraser, RailItem.Highlighter, RailItem.Lasso, RailItem.Line,
-                RailItem.Undo, RailItem.Redo, RailItem.More)) assertTrue("$i in $ctx", i in all)
+            for (i in listOf(RailItem.Back, RailItem.Pen, RailItem.Undo, RailItem.Redo)) assertTrue("$i in $ctx", i in all)
+        }
+        // Notes and inbox pages keep every tool and the more menu.
+        for (ctx in listOf(RailContext(), RailContext(isInboxPage = true, inBook = false))) {
+            val all = items(ctx)
+            for (i in listOf(RailItem.Eraser, RailItem.Highlighter, RailItem.Lasso, RailItem.Line, RailItem.More)) assertTrue("$i in $ctx", i in all)
         }
     }
 
@@ -106,11 +110,30 @@ class RailLayoutTest {
         assertEquals(2, RailLayout.topGroups(RailContext(inBook = false)).size)
     }
 
-    @Test fun aPlannerPageHasNoPageGroupNewPageOrStar() {
-        val all = items(RailContext(isPlannerPage = true))
-        for (i in listOf(RailItem.PageCounter, RailItem.PrevPage, RailItem.NextPage, RailItem.NewPage, RailItem.Favorite)) {
-            assertFalse("$i", i in all)
+    @Test fun aPlannerPageHasOnlyBackPenUndoRedo() {
+        for (inBook in listOf(true, false)) {
+            val ctx = RailContext(isPlannerPage = true, inBook = inBook)
+            assertEquals(listOf(RailItem.Back, RailItem.Pen, RailItem.Undo, RailItem.Redo), items(ctx))
+            assertEquals(listOf(listOf(RailItem.Back, RailItem.Pen), listOf(RailItem.Undo, RailItem.Redo)), RailLayout.topGroups(ctx))
+            assertTrue(RailLayout.bottom(ctx).isEmpty())
+            for (i in listOf(RailItem.Eraser, RailItem.Highlighter, RailItem.Lasso, RailItem.Line, RailItem.Favorite, RailItem.NewPage,
+                RailItem.More, RailItem.PageCounter, RailItem.PrevPage, RailItem.NextPage)) assertFalse("$i", i in items(ctx))
         }
+    }
+
+    @Test fun plannerPageSetDoesNotDependOnAnythingElseInTheContext() {
+        val plain = items(RailContext(isPlannerPage = true))
+        assertEquals(plain, items(RailContext(isPlannerPage = true, isInboxPage = true, clipboardHasContent = true, viewMoved = true)))
+    }
+
+    @Test fun plannerPagesDropAToolLeftOverFromANote() {
+        assertEquals(Mode.Draw, PlannerTools.mode(Mode.Select))
+        assertEquals(Mode.Draw, PlannerTools.mode(Mode.Line))
+        assertEquals(Mode.Draw, PlannerTools.mode(Mode.Draw))
+        // Erase stays: scribble to erase and the double tap toggle still work and switch back.
+        assertEquals(Mode.Erase, PlannerTools.mode(Mode.Erase))
+        assertEquals(Pen.BALLPEN, PlannerTools.pen(Pen.MARKER))
+        assertEquals(Pen.FOUNTAIN, PlannerTools.pen(Pen.FOUNTAIN))
     }
 
     @Test fun pasteOnlyWithClipboardAndResetOnlyWhenTheViewMoved() {

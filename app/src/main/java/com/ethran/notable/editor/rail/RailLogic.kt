@@ -1,5 +1,6 @@
 package com.ethran.notable.editor.rail
 
+import com.ethran.notable.editor.state.Mode
 import com.ethran.notable.editor.utils.Eraser
 import com.ethran.notable.editor.utils.NamedSettings
 import com.ethran.notable.editor.utils.Pen
@@ -20,7 +21,7 @@ enum class MoreItem { InsertImage, Paste, PageBackground, ResetView, Export, Cle
 /** What decides which buttons are shown. */
 data class RailContext(
     val isInboxPage: Boolean = false,
-    /** Planner pages (background starts with `planner-`) have their own navigation, so no page counter, no "new page", no star. */
+    /** Planner pages (background starts with `planner-`) show only back, pen, undo and redo. */
     val isPlannerPage: Boolean = false,
     /** The page belongs to a notebook (single pages have no "n of N"). */
     val inBook: Boolean = true,
@@ -30,17 +31,24 @@ data class RailContext(
 )
 
 object RailLayout {
-    /** Groups from the top of the rail; a thin rule separates the groups. */
-    fun topGroups(ctx: RailContext): List<List<RailItem>> = buildList {
-        add(listOf(RailItem.Back, RailItem.Pen, RailItem.Eraser, RailItem.Highlighter, RailItem.Lasso, RailItem.Line))
-        add(listOf(RailItem.Undo, RailItem.Redo))
-        if (ctx.inBook && !ctx.isPlannerPage) add(listOf(RailItem.PageCounter, RailItem.PrevPage, RailItem.NextPage))
-    }
+    /**
+     * Groups from the top of the rail; a thin rule separates the groups. A planner page (week, day, month, quarter, year)
+     * is written with the pen only: no marker, eraser, lasso, line, page group, new page, star or more menu. The pen
+     * gestures that exist today (scribble to erase, the eraser double tap) do not depend on rail buttons and stay.
+     */
+    fun topGroups(ctx: RailContext): List<List<RailItem>> =
+        if (ctx.isPlannerPage) listOf(listOf(RailItem.Back, RailItem.Pen), listOf(RailItem.Undo, RailItem.Redo))
+        else buildList {
+            add(listOf(RailItem.Back, RailItem.Pen, RailItem.Eraser, RailItem.Highlighter, RailItem.Lasso, RailItem.Line))
+            add(listOf(RailItem.Undo, RailItem.Redo))
+            if (ctx.inBook) add(listOf(RailItem.PageCounter, RailItem.PrevPage, RailItem.NextPage))
+        }
 
-    /** Buttons pinned to the bottom of the rail. */
+    /** Buttons pinned to the bottom of the rail (none on planner pages, so the more menu is out of reach there). */
     fun bottom(ctx: RailContext): List<RailItem> = buildList {
-        if (ctx.inBook && !ctx.isPlannerPage) add(RailItem.NewPage)
-        if (!ctx.isPlannerPage) add(RailItem.Favorite)
+        if (ctx.isPlannerPage) return@buildList
+        if (ctx.inBook) add(RailItem.NewPage)
+        add(RailItem.Favorite)
         add(RailItem.More)
     }
 
@@ -59,6 +67,19 @@ object RailLayout {
         add(MoreItem.BugReport)
         add(MoreItem.HideToolbar)
     }
+}
+
+/**
+ * Planner pages have no lasso, line or highlighter button, so a tool saved from a note page (selection, line, marker)
+ * would leave the user unable to write. This maps such a state back to the pen. Erase stays: the eraser gestures
+ * (scribble to erase, the double tap toggle) still switch to it and back.
+ */
+object PlannerTools {
+    /** The mode to use on a planner page for a saved [mode]. */
+    fun mode(mode: Mode): Mode = if (mode == Mode.Select || mode == Mode.Line) Mode.Draw else mode
+
+    /** The pen to use on a planner page for a saved [pen]: the marker has no button there, so it becomes the ballpoint. */
+    fun pen(pen: Pen): Pen = if (pen == Pen.MARKER) Pen.BALLPEN else pen
 }
 
 /** Result of mapping a saved editor state to the pens the interface still offers. */

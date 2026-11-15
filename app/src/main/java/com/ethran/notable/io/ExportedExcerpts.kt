@@ -17,15 +17,18 @@ object ExportedExcerpts {
         if (inboxPath.startsWith("/")) File(inboxPath)
         else File(Environment.getExternalStorageDirectory(), inboxPath)
 
-    /** Page id -> excerpt, for the pages that have an exported note with more than a title line. */
-    fun load(dir: File, pages: List<Page>): Map<String, String> {
-        val files = dir.listFiles { f -> f.isFile && f.extension == "md" } ?: return emptyMap()
+    /**
+     * Page id -> excerpt, for the pages that have an exported note with more than a title line. A page that was only
+     * recognised (left without Save & Exit) gets its excerpt from [recognised], the text kept by [RecognisedTextStore].
+     */
+    fun load(dir: File, pages: List<Page>, recognised: (String) -> String? = RecognisedTextStore::read): Map<String, String> {
+        val files = dir.listFiles { f -> f.isFile && f.extension == "md" } ?: emptyArray()
         val stamp = SimpleDateFormat("yyyy-MM-dd-HH-mm-ss", Locale.US)
         val result = mutableMapOf<String, String>()
         for (page in pages) {
             val suffix = stamp.format(page.createdAt) + ".md"
-            val file = files.firstOrNull { it.name == suffix || it.name.endsWith("-$suffix") } ?: continue
-            val text = try { file.readText() } catch (_: Exception) { continue }
+            val file = files.firstOrNull { it.name == suffix || it.name.endsWith("-$suffix") }
+            val text = file?.let { try { it.readText() } catch (_: Exception) { null } } ?: recognised(page.id) ?: continue
             excerptFrom(text).takeIf { it.isNotBlank() }?.let { result[page.id] = it }
         }
         return result
