@@ -198,9 +198,10 @@ class HomeViewModel @Inject constructor(
         val todo = synchronized(thumbRequested) { pageIds.filter { thumbRequested.add(it) } }
         if (todo.isEmpty()) return
         viewModelScope.launch(Dispatchers.IO) {
-            for (id in todo) {
-                if (thumbnailGenerator.ensure(id)) _uiState.update { it.copy(thumbRevision = it.thumbRevision + 1) }
-            }
+            // One recomposition for the whole row, not one per thumbnail (each is a screen refresh on e-ink).
+            var made = false
+            for (id in todo) if (thumbnailGenerator.ensure(id)) made = true
+            if (made) _uiState.update { it.copy(thumbRevision = it.thumbRevision + 1) }
         }
     }
 
