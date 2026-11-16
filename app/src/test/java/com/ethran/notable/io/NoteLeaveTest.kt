@@ -19,9 +19,17 @@ class NoteLeaveTest {
         assertEquals(LeaveAction.Export, act(strokes = 3, route = LeaveRoute.SaveAndExit))
     }
 
-    @Test fun aPageWithoutInkIsSimplyLeft() {
-        assertEquals(LeaveAction.None, act(strokes = 0, route = LeaveRoute.RailBack))
-        assertEquals(LeaveAction.None, act(strokes = 0, route = LeaveRoute.Other))
+    @Test fun aPageWithoutInkIsDeletedOnBackButOtherwiseLeftAlone() {
+        assertEquals(LeaveAction.Discard, act(strokes = 0, route = LeaveRoute.RailBack))
+        assertEquals(LeaveAction.Discard, act(strokes = 0, route = LeaveRoute.Other))
+        // an image, a favourite star or a tag keeps the note
+        fun keep(images: Int = 0, pinned: Boolean = false, tags: Boolean = false) =
+            NoteLeave.actionOnLeave(true, 0, tags, LeaveRoute.RailBack, imageCount = images, pinned = pinned)
+        assertEquals(LeaveAction.None, keep(images = 1))
+        assertEquals(LeaveAction.None, keep(pinned = true))
+        assertEquals(LeaveAction.None, keep(tags = true))
+        // planner and notebook pages are never deleted
+        assertEquals(LeaveAction.None, act(note = false, strokes = 0, route = LeaveRoute.RailBack))
         // tags alone do not make Back recognise anything
         assertEquals(LeaveAction.None, act(strokes = 0, tags = true, route = LeaveRoute.RailBack))
     }
@@ -37,7 +45,8 @@ class NoteLeaveTest {
 
     @Test fun shouldSyncOnLeaveMirrorsTheAction() {
         assertTrue(NoteLeave.shouldSyncOnLeave(true, 2, false, LeaveRoute.RailBack))
-        assertFalse(NoteLeave.shouldSyncOnLeave(true, 0, false, LeaveRoute.RailBack))
+        assertTrue(NoteLeave.shouldSyncOnLeave(true, 0, false, LeaveRoute.RailBack)) // an empty note is deleted
+        assertFalse(NoteLeave.shouldSyncOnLeave(true, 0, true, LeaveRoute.RailBack))
         assertFalse(NoteLeave.shouldSyncOnLeave(false, 2, false, LeaveRoute.Other))
     }
 
