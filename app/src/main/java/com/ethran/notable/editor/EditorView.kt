@@ -289,7 +289,8 @@ fun EditorView(
             val isPlanner = plannerMonday != null || plannerDay != null || plannerLevel != null
             SyncState.launchOnLeave(
                 appRepository, pageId, selectedTags.toList(), context, exportEngine,
-                isNotePage = NoteLeave.isNotePage(bookId, isPlanner, isInboxPage)
+                isNotePage = NoteLeave.isNotePage(bookId, isPlanner, isInboxPage),
+                contentInMemory = page.strokes.isNotEmpty() || page.images.isNotEmpty()
             )
         }
 

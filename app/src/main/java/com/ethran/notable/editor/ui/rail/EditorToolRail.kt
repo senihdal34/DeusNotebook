@@ -1,6 +1,5 @@
 package com.ethran.notable.editor.ui.rail
 
-import android.os.SystemClock
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts.PickVisualMedia
@@ -87,7 +86,6 @@ import com.onyx.android.sdk.api.device.epd.EpdController
 import com.onyx.android.sdk.api.device.epd.UpdateMode
 import io.shipbook.shipbooksdk.ShipBook
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.drop
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -161,15 +159,12 @@ fun EditorToolRail(
     }
 
     // --- folded / open -------------------------------------------------------------------------------------------
-    val autoHide = settings.toolbarAutoHide
-    val visibility = remember { RailVisibility(autoHide = autoHide, startFolded = !state.isToolbarOpen || isPlannerPage) }
+    // The rail never folds by itself while writing a note (erasing with the pen button counts as writing and folded it
+    // for good); only planner pages keep it folded, and the user can hide it from the more menu.
+    val visibility = remember { RailVisibility(autoHide = false, startFolded = !state.isToolbarOpen || isPlannerPage) }
     var folded by remember { mutableStateOf(visibility.folded) }
     var popover by remember { mutableStateOf<RailPopoverKind?>(null) }
-    val busy by rememberUpdatedState(
-        popover != null || state.menuStates.isMenuOpen || state.menuStates.isBackgroundSelectorModalOpen
-    )
 
-    LaunchedEffect(autoHide) { visibility.setAutoHide(autoHide) }
     // Planner pages start folded: the week and day pages have their own tab bar, zoom strip and label column.
     LaunchedEffect(isPlannerPage) {
         if (isPlannerPage) {
@@ -188,23 +183,6 @@ fun EditorToolRail(
             refreshRail()
         }
     }
-    // Fold after about five seconds of writing.
-    LaunchedEffect(autoHide) {
-        if (!autoHide) return@LaunchedEffect
-        var lastSeen = 0L
-        while (true) {
-            delay(500)
-            val w = state.lastWritingMs
-            if (w != 0L && w != lastSeen) {
-                visibility.onPenWriting(w); lastSeen = w
-            }
-            if (visibility.tick(SystemClock.uptimeMillis(), busy)) {
-                folded = true
-                refreshRail()
-            }
-        }
-    }
-
     fun unfold() {
         visibility.unfold(); folded = false
         if (!state.isToolbarOpen) state.isToolbarOpen = true

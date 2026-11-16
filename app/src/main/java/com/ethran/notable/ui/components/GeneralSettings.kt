@@ -62,13 +62,6 @@ fun GeneralSettings(
             })
 
         SettingToggleRow(
-            label = stringResource(R.string.settings_toolbar_auto_hide),
-            value = settings.toolbarAutoHide,
-            onToggle = { isChecked ->
-                onSettingsChange(settings.copy(toolbarAutoHide = isChecked))
-            })
-
-        SettingToggleRow(
             label = stringResource(R.string.start_in_planner),
             value = settings.startInPlanner,
             onToggle = { isChecked ->

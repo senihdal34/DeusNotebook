@@ -24,6 +24,9 @@ enum class LeaveAction {
     /** Recognise the handwriting and set the title and excerpt. Nothing is written to the vault. */
     Recognise,
 
+    /** The note is empty (no ink, no image, no tag, not a favourite): delete it instead of leaving an "Untitled note" card. */
+    Discard,
+
     /** Recognition plus the full export: Markdown, page image and stroke file in the vault inbox. */
     Export,
 }
@@ -40,16 +43,19 @@ object NoteLeave {
 
     /**
      * Save & Exit exports when there is ink or a tag (the rule it always had). Every other route only recognises, and
-     * only when the page has ink: an empty page is simply left, as before.
+     * only when the page has ink. An empty note (nothing written, no image, no tag, not a favourite) is deleted on those
+     * routes; Save & Exit leaves it alone, as before.
      */
     fun actionOnLeave(
-        isNotePage: Boolean, strokeCount: Int, hasTags: Boolean, route: LeaveRoute, currentTitle: String? = null
+        isNotePage: Boolean, strokeCount: Int, hasTags: Boolean, route: LeaveRoute, currentTitle: String? = null,
+        imageCount: Int = 0, pinned: Boolean = false
     ): LeaveAction = when {
         !isNotePage -> LeaveAction.None
         route == LeaveRoute.SaveAndExit -> if (strokeCount > 0 || hasTags) LeaveAction.Export else LeaveAction.None
         // Only a note that has no real title yet is recognised on a plain leave: a note that was merely opened to read
         // keeps its title (recognising again could replace a good title with a slightly different reading).
         strokeCount > 0 -> if (needsTitle(currentTitle)) LeaveAction.Recognise else LeaveAction.None
+        imageCount == 0 && !hasTags && !pinned -> LeaveAction.Discard
         else -> LeaveAction.None
     }
 
@@ -60,8 +66,9 @@ object NoteLeave {
 
     /** `shouldSyncOnLeave`: does leaving run any recognition at all. */
     fun shouldSyncOnLeave(
-        isNotePage: Boolean, strokeCount: Int, hasTags: Boolean, route: LeaveRoute, currentTitle: String? = null
-    ): Boolean = actionOnLeave(isNotePage, strokeCount, hasTags, route, currentTitle) != LeaveAction.None
+        isNotePage: Boolean, strokeCount: Int, hasTags: Boolean, route: LeaveRoute, currentTitle: String? = null,
+        imageCount: Int = 0, pinned: Boolean = false
+    ): Boolean = actionOnLeave(isNotePage, strokeCount, hasTags, route, currentTitle, imageCount, pinned) != LeaveAction.None
 
     /** Language-neutral stand-in title (local date and time of creation), used until, or if, recognition gives one. */
     fun provisionalTitle(createdAt: Date): String = SimpleDateFormat("yyyy-MM-dd HH:mm", Locale.US).format(createdAt)

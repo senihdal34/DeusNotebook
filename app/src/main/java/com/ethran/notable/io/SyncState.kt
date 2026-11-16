@@ -25,6 +25,9 @@ private val log = ShipBook.getLogger("SyncState")
  */
 object SyncState {
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
+
+    /** Pages left with ink or images still in memory (their database writes may be in flight): never deleted as empty. */
+    private val hasContent = java.util.concurrent.ConcurrentHashMap.newKeySet<String>()
     private val queue = SyncQueue()
 
     /** Pages whose recognition or export is running (the Home card shows its syncing mark for these). */
@@ -57,9 +60,12 @@ object SyncState {
         tags: List<String>,
         context: Context,
         exportEngine: ExportEngine,
-        isNotePage: Boolean
+        isNotePage: Boolean,
+        /** The open page still holds ink or images in memory: the database may not have them yet, so never delete it as empty. */
+        contentInMemory: Boolean = false
     ) {
         if (!isNotePage) return
+        if (contentInMemory) hasContent.add(pageId)
         start(appRepository, pageId, tags, context, exportEngine, export = false)
     }
 
@@ -120,12 +126,30 @@ object SyncState {
             log.i("Page $pageId is gone (deleted), nothing to do")
             return false
         }
+        // Strokes are written to the database a moment after they are drawn: a page that is left empty-looking is checked
+        // again after a short wait before it is deleted (see Discard below).
         val strokeCount = appRepository.pageRepository.getWithStrokeById(pageId).strokes.size
         val hasTags = tags.isNotEmpty() || appRepository.pageTags.get(pageId).isNotEmpty()
+        val imageCount = appRepository.pageRepository.getWithImageById(pageId).images.size
         val route = if (export) LeaveRoute.SaveAndExit else LeaveRoute.Other
         /** True when recognition or export ran, so the title or excerpt may have changed. */
-        return when (NoteLeave.actionOnLeave(isNotePage = true, strokeCount = strokeCount, hasTags = hasTags, route = route, currentTitle = page.title)) {
+        return when (NoteLeave.actionOnLeave(isNotePage = true, strokeCount = strokeCount, hasTags = hasTags, route = route, currentTitle = page.title, imageCount = imageCount, pinned = page.pinned == 1)) {
             LeaveAction.None -> { log.i("Nothing to do for page $pageId (no ink)"); false }
+            LeaveAction.Discard -> {
+                val inMemory = hasContent.remove(pageId)
+                kotlinx.coroutines.delay(DISCARD_RECHECK_MS)
+                val stillEmpty = !inMemory &&
+                    appRepository.pageRepository.getWithStrokeById(pageId).strokes.isEmpty() &&
+                    appRepository.pageRepository.getWithImageById(pageId).images.isEmpty()
+                if (stillEmpty) {
+                    appRepository.pageRepository.delete(pageId)
+                    log.i("Empty note $pageId deleted on leave")
+                    true
+                } else {
+                    log.i("Note $pageId looked empty but has content, kept")
+                    false
+                }
+            }
             LeaveAction.Recognise -> {
                 InboxSyncEngine.recognisePage(appRepository, pageId, context)
                 log.i("Recognition complete for page $pageId")
@@ -138,4 +162,6 @@ object SyncState {
             }
         }
     }
+
+    private const val DISCARD_RECHECK_MS = 1500L
 }
